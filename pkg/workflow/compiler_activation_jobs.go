@@ -256,9 +256,22 @@ func (c *Compiler) buildPreActivationJob(data *WorkflowData, needsPermissionChec
 	// Pre-activation job uses the user's original if condition (data.If)
 	// The workflow_run safety check is NOT applied here - it's only on the activation job
 	// Don't include conditions that reference custom job outputs (those belong on the agent job)
+	//
+	// OPTIMIZATION: Skip pre_activation job entirely for safe events (schedule, merge_group)
+	// These events don't require permission checks and are trusted by definition.
+	// When pre_activation is skipped, downstream jobs check for needs.pre_activation.result == 'skipped'
 	var jobIfCondition string
 	if !c.referencesCustomJobOutputs(data.If, data.Jobs) {
 		jobIfCondition = data.If
+	}
+
+	// Add safe event skip condition: don't run pre_activation for schedule/merge_group events
+	safeEventSkipCondition := BuildIsNotSafePreActivationEvent().Render()
+	if jobIfCondition != "" {
+		// Combine existing condition with safe event check
+		jobIfCondition = fmt.Sprintf("(%s) && (%s)", safeEventSkipCondition, jobIfCondition)
+	} else {
+		jobIfCondition = safeEventSkipCondition
 	}
 
 	job := &Job{
@@ -517,10 +530,19 @@ func (c *Compiler) buildActivationJob(data *WorkflowData, preActivationJobCreate
 		// Also depend on custom jobs that run after pre_activation but before activation
 		activationNeeds = append(activationNeeds, customJobsBeforeActivation...)
 
-		activatedExpr := BuildEquals(
+		// Build activation condition:
+		// - If pre_activation was skipped (safe event like schedule/merge_group), proceed
+		// - Otherwise, check that pre_activation.outputs.activated == 'true'
+		preActivationSkipped := BuildEquals(
+			BuildPropertyAccess(fmt.Sprintf("needs.%s.result", string(constants.PreActivationJobName))),
+			BuildStringLiteral("skipped"),
+		)
+		preActivationActivated := BuildEquals(
 			BuildPropertyAccess(fmt.Sprintf("needs.%s.outputs.%s", string(constants.PreActivationJobName), constants.ActivatedOutput)),
 			BuildStringLiteral("true"),
 		)
+		// (pre_activation was skipped) OR (pre_activation.outputs.activated == 'true')
+		activatedExpr := BuildOr(preActivationSkipped, preActivationActivated)
 
 		// If there are custom jobs before activation and the if condition references them,
 		// include that condition in the activation job's if clause

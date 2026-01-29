@@ -44,7 +44,9 @@ jobs:
     needs:
       - pre_activation
       - search_issues
-    if: (needs.pre_activation.outputs.activated == 'true') && (needs.search_issues.outputs.has_issues == 'true')
+    if: >
+      ((needs.pre_activation.result == 'skipped') || (needs.pre_activation.outputs.activated == 'true')) &&
+      (needs.search_issues.outputs.has_issues == 'true')
     runs-on: ubuntu-slim
     permissions:
       contents: read
@@ -1213,6 +1215,7 @@ jobs:
           if-no-files-found: ignore
 
   pre_activation:
+    if: (github.event_name != 'schedule') && (github.event_name != 'merge_group')
     runs-on: ubuntu-slim
     permissions:
       contents: read

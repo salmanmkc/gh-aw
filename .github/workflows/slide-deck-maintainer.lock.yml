@@ -43,7 +43,7 @@ run-name: "Slide Deck Maintainer"
 jobs:
   activation:
     needs: pre_activation
-    if: needs.pre_activation.outputs.activated == 'true'
+    if: (needs.pre_activation.result == 'skipped') || (needs.pre_activation.outputs.activated == 'true')
     runs-on: ubuntu-slim
     permissions:
       contents: read
@@ -1314,6 +1314,7 @@ jobs:
           if-no-files-found: ignore
 
   pre_activation:
+    if: (github.event_name != 'schedule') && (github.event_name != 'merge_group')
     runs-on: ubuntu-slim
     permissions:
       contents: read

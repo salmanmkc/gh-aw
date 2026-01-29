@@ -76,18 +76,21 @@ jobs:
   activation:
     needs: pre_activation
     if: >
-      (needs.pre_activation.outputs.activated == 'true') && (((github.event_name == 'issues' || github.event_name == 'issue_comment' ||
+      ((needs.pre_activation.result == 'skipped') || (needs.pre_activation.outputs.activated == 'true')) &&
+      (((github.event_name == 'issues' || github.event_name == 'issue_comment' || github.event_name == 'pull_request' ||
+      github.event_name == 'pull_request_review_comment' || github.event_name == 'discussion' || github.event_name == 'discussion_comment') &&
+      ((github.event_name == 'issues') && (contains(github.event.issue.body, '/scout')) || (github.event_name == 'issue_comment') &&
+      ((contains(github.event.comment.body, '/scout')) && (github.event.issue.pull_request == null)) ||
+      (github.event_name == 'issue_comment') &&
+      ((contains(github.event.comment.body, '/scout')) && (github.event.issue.pull_request != null)) ||
+      (github.event_name == 'pull_request_review_comment') &&
+      (contains(github.event.comment.body, '/scout')) || (github.event_name == 'pull_request') &&
+      (contains(github.event.pull_request.body, '/scout')) ||
+      (github.event_name == 'discussion') && (contains(github.event.discussion.body, '/scout')) ||
+      (github.event_name == 'discussion_comment') &&
+      (contains(github.event.comment.body, '/scout')))) || (!(github.event_name == 'issues' || github.event_name == 'issue_comment' ||
       github.event_name == 'pull_request' || github.event_name == 'pull_request_review_comment' || github.event_name == 'discussion' ||
-      github.event_name == 'discussion_comment') && ((github.event_name == 'issues') && (contains(github.event.issue.body, '/scout')) ||
-      (github.event_name == 'issue_comment') && ((contains(github.event.comment.body, '/scout')) && (github.event.issue.pull_request == null)) ||
-      (github.event_name == 'issue_comment') && ((contains(github.event.comment.body, '/scout')) && (github.event.issue.pull_request != null)) ||
-      (github.event_name == 'pull_request_review_comment') && (contains(github.event.comment.body, '/scout')) ||
-      (github.event_name == 'pull_request') && (contains(github.event.pull_request.body, '/scout')) ||
-      (github.event_name == 'discussion') &&
-      (contains(github.event.discussion.body, '/scout')) || (github.event_name == 'discussion_comment') &&
-      (contains(github.event.comment.body, '/scout')))) ||
-      (!(github.event_name == 'issues' || github.event_name == 'issue_comment' || github.event_name == 'pull_request' ||
-      github.event_name == 'pull_request_review_comment' || github.event_name == 'discussion' || github.event_name == 'discussion_comment')))
+      github.event_name == 'discussion_comment')))
     runs-on: ubuntu-slim
     permissions:
       contents: read
@@ -1516,20 +1519,20 @@ jobs:
 
   pre_activation:
     if: >
-      ((github.event_name == 'issues' || github.event_name == 'issue_comment' || github.event_name == 'pull_request' ||
-      github.event_name == 'pull_request_review_comment' || github.event_name == 'discussion' || github.event_name == 'discussion_comment') &&
-      ((github.event_name == 'issues') && (contains(github.event.issue.body, '/scout')) || (github.event_name == 'issue_comment') &&
-      ((contains(github.event.comment.body, '/scout')) && (github.event.issue.pull_request == null)) ||
-      (github.event_name == 'issue_comment') &&
-      ((contains(github.event.comment.body, '/scout')) && (github.event.issue.pull_request != null)) ||
-      (github.event_name == 'pull_request_review_comment') &&
+      ((github.event_name != 'schedule') && (github.event_name != 'merge_group')) && (((github.event_name == 'issues' ||
+      github.event_name == 'issue_comment' || github.event_name == 'pull_request' || github.event_name == 'pull_request_review_comment' ||
+      github.event_name == 'discussion' || github.event_name == 'discussion_comment') && ((github.event_name == 'issues') &&
+      (contains(github.event.issue.body, '/scout')) || (github.event_name == 'issue_comment') &&
+      ((contains(github.event.comment.body, '/scout')) &&
+      (github.event.issue.pull_request == null)) || (github.event_name == 'issue_comment') && ((contains(github.event.comment.body, '/scout')) &&
+      (github.event.issue.pull_request != null)) || (github.event_name == 'pull_request_review_comment') &&
       (contains(github.event.comment.body, '/scout')) || (github.event_name == 'pull_request') &&
       (contains(github.event.pull_request.body, '/scout')) ||
       (github.event_name == 'discussion') && (contains(github.event.discussion.body, '/scout')) ||
       (github.event_name == 'discussion_comment') &&
       (contains(github.event.comment.body, '/scout')))) || (!(github.event_name == 'issues' || github.event_name == 'issue_comment' ||
       github.event_name == 'pull_request' || github.event_name == 'pull_request_review_comment' || github.event_name == 'discussion' ||
-      github.event_name == 'discussion_comment'))
+      github.event_name == 'discussion_comment')))
     runs-on: ubuntu-slim
     permissions:
       contents: read
