@@ -214,7 +214,7 @@ The following files are justified despite their size due to domain complexity:
 ### Recommended Sizes
 
 - **Small files**: 50-200 lines
-  - Utilities, simple features, helpers
+  - Utilities, basic features, helpers
   - Examples: `args.go` (65 lines), `artifacts.go` (60 lines)
 
 - **Medium files**: 200-500 lines
@@ -466,7 +466,7 @@ pkg/workflow/
 1. ✅ Is the file over 800 lines? → Consider splitting
 2. ✅ Are there distinct logical sections? → Extract to separate files
 3. ✅ Would splitting improve testability? → Do it
-4. ❌ Am I just moving code around without improving organization? → Don't do it
+4. ❌ Am I only moving code around without improving organization? → Don't do it
 
 ## Contributing to Organization Patterns
 

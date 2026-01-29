@@ -5,7 +5,7 @@
 
 ## Overview
 
-This document provides a comprehensive visual guide to the adaptive color palette and styling system used in GitHub Agentic Workflows. The system uses [lipgloss](https://github.com/charmbracelet/lipgloss) with adaptive colors that automatically adjust based on the user's terminal theme (light or dark).
+This document provides a complete visual guide to the adaptive color palette and styling system used in GitHub Agentic Workflows. The system uses [lipgloss](https://github.com/charmbracelet/lipgloss) with adaptive colors that automatically adjust based on the user's terminal theme (light or dark).
 
 **Implementation**: `pkg/styles/theme.go`
 
@@ -13,7 +13,7 @@ This document provides a comprehensive visual guide to the adaptive color palett
 
 ### Adaptive Color Strategy
 
-GitHub Agentic Workflows uses an adaptive color system that provides optimal readability in both light and dark terminals:
+GitHub Agentic Workflows uses an adaptive color system that designed for readability in both light and dark terminals:
 
 **Light Mode**:
 - Darker, more saturated colors for visibility on light backgrounds
@@ -226,7 +226,7 @@ When adding new styles to the system:
    - Include visual examples
    - Document semantic usage
 
-### Best Practices
+### Recommended Practices
 
 **DO**:
 - ✅ Use semantic colors consistently across the codebase

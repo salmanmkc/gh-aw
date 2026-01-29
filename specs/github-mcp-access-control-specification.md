@@ -612,7 +612,7 @@ When `roles` is specified, access is granted ONLY if the user's role in the repo
 - `roles: ["write", "admin"]` - User must have "write" OR "admin" role
 - `roles: ["read", "write", "admin"]` - User can have any of these roles
 
-**Best Practice**: For typical write operations, specify `["write", "maintain", "admin"]` to allow all users with write-level access or above.
+**Recommendation**: For typical write operations, specify `["write", "maintain", "admin"]` to allow all users with write-level access or above.
 
 **Example**:
 ```yaml

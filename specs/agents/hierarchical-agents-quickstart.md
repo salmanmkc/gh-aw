@@ -1,6 +1,6 @@
 # Quick Start: Hierarchical Agents
 
-This guide helps you quickly understand and use the new meta-orchestrator agents.
+This guide helps you understand and use the new meta-orchestrator agents.
 
 ## What Are Meta-Orchestrators?
 
@@ -289,7 +289,7 @@ Edit the workflow markdown files to:
 ## Best Practices
 
 1. **Review regularly** - Don't let reports go unread
-2. **Act promptly** - Address critical issues quickly
+2. **Act on feedback** - Address critical issues as they arise
 3. **Close loops** - Update issues when fixed
 4. **Learn patterns** - Use insights to improve future agents
 5. **Collaborate** - Share findings with team

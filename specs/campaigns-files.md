@@ -470,7 +470,7 @@ Campaign workers are specialized workflows designed to be orchestrated by campai
 
 4. **Orchestration agnostic**: Workers don't know about orchestration policy
    - Sequential vs parallel execution is orchestrator's concern
-   - Workers are simple, focused, deterministic units
+   - Workers are focused, deterministic units
 
 ### Worker Workflow Template
 

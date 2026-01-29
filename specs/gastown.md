@@ -577,7 +577,7 @@ Use HTML details/summary for collapsible sections:
 - No composition/extension
 - No parameterization
 - No versioning
-- Simple concatenation
+- Direct concatenation
 
 ### 6.3 Comparison
 

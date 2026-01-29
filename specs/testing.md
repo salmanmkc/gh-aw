@@ -155,7 +155,7 @@ This project **intentionally avoids** mocking frameworks and test suites:
 - **Confidence**: Tests catch real integration issues
 
 **No test suites (testify/suite) because:**
-- **Parallel execution**: Standard Go tests run in parallel efficiently
+- **Parallel execution**: Standard Go tests run in parallel by default
 - **Simplicity**: No suite lifecycle methods to understand
 - **Explicitness**: Setup is visible in each test
 - **Compatibility**: Compatible with standard `go test` tooling

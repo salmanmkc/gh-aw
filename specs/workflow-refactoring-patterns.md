@@ -284,7 +284,7 @@ Main Workflow (280 lines)
 ## Anti-Patterns to Avoid
 
 ❌ **Don't over-extract**: Keep related logic together. Not every 50-line section needs to be a separate module.
-   - **Bad example**: Extracting a 30-line section just because it's slightly different
+   - **Bad example**: Extracting a 30-line section only because it's slightly different
    - **Good example**: Extracting a 150-line section that's used by 3+ workflows
 
 ❌ **Don't create circular dependencies**: Shared modules should not import each other in circular ways.
