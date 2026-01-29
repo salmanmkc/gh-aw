@@ -8,7 +8,8 @@
 ## Executive Summary
 
 This bundle includes three dependency updates for the documentation site:
-- **Astro:** 5.16.12 → 5.17.1 (minor update, installed via semver ^5.16.15)
+- **Package.json specification:** Astro ^5.16.12 → ^5.16.15 (patch)
+- **Actual version installed:** Astro 5.17.1 (latest version satisfying ^5.16.15)
 - **@astrojs/starlight:** 0.37.3 → 0.37.4 (patch update)
 - **@playwright/test:** 1.57.0 → 1.58.0 (minor update)
 
@@ -16,10 +17,12 @@ This bundle includes three dependency updates for the documentation site:
 
 ## Package Updates
 
-### 1. Astro: 5.16.12 → 5.17.1
+### 1. Astro: Package.json ^5.16.12 → ^5.16.15, Installed 5.17.1
 
-**Update Type:** Minor (installed via semver ^5.16.15)  
+**Update Type:** Package.json specifies patch minimum (^5.16.15), npm installed latest minor (5.17.1)  
 **Risk Level:** 🟡 Low (breaking changes present but don't affect us)
+
+**Note:** Due to semver caret (^) syntax, `^5.16.15` allows any version >=5.16.15 and <6.0.0. npm installs the latest available version (5.17.1) that satisfies this constraint.
 
 #### Version History
 - **5.16.13:** Multiple `<style>` and `<script>` tag rendering changes
@@ -107,8 +110,8 @@ None - fully backward compatible.
 #### Impact on Our Codebase
 ✅ **None** - Verification completed:
 ```bash
-# Searched test files for removed features
-grep -r "_react\|_vue\|:light\|devtools\|page\.accessibility" tests/
+# Searched test files for removed Playwright features
+grep -r "_react\|_vue\|:light\|devtools" tests/
 # Result: No matches found
 ```
 
@@ -146,12 +149,13 @@ Current state shows 7 moderate severity vulnerabilities in transitive dependenci
 
 ## Actual Versions Installed
 
-Due to semver ranges in package.json (`^5.16.15`), npm installed the latest compatible minor version:
-- **Astro:** 5.17.1 (latest version satisfying ^5.16.15)
-- **@astrojs/starlight:** 0.37.4 (as requested)
-- **@playwright/test:** 1.58.0 (as requested)
+The relationship between package.json and installed versions:
+- **Astro package.json:** Changed from `^5.16.12` to `^5.16.15`
+- **Astro installed:** 5.17.1 (latest version satisfying ^5.16.15 constraint)
+- **@astrojs/starlight:** 0.37.4 (as requested in package.json)
+- **@playwright/test:** 1.58.0 (as requested in package.json)
 
-This is expected behavior with `^` (caret) version ranges, which allows minor and patch updates. The 5.17.1 version includes all fixes and features from 5.16.x through 5.17.1.
+**Semver explanation:** The caret (^) in `^5.16.15` means ">=5.16.15 and <6.0.0". npm automatically installs the latest version within that range, which is currently 5.17.1. This is expected and desired behavior.
 
 ---
 
