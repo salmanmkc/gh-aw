@@ -231,21 +231,36 @@ func TestConstantValues(t *testing.T) {
 		{"ActivationJobName", string(ActivationJobName), "activation"},
 		{"PreActivationJobName", string(PreActivationJobName), "pre_activation"},
 		{"DetectionJobName", string(DetectionJobName), "detection"},
-		{"SafeOutputArtifactName", SafeOutputArtifactName, "safe-output"},
-		{"AgentOutputArtifactName", AgentOutputArtifactName, "agent-output"},
-		{"SafeOutputsMCPServerID", SafeOutputsMCPServerID, "safeoutputs"},
+		{"SafeOutputArtifactName", string(SafeOutputArtifactName), "safe-output"},
+		{"AgentOutputArtifactName", string(AgentOutputArtifactName), "agent-output"},
+		{"SafeOutputsMCPServerID", string(SafeOutputsMCPServerID), "safeoutputs"},
+		{"SafeInputsMCPServerID", string(SafeInputsMCPServerID), "safeinputs"},
 		{"CheckMembershipStepID", string(CheckMembershipStepID), "check_membership"},
 		{"CheckStopTimeStepID", string(CheckStopTimeStepID), "check_stop_time"},
 		{"CheckSkipIfMatchStepID", string(CheckSkipIfMatchStepID), "check_skip_if_match"},
 		{"CheckSkipIfNoMatchStepID", string(CheckSkipIfNoMatchStepID), "check_skip_if_no_match"},
 		{"CheckCommandPositionStepID", string(CheckCommandPositionStepID), "check_command_position"},
-		{"IsTeamMemberOutput", IsTeamMemberOutput, "is_team_member"},
-		{"StopTimeOkOutput", StopTimeOkOutput, "stop_time_ok"},
-		{"SkipCheckOkOutput", SkipCheckOkOutput, "skip_check_ok"},
-		{"SkipNoMatchCheckOkOutput", SkipNoMatchCheckOkOutput, "skip_no_match_check_ok"},
-		{"CommandPositionOkOutput", CommandPositionOkOutput, "command_position_ok"},
-		{"ActivatedOutput", ActivatedOutput, "activated"},
-		{"DefaultActivationJobRunnerImage", DefaultActivationJobRunnerImage, "ubuntu-slim"},
+		{"IsTeamMemberOutput", string(IsTeamMemberOutput), "is_team_member"},
+		{"StopTimeOkOutput", string(StopTimeOkOutput), "stop_time_ok"},
+		{"SkipCheckOkOutput", string(SkipCheckOkOutput), "skip_check_ok"},
+		{"SkipNoMatchCheckOkOutput", string(SkipNoMatchCheckOkOutput), "skip_no_match_check_ok"},
+		{"CommandPositionOkOutput", string(CommandPositionOkOutput), "command_position_ok"},
+		{"ActivatedOutput", string(ActivatedOutput), "activated"},
+		{"DefaultActivationJobRunnerImage", string(DefaultActivationJobRunnerImage), "ubuntu-slim"},
+		{"GitHubCopilotMCPDomain", string(GitHubCopilotMCPDomain), "api.githubcopilot.com"},
+		{"AgenticCampaignLabel", string(AgenticCampaignLabel), "agentic-campaign"},
+		{"CampaignLabelPrefix", string(CampaignLabelPrefix), "z_campaign_"},
+		{"DefaultMCPGatewayContainer", string(DefaultMCPGatewayContainer), "ghcr.io/githubnext/gh-aw-mcpg"},
+		{"DefaultSerenaMCPServerContainer", string(DefaultSerenaMCPServerContainer), "ghcr.io/githubnext/serena-mcp-server"},
+		{"OraiosSerenaContainer", string(OraiosSerenaContainer), "ghcr.io/oraios/serena"},
+		{"DefaultNodeAlpineLTSImage", string(DefaultNodeAlpineLTSImage), "node:lts-alpine"},
+		{"DefaultPythonAlpineLTSImage", string(DefaultPythonAlpineLTSImage), "python:alpine"},
+		{"DefaultAlpineImage", string(DefaultAlpineImage), "alpine:latest"},
+		{"DefaultGhAwMount", string(DefaultGhAwMount), "/opt/gh-aw:/opt/gh-aw:ro"},
+		{"DefaultTmpGhAwMount", string(DefaultTmpGhAwMount), "/tmp/gh-aw:/tmp/gh-aw:rw"},
+		{"DefaultWorkspaceMount", string(DefaultWorkspaceMount), "${{ github.workspace }}:${{ github.workspace }}:rw"},
+		{"AgentOutputFilename", string(AgentOutputFilename), "agent_output.json"},
+		{"MatchedCommandOutput", string(MatchedCommandOutput), "matched_command"},
 	}
 
 	for _, tt := range tests {
@@ -532,6 +547,220 @@ func TestSemanticTypeAliases(t *testing.T) {
 			t.Errorf("CustomEngine = %q, want %q", custom, "custom")
 		}
 	})
+
+	// Test FilePath type
+	t.Run("FilePath type", func(t *testing.T) {
+		var testPath FilePath = "/opt/gh-aw/safe-inputs"
+		if string(testPath) != "/opt/gh-aw/safe-inputs" {
+			t.Errorf("FilePath conversion failed: got %q, want %q", testPath, "/opt/gh-aw/safe-inputs")
+		}
+	})
+
+	// Test ContainerImage type
+	t.Run("ContainerImage type", func(t *testing.T) {
+		var testImage ContainerImage = "ghcr.io/test/image"
+		if string(testImage) != "ghcr.io/test/image" {
+			t.Errorf("ContainerImage conversion failed: got %q, want %q", testImage, "ghcr.io/test/image")
+		}
+
+		// Test container image constants have the correct type
+		gateway := DefaultMCPGatewayContainer
+		if string(gateway) != "ghcr.io/githubnext/gh-aw-mcpg" {
+			t.Errorf("DefaultMCPGatewayContainer = %q, want %q", gateway, "ghcr.io/githubnext/gh-aw-mcpg")
+		}
+
+		serena := DefaultSerenaMCPServerContainer
+		if string(serena) != "ghcr.io/githubnext/serena-mcp-server" {
+			t.Errorf("DefaultSerenaMCPServerContainer = %q, want %q", serena, "ghcr.io/githubnext/serena-mcp-server")
+		}
+
+		oraios := OraiosSerenaContainer
+		if string(oraios) != "ghcr.io/oraios/serena" {
+			t.Errorf("OraiosSerenaContainer = %q, want %q", oraios, "ghcr.io/oraios/serena")
+		}
+
+		node := DefaultNodeAlpineLTSImage
+		if string(node) != "node:lts-alpine" {
+			t.Errorf("DefaultNodeAlpineLTSImage = %q, want %q", node, "node:lts-alpine")
+		}
+
+		python := DefaultPythonAlpineLTSImage
+		if string(python) != "python:alpine" {
+			t.Errorf("DefaultPythonAlpineLTSImage = %q, want %q", python, "python:alpine")
+		}
+
+		alpine := DefaultAlpineImage
+		if string(alpine) != "alpine:latest" {
+			t.Errorf("DefaultAlpineImage = %q, want %q", alpine, "alpine:latest")
+		}
+	})
+
+	// Test Domain type
+	t.Run("Domain type", func(t *testing.T) {
+		var testDomain Domain = "example.com"
+		if string(testDomain) != "example.com" {
+			t.Errorf("Domain conversion failed: got %q, want %q", testDomain, "example.com")
+		}
+
+		// Test domain constant has the correct type
+		copilotDomain := GitHubCopilotMCPDomain
+		if string(copilotDomain) != "api.githubcopilot.com" {
+			t.Errorf("GitHubCopilotMCPDomain = %q, want %q", copilotDomain, "api.githubcopilot.com")
+		}
+	})
+
+	// Test Label type
+	t.Run("Label type", func(t *testing.T) {
+		var testLabel Label = "test-label"
+		if string(testLabel) != "test-label" {
+			t.Errorf("Label conversion failed: got %q, want %q", testLabel, "test-label")
+		}
+
+		// Test label constants have the correct type
+		campaignLabel := AgenticCampaignLabel
+		if string(campaignLabel) != "agentic-campaign" {
+			t.Errorf("AgenticCampaignLabel = %q, want %q", campaignLabel, "agentic-campaign")
+		}
+
+		labelPrefix := CampaignLabelPrefix
+		if string(labelPrefix) != "z_campaign_" {
+			t.Errorf("CampaignLabelPrefix = %q, want %q", labelPrefix, "z_campaign_")
+		}
+	})
+
+	// Test ArtifactName type
+	t.Run("ArtifactName type", func(t *testing.T) {
+		var testArtifact ArtifactName = "test-artifact"
+		if string(testArtifact) != "test-artifact" {
+			t.Errorf("ArtifactName conversion failed: got %q, want %q", testArtifact, "test-artifact")
+		}
+
+		// Test artifact name constants have the correct type
+		safeOutput := SafeOutputArtifactName
+		if string(safeOutput) != "safe-output" {
+			t.Errorf("SafeOutputArtifactName = %q, want %q", safeOutput, "safe-output")
+		}
+
+		agentOutput := AgentOutputArtifactName
+		if string(agentOutput) != "agent-output" {
+			t.Errorf("AgentOutputArtifactName = %q, want %q", agentOutput, "agent-output")
+		}
+	})
+
+	// Test FileName type
+	t.Run("FileName type", func(t *testing.T) {
+		var testFile FileName = "test.json"
+		if string(testFile) != "test.json" {
+			t.Errorf("FileName conversion failed: got %q, want %q", testFile, "test.json")
+		}
+
+		// Test filename constant has the correct type
+		agentFile := AgentOutputFilename
+		if string(agentFile) != "agent_output.json" {
+			t.Errorf("AgentOutputFilename = %q, want %q", agentFile, "agent_output.json")
+		}
+	})
+
+	// Test ServerID type
+	t.Run("ServerID type", func(t *testing.T) {
+		var testServer ServerID = "testserver"
+		if string(testServer) != "testserver" {
+			t.Errorf("ServerID conversion failed: got %q, want %q", testServer, "testserver")
+		}
+
+		// Test server ID constants have the correct type
+		safeOutputsServer := SafeOutputsMCPServerID
+		if string(safeOutputsServer) != "safeoutputs" {
+			t.Errorf("SafeOutputsMCPServerID = %q, want %q", safeOutputsServer, "safeoutputs")
+		}
+
+		safeInputsServer := SafeInputsMCPServerID
+		if string(safeInputsServer) != "safeinputs" {
+			t.Errorf("SafeInputsMCPServerID = %q, want %q", safeInputsServer, "safeinputs")
+		}
+	})
+
+	// Test OutputName type
+	t.Run("OutputName type", func(t *testing.T) {
+		var testOutput OutputName = "test_output"
+		if string(testOutput) != "test_output" {
+			t.Errorf("OutputName conversion failed: got %q, want %q", testOutput, "test_output")
+		}
+
+		// Test output name constants have the correct type
+		teamMember := IsTeamMemberOutput
+		if string(teamMember) != "is_team_member" {
+			t.Errorf("IsTeamMemberOutput = %q, want %q", teamMember, "is_team_member")
+		}
+
+		stopTime := StopTimeOkOutput
+		if string(stopTime) != "stop_time_ok" {
+			t.Errorf("StopTimeOkOutput = %q, want %q", stopTime, "stop_time_ok")
+		}
+
+		skipCheck := SkipCheckOkOutput
+		if string(skipCheck) != "skip_check_ok" {
+			t.Errorf("SkipCheckOkOutput = %q, want %q", skipCheck, "skip_check_ok")
+		}
+
+		skipNoMatch := SkipNoMatchCheckOkOutput
+		if string(skipNoMatch) != "skip_no_match_check_ok" {
+			t.Errorf("SkipNoMatchCheckOkOutput = %q, want %q", skipNoMatch, "skip_no_match_check_ok")
+		}
+
+		commandPos := CommandPositionOkOutput
+		if string(commandPos) != "command_position_ok" {
+			t.Errorf("CommandPositionOkOutput = %q, want %q", commandPos, "command_position_ok")
+		}
+
+		matchedCmd := MatchedCommandOutput
+		if string(matchedCmd) != "matched_command" {
+			t.Errorf("MatchedCommandOutput = %q, want %q", matchedCmd, "matched_command")
+		}
+
+		activated := ActivatedOutput
+		if string(activated) != "activated" {
+			t.Errorf("ActivatedOutput = %q, want %q", activated, "activated")
+		}
+	})
+
+	// Test RunnerImage type
+	t.Run("RunnerImage type", func(t *testing.T) {
+		var testRunner RunnerImage = "ubuntu-latest"
+		if string(testRunner) != "ubuntu-latest" {
+			t.Errorf("RunnerImage conversion failed: got %q, want %q", testRunner, "ubuntu-latest")
+		}
+
+		// Test runner image constant has the correct type
+		activationRunner := DefaultActivationJobRunnerImage
+		if string(activationRunner) != "ubuntu-slim" {
+			t.Errorf("DefaultActivationJobRunnerImage = %q, want %q", activationRunner, "ubuntu-slim")
+		}
+	})
+
+	// Test MountPath type
+	t.Run("MountPath type", func(t *testing.T) {
+		var testMount MountPath = "/src:/dst:ro"
+		if string(testMount) != "/src:/dst:ro" {
+			t.Errorf("MountPath conversion failed: got %q, want %q", testMount, "/src:/dst:ro")
+		}
+
+		// Test mount path constants have the correct type
+		ghAwMount := DefaultGhAwMount
+		if string(ghAwMount) != "/opt/gh-aw:/opt/gh-aw:ro" {
+			t.Errorf("DefaultGhAwMount = %q, want %q", ghAwMount, "/opt/gh-aw:/opt/gh-aw:ro")
+		}
+
+		tmpMount := DefaultTmpGhAwMount
+		if string(tmpMount) != "/tmp/gh-aw:/tmp/gh-aw:rw" {
+			t.Errorf("DefaultTmpGhAwMount = %q, want %q", tmpMount, "/tmp/gh-aw:/tmp/gh-aw:rw")
+		}
+
+		workspaceMount := DefaultWorkspaceMount
+		if string(workspaceMount) != "${{ github.workspace }}:${{ github.workspace }}:rw" {
+			t.Errorf("DefaultWorkspaceMount = %q, want %q", workspaceMount, "${{ github.workspace }}:${{ github.workspace }}:rw")
+		}
+	})
 }
 
 func TestTypeSafetyBetweenSemanticTypes(t *testing.T) {
@@ -723,6 +952,156 @@ func TestHelperMethods(t *testing.T) {
 		emptyEngine := EngineName("")
 		if emptyEngine.IsValid() {
 			t.Error("EngineName.IsValid() = true, want false for empty value")
+		}
+	})
+
+	t.Run("FilePath", func(t *testing.T) {
+		path := FilePath("/opt/gh-aw")
+		if path.String() != "/opt/gh-aw" {
+			t.Errorf("FilePath.String() = %q, want %q", path.String(), "/opt/gh-aw")
+		}
+		if !path.IsValid() {
+			t.Error("FilePath.IsValid() = false, want true for non-empty value")
+		}
+
+		emptyPath := FilePath("")
+		if emptyPath.IsValid() {
+			t.Error("FilePath.IsValid() = true, want false for empty value")
+		}
+	})
+
+	t.Run("ContainerImage", func(t *testing.T) {
+		image := ContainerImage("ghcr.io/test/image")
+		if image.String() != "ghcr.io/test/image" {
+			t.Errorf("ContainerImage.String() = %q, want %q", image.String(), "ghcr.io/test/image")
+		}
+		if !image.IsValid() {
+			t.Error("ContainerImage.IsValid() = false, want true for non-empty value")
+		}
+
+		emptyImage := ContainerImage("")
+		if emptyImage.IsValid() {
+			t.Error("ContainerImage.IsValid() = true, want false for empty value")
+		}
+	})
+
+	t.Run("Domain", func(t *testing.T) {
+		domain := Domain("example.com")
+		if domain.String() != "example.com" {
+			t.Errorf("Domain.String() = %q, want %q", domain.String(), "example.com")
+		}
+		if !domain.IsValid() {
+			t.Error("Domain.IsValid() = false, want true for non-empty value")
+		}
+
+		emptyDomain := Domain("")
+		if emptyDomain.IsValid() {
+			t.Error("Domain.IsValid() = true, want false for empty value")
+		}
+	})
+
+	t.Run("Label", func(t *testing.T) {
+		label := Label("test-label")
+		if label.String() != "test-label" {
+			t.Errorf("Label.String() = %q, want %q", label.String(), "test-label")
+		}
+		if !label.IsValid() {
+			t.Error("Label.IsValid() = false, want true for non-empty value")
+		}
+
+		emptyLabel := Label("")
+		if emptyLabel.IsValid() {
+			t.Error("Label.IsValid() = true, want false for empty value")
+		}
+	})
+
+	t.Run("ArtifactName", func(t *testing.T) {
+		artifact := ArtifactName("test-artifact")
+		if artifact.String() != "test-artifact" {
+			t.Errorf("ArtifactName.String() = %q, want %q", artifact.String(), "test-artifact")
+		}
+		if !artifact.IsValid() {
+			t.Error("ArtifactName.IsValid() = false, want true for non-empty value")
+		}
+
+		emptyArtifact := ArtifactName("")
+		if emptyArtifact.IsValid() {
+			t.Error("ArtifactName.IsValid() = true, want false for empty value")
+		}
+	})
+
+	t.Run("FileName", func(t *testing.T) {
+		filename := FileName("test.json")
+		if filename.String() != "test.json" {
+			t.Errorf("FileName.String() = %q, want %q", filename.String(), "test.json")
+		}
+		if !filename.IsValid() {
+			t.Error("FileName.IsValid() = false, want true for non-empty value")
+		}
+
+		emptyFilename := FileName("")
+		if emptyFilename.IsValid() {
+			t.Error("FileName.IsValid() = true, want false for empty value")
+		}
+	})
+
+	t.Run("ServerID", func(t *testing.T) {
+		server := ServerID("testserver")
+		if server.String() != "testserver" {
+			t.Errorf("ServerID.String() = %q, want %q", server.String(), "testserver")
+		}
+		if !server.IsValid() {
+			t.Error("ServerID.IsValid() = false, want true for non-empty value")
+		}
+
+		emptyServer := ServerID("")
+		if emptyServer.IsValid() {
+			t.Error("ServerID.IsValid() = true, want false for empty value")
+		}
+	})
+
+	t.Run("OutputName", func(t *testing.T) {
+		output := OutputName("test_output")
+		if output.String() != "test_output" {
+			t.Errorf("OutputName.String() = %q, want %q", output.String(), "test_output")
+		}
+		if !output.IsValid() {
+			t.Error("OutputName.IsValid() = false, want true for non-empty value")
+		}
+
+		emptyOutput := OutputName("")
+		if emptyOutput.IsValid() {
+			t.Error("OutputName.IsValid() = true, want false for empty value")
+		}
+	})
+
+	t.Run("RunnerImage", func(t *testing.T) {
+		runner := RunnerImage("ubuntu-latest")
+		if runner.String() != "ubuntu-latest" {
+			t.Errorf("RunnerImage.String() = %q, want %q", runner.String(), "ubuntu-latest")
+		}
+		if !runner.IsValid() {
+			t.Error("RunnerImage.IsValid() = false, want true for non-empty value")
+		}
+
+		emptyRunner := RunnerImage("")
+		if emptyRunner.IsValid() {
+			t.Error("RunnerImage.IsValid() = true, want false for empty value")
+		}
+	})
+
+	t.Run("MountPath", func(t *testing.T) {
+		mount := MountPath("/src:/dst:ro")
+		if mount.String() != "/src:/dst:ro" {
+			t.Errorf("MountPath.String() = %q, want %q", mount.String(), "/src:/dst:ro")
+		}
+		if !mount.IsValid() {
+			t.Error("MountPath.IsValid() = false, want true for non-empty value")
+		}
+
+		emptyMount := MountPath("")
+		if emptyMount.IsValid() {
+			t.Error("MountPath.IsValid() = true, want false for empty value")
 		}
 	})
 }

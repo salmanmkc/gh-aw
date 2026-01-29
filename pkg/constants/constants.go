@@ -225,6 +225,206 @@ func (e EngineName) IsValid() bool {
 	return len(e) > 0
 }
 
+// FilePath represents a file or directory path.
+// This semantic type distinguishes file paths from arbitrary strings,
+// making path parameters explicit and preventing accidental mixing with other string types.
+//
+// Example usage:
+//
+//	const SafeInputsDirectory FilePath = "/opt/gh-aw/safe-inputs"
+//	func ReadFile(path FilePath) error { ... }
+type FilePath string
+
+// String returns the string representation of the file path
+func (f FilePath) String() string {
+	return string(f)
+}
+
+// IsValid returns true if the file path is non-empty
+func (f FilePath) IsValid() bool {
+	return len(f) > 0
+}
+
+// ContainerImage represents a Docker/OCI container image reference.
+// This semantic type distinguishes container image references from arbitrary strings,
+// making container configuration explicit and type-safe.
+//
+// Example usage:
+//
+//	const DefaultMCPGatewayContainer ContainerImage = "ghcr.io/githubnext/gh-aw-mcpg"
+//	func PullImage(image ContainerImage) error { ... }
+type ContainerImage string
+
+// String returns the string representation of the container image
+func (c ContainerImage) String() string {
+	return string(c)
+}
+
+// IsValid returns true if the container image is non-empty
+func (c ContainerImage) IsValid() bool {
+	return len(c) > 0
+}
+
+// Domain represents a network domain name.
+// This semantic type distinguishes domain names from arbitrary strings,
+// making domain-related operations explicit and type-safe.
+//
+// Example usage:
+//
+//	const GitHubCopilotMCPDomain Domain = "api.githubcopilot.com"
+//	func AllowDomain(domain Domain) error { ... }
+type Domain string
+
+// String returns the string representation of the domain
+func (d Domain) String() string {
+	return string(d)
+}
+
+// IsValid returns true if the domain is non-empty
+func (d Domain) IsValid() bool {
+	return len(d) > 0
+}
+
+// Label represents a GitHub label identifier.
+// This semantic type distinguishes label names from arbitrary strings,
+// making label operations explicit and type-safe.
+//
+// Example usage:
+//
+//	const AgenticCampaignLabel Label = "agentic-campaign"
+//	func AddLabel(label Label) error { ... }
+type Label string
+
+// String returns the string representation of the label
+func (l Label) String() string {
+	return string(l)
+}
+
+// IsValid returns true if the label is non-empty
+func (l Label) IsValid() bool {
+	return len(l) > 0
+}
+
+// ArtifactName represents a GitHub Actions artifact identifier.
+// This semantic type distinguishes artifact names from arbitrary strings,
+// making artifact operations explicit and type-safe.
+//
+// Example usage:
+//
+//	const SafeOutputArtifactName ArtifactName = "safe-output"
+//	func UploadArtifact(name ArtifactName) error { ... }
+type ArtifactName string
+
+// String returns the string representation of the artifact name
+func (a ArtifactName) String() string {
+	return string(a)
+}
+
+// IsValid returns true if the artifact name is non-empty
+func (a ArtifactName) IsValid() bool {
+	return len(a) > 0
+}
+
+// FileName represents a filename (without path).
+// This semantic type distinguishes filenames from full paths,
+// making file operations more explicit and type-safe.
+//
+// Example usage:
+//
+//	const AgentOutputFilename FileName = "agent_output.json"
+//	func CreateFile(name FileName) error { ... }
+type FileName string
+
+// String returns the string representation of the filename
+func (f FileName) String() string {
+	return string(f)
+}
+
+// IsValid returns true if the filename is non-empty
+func (f FileName) IsValid() bool {
+	return len(f) > 0
+}
+
+// ServerID represents an MCP server identifier.
+// This semantic type distinguishes server IDs from arbitrary strings,
+// making MCP server configuration explicit and type-safe.
+//
+// Example usage:
+//
+//	const SafeOutputsMCPServerID ServerID = "safeoutputs"
+//	func GetServer(id ServerID) (*Server, error) { ... }
+type ServerID string
+
+// String returns the string representation of the server ID
+func (s ServerID) String() string {
+	return string(s)
+}
+
+// IsValid returns true if the server ID is non-empty
+func (s ServerID) IsValid() bool {
+	return len(s) > 0
+}
+
+// OutputName represents a GitHub Actions step output name.
+// This semantic type distinguishes output names from arbitrary strings,
+// making output operations explicit and type-safe.
+//
+// Example usage:
+//
+//	const IsTeamMemberOutput OutputName = "is_team_member"
+//	func SetOutput(name OutputName, value string) error { ... }
+type OutputName string
+
+// String returns the string representation of the output name
+func (o OutputName) String() string {
+	return string(o)
+}
+
+// IsValid returns true if the output name is non-empty
+func (o OutputName) IsValid() bool {
+	return len(o) > 0
+}
+
+// RunnerImage represents a GitHub Actions runner image identifier.
+// This semantic type distinguishes runner images from arbitrary strings,
+// making runner configuration explicit and type-safe.
+//
+// Example usage:
+//
+//	const DefaultActivationJobRunnerImage RunnerImage = "ubuntu-slim"
+//	func SetRunner(image RunnerImage) error { ... }
+type RunnerImage string
+
+// String returns the string representation of the runner image
+func (r RunnerImage) String() string {
+	return string(r)
+}
+
+// IsValid returns true if the runner image is non-empty
+func (r RunnerImage) IsValid() bool {
+	return len(r) > 0
+}
+
+// MountPath represents a Docker volume mount specification.
+// This semantic type distinguishes mount paths from arbitrary strings,
+// making container mount configuration explicit and type-safe.
+//
+// Example usage:
+//
+//	const DefaultGhAwMount MountPath = "/opt/gh-aw:/opt/gh-aw:ro"
+//	func AddMount(mount MountPath) error { ... }
+type MountPath string
+
+// String returns the string representation of the mount path
+func (m MountPath) String() string {
+	return string(m)
+}
+
+// IsValid returns true if the mount path is non-empty
+func (m MountPath) IsValid() bool {
+	return len(m) > 0
+}
+
 // MaxExpressionLineLength is the maximum length for a single line expression before breaking into multiline.
 const MaxExpressionLineLength LineLength = 120
 
@@ -236,7 +436,7 @@ const DefaultMCPRegistryURL URL = "https://api.mcp.github.com/v0.1"
 
 // GitHubCopilotMCPDomain is the domain for the hosted GitHub MCP server.
 // Used when github tool is configured with mode: remote.
-const GitHubCopilotMCPDomain = "api.githubcopilot.com"
+const GitHubCopilotMCPDomain Domain = "api.githubcopilot.com"
 
 // DefaultCampaignTemplateProjectURL is the default source project URL for copying campaign templates.
 // This points to the githubnext "[TEMPLATE: Agentic Campaign]" project (Project 74).
@@ -245,12 +445,12 @@ const DefaultCampaignTemplateProjectURL URL = "https://github.com/orgs/githubnex
 // AgenticCampaignLabel is the label applied to all campaign-related issues, PRs, and discussions.
 // This label marks content as part of an agentic campaign, preventing other workflows from
 // processing these items to avoid interference with campaign orchestration.
-const AgenticCampaignLabel = "agentic-campaign"
+const AgenticCampaignLabel Label = "agentic-campaign"
 
 // CampaignLabelPrefix is the prefix used for campaign-specific labels.
 // Campaign-specific labels follow the format "z_campaign_<id>" where <id> is the campaign identifier.
 // The "z_" prefix ensures these labels sort last in label lists.
-const CampaignLabelPrefix = "z_campaign_"
+const CampaignLabelPrefix Label = "z_campaign_"
 
 // DefaultClaudeCodeVersion is the default version of the Claude Code CLI.
 const DefaultClaudeCodeVersion Version = "2.1.22"
@@ -295,24 +495,24 @@ const DefaultFirewallVersion Version = "v0.11.2"
 const DefaultMCPGatewayVersion Version = "v0.0.84"
 
 // DefaultMCPGatewayContainer is the default container image for the MCP Gateway
-const DefaultMCPGatewayContainer = "ghcr.io/githubnext/gh-aw-mcpg"
+const DefaultMCPGatewayContainer ContainerImage = "ghcr.io/githubnext/gh-aw-mcpg"
 
 // DefaultSerenaMCPServerContainer is the default container image for the Serena MCP server
-const DefaultSerenaMCPServerContainer = "ghcr.io/githubnext/serena-mcp-server"
+const DefaultSerenaMCPServerContainer ContainerImage = "ghcr.io/githubnext/serena-mcp-server"
 
 // OraiosSerenaContainer is the Oraios Serena MCP server container image (legacy)
-const OraiosSerenaContainer = "ghcr.io/oraios/serena"
+const OraiosSerenaContainer ContainerImage = "ghcr.io/oraios/serena"
 
 // SerenaLanguageSupport defines the supported languages for each Serena container image
 var SerenaLanguageSupport = map[string][]string{
-	DefaultSerenaMCPServerContainer: {
+	string(DefaultSerenaMCPServerContainer): {
 		"go", "typescript", "javascript", "python", "java", "rust", "csharp",
 		"cpp", "c", "ruby", "php", "bash", "swift", "kotlin", "scala",
 		"haskell", "elixir", "erlang", "clojure", "lua", "perl", "r",
 		"dart", "julia", "fortran", "nix", "rego", "terraform", "yaml",
 		"markdown", "zig", "elm",
 	},
-	OraiosSerenaContainer: {
+	string(OraiosSerenaContainer): {
 		"go", "typescript", "javascript", "python", "java", "rust", "csharp",
 		"cpp", "c", "ruby", "php", "bash", "swift", "kotlin", "scala",
 		"haskell", "elixir", "erlang", "clojure", "lua", "perl", "r",
@@ -344,28 +544,28 @@ const DefaultNodeVersion Version = "24"
 
 // DefaultNodeAlpineLTSImage is the default Node.js Alpine LTS container image for MCP servers
 // Using node:lts-alpine provides the latest LTS version with minimal footprint
-const DefaultNodeAlpineLTSImage = "node:lts-alpine"
+const DefaultNodeAlpineLTSImage ContainerImage = "node:lts-alpine"
 
 // DefaultPythonAlpineLTSImage is the default Python Alpine LTS container image for MCP servers
 // Using python:alpine provides the latest stable version with minimal footprint
-const DefaultPythonAlpineLTSImage = "python:alpine"
+const DefaultPythonAlpineLTSImage ContainerImage = "python:alpine"
 
 // DefaultAlpineImage is the default minimal Alpine container image for running Go binaries
 // Used for MCP servers that run statically-linked Go binaries like gh-aw mcp-server
-const DefaultAlpineImage = "alpine:latest"
+const DefaultAlpineImage ContainerImage = "alpine:latest"
 
 // DefaultGhAwMount is the mount path for the gh-aw directory in containerized MCP servers
 // The gh-aw binary and supporting files are mounted read-only from /opt/gh-aw
-const DefaultGhAwMount = "/opt/gh-aw:/opt/gh-aw:ro"
+const DefaultGhAwMount MountPath = "/opt/gh-aw:/opt/gh-aw:ro"
 
 // DefaultTmpGhAwMount is the mount path for temporary gh-aw files in containerized MCP servers
 // Used for logs, cache, and other runtime data that needs read-write access
-const DefaultTmpGhAwMount = "/tmp/gh-aw:/tmp/gh-aw:rw"
+const DefaultTmpGhAwMount MountPath = "/tmp/gh-aw:/tmp/gh-aw:rw"
 
 // DefaultWorkspaceMount is the mount path for the GitHub workspace directory in containerized MCP servers
 // Uses GitHub Actions expression syntax which expands to the actual workspace path at runtime
 // This is required when MCP servers need read-write access to repository files
-const DefaultWorkspaceMount = "${{ github.workspace }}:${{ github.workspace }}:rw"
+const DefaultWorkspaceMount MountPath = "${{ github.workspace }}:${{ github.workspace }}:rw"
 
 // DefaultPythonVersion is the default version of Python for runtime setup
 const DefaultPythonVersion Version = "3.12"
@@ -403,7 +603,7 @@ const DefaultToolTimeout = 60 * time.Second
 const DefaultMCPStartupTimeout = 120 * time.Second
 
 // DefaultActivationJobRunnerImage is the default runner image for activation and pre-activation jobs
-const DefaultActivationJobRunnerImage = "ubuntu-slim"
+const DefaultActivationJobRunnerImage RunnerImage = "ubuntu-slim"
 
 // DefaultAllowedDomains defines the default localhost domains with port variations
 // that are always allowed for Playwright browser automation
@@ -485,20 +685,20 @@ const AgentJobName JobName = "agent"
 const ActivationJobName JobName = "activation"
 const PreActivationJobName JobName = "pre_activation"
 const DetectionJobName JobName = "detection"
-const SafeOutputArtifactName = "safe-output"
-const AgentOutputArtifactName = "agent-output"
+const SafeOutputArtifactName ArtifactName = "safe-output"
+const AgentOutputArtifactName ArtifactName = "agent-output"
 
 // AgentOutputFilename is the filename of the agent output JSON file
-const AgentOutputFilename = "agent_output.json"
+const AgentOutputFilename FileName = "agent_output.json"
 
 // SafeOutputsMCPServerID is the identifier for the safe-outputs MCP server
-const SafeOutputsMCPServerID = "safeoutputs"
+const SafeOutputsMCPServerID ServerID = "safeoutputs"
 
 // SafeInputsMCPServerID is the identifier for the safe-inputs MCP server
-const SafeInputsMCPServerID = "safeinputs"
+const SafeInputsMCPServerID ServerID = "safeinputs"
 
 // SafeInputsMCPVersion is the version of the safe-inputs MCP server
-const SafeInputsMCPVersion = "1.0.0"
+const SafeInputsMCPVersion Version = "1.0.0"
 
 // Feature flag identifiers
 const (
@@ -520,13 +720,13 @@ const CheckSkipIfNoMatchStepID StepID = "check_skip_if_no_match"
 const CheckCommandPositionStepID StepID = "check_command_position"
 
 // Output names for pre-activation job steps
-const IsTeamMemberOutput = "is_team_member"
-const StopTimeOkOutput = "stop_time_ok"
-const SkipCheckOkOutput = "skip_check_ok"
-const SkipNoMatchCheckOkOutput = "skip_no_match_check_ok"
-const CommandPositionOkOutput = "command_position_ok"
-const MatchedCommandOutput = "matched_command"
-const ActivatedOutput = "activated"
+const IsTeamMemberOutput OutputName = "is_team_member"
+const StopTimeOkOutput OutputName = "stop_time_ok"
+const SkipCheckOkOutput OutputName = "skip_check_ok"
+const SkipNoMatchCheckOkOutput OutputName = "skip_no_match_check_ok"
+const CommandPositionOkOutput OutputName = "command_position_ok"
+const MatchedCommandOutput OutputName = "matched_command"
+const ActivatedOutput OutputName = "activated"
 
 // Agentic engine name constants using EngineName type for type safety
 const (
