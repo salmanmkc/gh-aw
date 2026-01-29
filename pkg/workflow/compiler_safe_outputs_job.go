@@ -146,37 +146,97 @@ func (c *Compiler) buildConsolidatedSafeOutputsJob(data *WorkflowData, mainJobNa
 
 	// Check if any project-handler-manager-supported types are enabled
 	// These types require GH_AW_PROJECT_GITHUB_TOKEN and are processed separately
-	hasProjectHandlerManagerTypes := data.SafeOutputs.CreateProjects != nil ||
-		data.SafeOutputs.CreateProjectStatusUpdates != nil ||
-		data.SafeOutputs.UpdateProjects != nil ||
+	hasPreProjectHandlerManagerTypes := data.SafeOutputs.CreateProjects != nil ||
 		data.SafeOutputs.CopyProjects != nil
+	hasPostProjectHandlerManagerTypes := data.SafeOutputs.CreateProjectStatusUpdates != nil ||
+		data.SafeOutputs.UpdateProjects != nil
+	hasProjectHandlerManagerTypes := hasPreProjectHandlerManagerTypes || hasPostProjectHandlerManagerTypes
 
-	// 1. Project Handler Manager step (processes create_project, update_project, copy_project, etc.)
+	needsPostProjectHandlerManagerStep := false
+	postProjectHandlerManagerStepOutputPrefix := ""
+	postProjectHandlerManagerStepID := ""
+	var postProjectHandlerManagerStepOpts projectHandlerManagerStepOptions
+
+	// 1. Project Handler Manager step(s)
 	// These types require GH_AW_PROJECT_GITHUB_TOKEN and must be processed separately from the main handler manager
-	// This runs FIRST to ensure projects exist before issues/PRs are created and potentially added to them
+	// Pre-phase runs FIRST to ensure projects exist before issues/PRs are created and potentially added to them.
+	// Post-phase runs AFTER the handler manager so update_project can resolve issue temporary IDs created by create_issue.
 	if hasProjectHandlerManagerTypes {
 		consolidatedSafeOutputsJobLog.Print("Using project handler manager for project-related safe outputs")
-		projectHandlerManagerSteps := c.buildProjectHandlerManagerStep(data)
-		steps = append(steps, projectHandlerManagerSteps...)
-		safeOutputStepNames = append(safeOutputStepNames, "process_project_safe_outputs")
 
-		// Add outputs from project handler manager
-		outputs["process_project_safe_outputs_processed_count"] = "${{ steps.process_project_safe_outputs.outputs.processed_count }}"
-		outputs["process_project_safe_outputs_temporary_project_map"] = "${{ steps.process_project_safe_outputs.outputs.temporary_project_map }}"
+		if hasPreProjectHandlerManagerTypes && hasPostProjectHandlerManagerTypes {
+			preTypes := map[string]bool{"create_project": true, "copy_project": true}
+			preSteps := c.buildProjectHandlerManagerStepWithOptions(data, projectHandlerManagerStepOptions{
+				stepName:     "Process Project-Related Safe Outputs (pre)",
+				stepID:       "process_project_safe_outputs",
+				includeTypes: preTypes,
+			})
+			steps = append(steps, preSteps...)
+			safeOutputStepNames = append(safeOutputStepNames, "process_project_safe_outputs")
+
+			// Add outputs from pre-phase project handler manager
+			outputs["process_project_safe_outputs_processed_count"] = "${{ steps.process_project_safe_outputs.outputs.processed_count }}"
+			outputs["process_project_safe_outputs_temporary_project_map"] = "${{ steps.process_project_safe_outputs.outputs.temporary_project_map }}"
+
+			postTypes := map[string]bool{"create_project_status_update": true, "update_project": true}
+			postStepOpts := projectHandlerManagerStepOptions{
+				stepName:                    "Process Project-Related Safe Outputs (post)",
+				stepID:                      "process_project_safe_outputs_post",
+				includeTypes:                postTypes,
+				seedTemporaryProjectMapExpr: "${{ steps.process_project_safe_outputs.outputs.temporary_project_map }}",
+			}
+			if hasHandlerManagerTypes {
+				needsPostProjectHandlerManagerStep = true
+				postStepOpts.seedTemporaryIDMapExpr = "${{ steps.process_safe_outputs.outputs.temporary_id_map }}"
+				postProjectHandlerManagerStepOpts = postStepOpts
+				postProjectHandlerManagerStepID = postStepOpts.stepID
+				postProjectHandlerManagerStepOutputPrefix = "process_project_safe_outputs_post"
+			} else {
+				postSteps := c.buildProjectHandlerManagerStepWithOptions(data, postStepOpts)
+				steps = append(steps, postSteps...)
+				safeOutputStepNames = append(safeOutputStepNames, "process_project_safe_outputs_post")
+
+				// Add outputs from post-phase project handler manager
+				outputs["process_project_safe_outputs_post_processed_count"] = "${{ steps.process_project_safe_outputs_post.outputs.processed_count }}"
+				outputs["process_project_safe_outputs_post_temporary_project_map"] = "${{ steps.process_project_safe_outputs_post.outputs.temporary_project_map }}"
+			}
+		} else {
+			// Single project phase (either only pre-types or only post-types)
+			singleStepOpts := projectHandlerManagerStepOptions{
+				stepName: "Process Project-Related Safe Outputs",
+				stepID:   "process_project_safe_outputs",
+			}
+			deferSingleProjectStep := false
+			if hasPostProjectHandlerManagerTypes && !hasPreProjectHandlerManagerTypes {
+				singleStepOpts.includeTypes = map[string]bool{"create_project_status_update": true, "update_project": true}
+				if hasHandlerManagerTypes {
+					needsPostProjectHandlerManagerStep = true
+					singleStepOpts.seedTemporaryIDMapExpr = "${{ steps.process_safe_outputs.outputs.temporary_id_map }}"
+					postProjectHandlerManagerStepOpts = singleStepOpts
+					postProjectHandlerManagerStepID = singleStepOpts.stepID
+					postProjectHandlerManagerStepOutputPrefix = "process_project_safe_outputs"
+					// Don't add the step yet; it must run after the handler manager.
+					deferSingleProjectStep = true
+				}
+			}
+			if !deferSingleProjectStep {
+				projectHandlerManagerSteps := c.buildProjectHandlerManagerStepWithOptions(data, singleStepOpts)
+				steps = append(steps, projectHandlerManagerSteps...)
+				safeOutputStepNames = append(safeOutputStepNames, "process_project_safe_outputs")
+
+				// Add outputs from project handler manager
+				outputs["process_project_safe_outputs_processed_count"] = "${{ steps.process_project_safe_outputs.outputs.processed_count }}"
+				outputs["process_project_safe_outputs_temporary_project_map"] = "${{ steps.process_project_safe_outputs.outputs.temporary_project_map }}"
+			}
+		}
 
 		// Add permissions for project-related types
 		// Note: Projects v2 cannot use GITHUB_TOKEN; it requires a PAT or GitHub App token
 		// The permissions here are for workflow-level permissions, actual API calls use GH_AW_PROJECT_GITHUB_TOKEN
-		if data.SafeOutputs.CreateProjects != nil {
-			permissions.Merge(NewPermissionsContentsReadProjectsWrite())
-		}
-		if data.SafeOutputs.CreateProjectStatusUpdates != nil {
-			permissions.Merge(NewPermissionsContentsReadProjectsWrite())
-		}
-		if data.SafeOutputs.UpdateProjects != nil {
-			permissions.Merge(NewPermissionsContentsReadProjectsWrite())
-		}
-		if data.SafeOutputs.CopyProjects != nil {
+		if data.SafeOutputs.CreateProjects != nil ||
+			data.SafeOutputs.CreateProjectStatusUpdates != nil ||
+			data.SafeOutputs.UpdateProjects != nil ||
+			data.SafeOutputs.CopyProjects != nil {
 			permissions.Merge(NewPermissionsContentsReadProjectsWrite())
 		}
 	}
@@ -252,6 +312,16 @@ func (c *Compiler) buildConsolidatedSafeOutputsJob(data *WorkflowData, mainJobNa
 		if data.SafeOutputs.DispatchWorkflow != nil {
 			permissions.Merge(NewPermissionsActionsWrite())
 		}
+	}
+
+	// If a post-phase project step is needed (e.g., update_project needs issue temporary IDs), add it now.
+	if needsPostProjectHandlerManagerStep {
+		postSteps := c.buildProjectHandlerManagerStepWithOptions(data, postProjectHandlerManagerStepOpts)
+		steps = append(steps, postSteps...)
+		safeOutputStepNames = append(safeOutputStepNames, postProjectHandlerManagerStepID)
+
+		outputs[fmt.Sprintf("%s_processed_count", postProjectHandlerManagerStepOutputPrefix)] = fmt.Sprintf("${{ steps.%s.outputs.processed_count }}", postProjectHandlerManagerStepID)
+		outputs[fmt.Sprintf("%s_temporary_project_map", postProjectHandlerManagerStepOutputPrefix)] = fmt.Sprintf("${{ steps.%s.outputs.temporary_project_map }}", postProjectHandlerManagerStepID)
 	}
 
 	// 3. Assign To Agent step (runs after handler managers)

@@ -3,6 +3,7 @@
 
 const { loadAgentOutput } = require("./load_agent_output.cjs");
 const { getErrorMessage } = require("./error_helpers.cjs");
+const { loadTemporaryIdMap, resolveIssueNumber, isTemporaryId } = require("./temporary_id.cjs");
 
 /**
  * Campaign label prefix constant.
@@ -770,12 +771,24 @@ async function updateProject(output) {
       return;
     }
     let contentNumber = null;
+    // Optional: support temporary IDs for issues created earlier in the same workflow run.
+    // When content_number is a temporary ID (aw_XXXXXXXXXXXX), resolve it via GH_AW_TEMPORARY_ID_MAP.
+    const temporaryIdMap = loadTemporaryIdMap();
     if (hasContentNumber || hasIssue || hasPullRequest) {
       const rawContentNumber = hasContentNumber ? output.content_number : hasIssue ? output.issue : output.pull_request,
         sanitizedContentNumber = null == rawContentNumber ? "" : "number" == typeof rawContentNumber ? rawContentNumber.toString() : String(rawContentNumber).trim();
       if (sanitizedContentNumber) {
-        if (!/^\d+$/.test(sanitizedContentNumber)) throw new Error(`Invalid content number "${rawContentNumber}". Provide a positive integer.`);
-        contentNumber = Number.parseInt(sanitizedContentNumber, 10);
+        const contentWithoutHash = sanitizedContentNumber.startsWith("#") ? sanitizedContentNumber.substring(1) : sanitizedContentNumber;
+        if (typeof contentWithoutHash === "string" && isTemporaryId(contentWithoutHash)) {
+          const resolved = resolveIssueNumber(contentWithoutHash, temporaryIdMap);
+          if (resolved.errorMessage || !resolved.resolved) {
+            throw new Error(resolved.errorMessage || `Failed to resolve temporary ID: ${sanitizedContentNumber}`);
+          }
+          contentNumber = resolved.resolved.number;
+        } else {
+          if (!/^\d+$/.test(sanitizedContentNumber)) throw new Error(`Invalid content number "${rawContentNumber}". Provide a positive integer (or a temporary ID like aw_XXXXXXXXXXXX when GH_AW_TEMPORARY_ID_MAP is available).`);
+          contentNumber = Number.parseInt(sanitizedContentNumber, 10);
+        }
       } else core.warning("Content number field provided but empty; skipping project item update.");
     }
     if (null !== contentNumber) {

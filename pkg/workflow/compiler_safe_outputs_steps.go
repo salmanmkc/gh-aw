@@ -160,11 +160,10 @@ func (c *Compiler) buildHandlerManagerStep(data *WorkflowData) []string {
 	steps = append(steps, "        env:\n")
 	steps = append(steps, "          GH_AW_AGENT_OUTPUT: ${{ env.GH_AW_AGENT_OUTPUT }}\n")
 
-	// Check if any project-handler types are enabled
-	// If so, pass the temporary project map from the project handler step
+	// Only create_project/copy_project can produce a temporary project map.
+	// If enabled, pass the map from the project handler step so text-based handlers
+	// can resolve temporary project IDs.
 	hasProjectHandlerTypes := data.SafeOutputs.CreateProjects != nil ||
-		data.SafeOutputs.CreateProjectStatusUpdates != nil ||
-		data.SafeOutputs.UpdateProjects != nil ||
 		data.SafeOutputs.CopyProjects != nil
 
 	if hasProjectHandlerTypes {
@@ -201,21 +200,50 @@ func (c *Compiler) buildHandlerManagerStep(data *WorkflowData) []string {
 // to dispatch project-related messages (create_project, update_project, copy_project, create_project_status_update) to appropriate handlers.
 // These types require GH_AW_PROJECT_GITHUB_TOKEN and are separated from the main handler manager.
 func (c *Compiler) buildProjectHandlerManagerStep(data *WorkflowData) []string {
+	return c.buildProjectHandlerManagerStepWithOptions(data, projectHandlerManagerStepOptions{
+		stepName: "Process Project-Related Safe Outputs",
+		stepID:   "process_project_safe_outputs",
+	})
+	// Note: options allow callers to create multiple project phases.
+}
+
+type projectHandlerManagerStepOptions struct {
+	stepName string
+	stepID   string
+
+	// includeTypes limits which project handlers are configured in this step.
+	// If nil, all enabled project handlers are included.
+	includeTypes map[string]bool
+
+	// seedTemporaryProjectMapExpr, when non-empty, sets GH_AW_TEMPORARY_PROJECT_MAP in env.
+	seedTemporaryProjectMapExpr string
+
+	// seedTemporaryIDMapExpr, when non-empty, sets GH_AW_TEMPORARY_ID_MAP in env.
+	seedTemporaryIDMapExpr string
+}
+
+func (c *Compiler) buildProjectHandlerManagerStepWithOptions(data *WorkflowData, opts projectHandlerManagerStepOptions) []string {
 	consolidatedSafeOutputsStepsLog.Print("Building project handler manager step")
 
 	var steps []string
 
 	// Step name and metadata
-	steps = append(steps, "      - name: Process Project-Related Safe Outputs\n")
-	steps = append(steps, "        id: process_project_safe_outputs\n")
+	steps = append(steps, fmt.Sprintf("      - name: %s\n", opts.stepName))
+	steps = append(steps, fmt.Sprintf("        id: %s\n", opts.stepID))
 	steps = append(steps, fmt.Sprintf("        uses: %s\n", GetActionPin("actions/github-script")))
 
 	// Environment variables
 	steps = append(steps, "        env:\n")
 	steps = append(steps, "          GH_AW_AGENT_OUTPUT: ${{ env.GH_AW_AGENT_OUTPUT }}\n")
+	if opts.seedTemporaryProjectMapExpr != "" {
+		steps = append(steps, fmt.Sprintf("          GH_AW_TEMPORARY_PROJECT_MAP: %s\n", opts.seedTemporaryProjectMapExpr))
+	}
+	if opts.seedTemporaryIDMapExpr != "" {
+		steps = append(steps, fmt.Sprintf("          GH_AW_TEMPORARY_ID_MAP: %s\n", opts.seedTemporaryIDMapExpr))
+	}
 
 	// Add project handler manager config as JSON
-	c.addProjectHandlerManagerConfigEnvVar(&steps, data)
+	c.addProjectHandlerManagerConfigEnvVarForTypes(&steps, data, opts.includeTypes)
 
 	// Add custom safe output env vars
 	c.addCustomSafeOutputEnvVars(&steps, data)

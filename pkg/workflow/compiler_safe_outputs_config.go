@@ -526,6 +526,14 @@ func (c *Compiler) addHandlerManagerConfigEnvVar(steps *[]string, data *Workflow
 // containing JSON configuration for project-related safe output handlers (create_project, create_project_status_update).
 // These handlers require GH_AW_PROJECT_GITHUB_TOKEN and are processed separately from the main handler manager.
 func (c *Compiler) addProjectHandlerManagerConfigEnvVar(steps *[]string, data *WorkflowData) {
+	c.addProjectHandlerManagerConfigEnvVarForTypes(steps, data, nil)
+}
+
+// addProjectHandlerManagerConfigEnvVarForTypes adds the GH_AW_SAFE_OUTPUTS_PROJECT_HANDLER_CONFIG environment variable
+// containing JSON configuration for a subset of project-related safe output handlers.
+//
+// If includeTypes is nil, all enabled project handlers are included.
+func (c *Compiler) addProjectHandlerManagerConfigEnvVarForTypes(steps *[]string, data *WorkflowData, includeTypes map[string]bool) {
 	if data.SafeOutputs == nil {
 		compilerSafeOutputsConfigLog.Print("No safe-outputs configuration, skipping project handler config")
 		return
@@ -536,7 +544,14 @@ func (c *Compiler) addProjectHandlerManagerConfigEnvVar(steps *[]string, data *W
 
 	// Build configuration for each project handler using the registry
 	for handlerName, builder := range projectHandlerRegistry {
-		if handlerConfig := builder(data.SafeOutputs); len(handlerConfig) > 0 {
+		if includeTypes != nil {
+			if !includeTypes[handlerName] {
+				continue
+			}
+		}
+		handlerConfig := builder(data.SafeOutputs)
+		// Include handler if it returns a non-nil config (explicitly enabled, even if empty)
+		if handlerConfig != nil {
 			config[handlerName] = handlerConfig
 		}
 	}

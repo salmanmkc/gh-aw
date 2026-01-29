@@ -112,8 +112,29 @@ async function processMessages(messageHandlers, messages) {
   const results = [];
   let processedCount = 0;
 
-  // Build a temporary project ID map as we process create_project messages
+  // Build a temporary project ID map as we process create_project messages.
+  //
+  // This can also be pre-seeded from a previous step via GH_AW_TEMPORARY_PROJECT_MAP
+  // so we can run project handlers in multiple phases (e.g., create_project early,
+  // update_project later).
   const temporaryProjectMap = new Map();
+
+  const initialTempProjectMapJson = process.env.GH_AW_TEMPORARY_PROJECT_MAP;
+  if (initialTempProjectMapJson && initialTempProjectMapJson !== "{}") {
+    try {
+      const initial = JSON.parse(initialTempProjectMapJson);
+      if (initial && typeof initial === "object") {
+        for (const [k, v] of Object.entries(initial)) {
+          if (typeof k === "string" && typeof v === "string") {
+            temporaryProjectMap.set(k.toLowerCase(), v);
+          }
+        }
+        core.info(`Loaded initial temporary project map with ${temporaryProjectMap.size} mapping(s)`);
+      }
+    } catch (error) {
+      core.warning(`Failed to parse GH_AW_TEMPORARY_PROJECT_MAP: ${getErrorMessage(error)}`);
+    }
+  }
 
   core.info(`Processing ${messages.length} project-related message(s)...`);
 

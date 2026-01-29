@@ -240,7 +240,7 @@ var ValidationConfig = map[string]TypeValidationConfig{
 			// This is part of the campaign tracking convention but not required for general use.
 			"campaign_id":    {Type: "string", Sanitize: true, MaxLength: 128},
 			"content_type":   {Type: "string", Enum: []string{"issue", "pull_request"}},
-			"content_number": {OptionalPositiveInteger: true},
+			"content_number": {IssueNumberOrTemporaryID: true},
 			"issue":          {OptionalPositiveInteger: true}, // Legacy
 			"pull_request":   {OptionalPositiveInteger: true}, // Legacy
 			"fields":         {Type: "object"},

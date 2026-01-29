@@ -38,21 +38,23 @@ describe("temporary_id.cjs", () => {
   });
 
   describe("isTemporaryId", () => {
-    it("should return true for valid aw_ prefixed 12-char hex strings", async () => {
+    it("should return true for valid aw_ prefixed 12-64 char alphanumeric strings", async () => {
       const { isTemporaryId } = await import("./temporary_id.cjs");
       expect(isTemporaryId("aw_abc123def456")).toBe(true);
       expect(isTemporaryId("aw_000000000000")).toBe(true);
       expect(isTemporaryId("aw_AABBCCDD1122")).toBe(true);
       expect(isTemporaryId("aw_aAbBcCdDeEfF")).toBe(true);
+      expect(isTemporaryId("aw_parent123456")).toBe(true);
+      expect(isTemporaryId("aw_sec2026012901")).toBe(true);
     });
 
     it("should return false for invalid strings", async () => {
       const { isTemporaryId } = await import("./temporary_id.cjs");
       expect(isTemporaryId("abc123def456")).toBe(false); // Missing aw_ prefix
       expect(isTemporaryId("aw_abc123")).toBe(false); // Too short
-      expect(isTemporaryId("aw_abc123def4567")).toBe(false); // Too long
-      expect(isTemporaryId("aw_parent123456")).toBe(false); // Contains non-hex chars
-      expect(isTemporaryId("aw_ghijklmnopqr")).toBe(false); // Non-hex letters
+      expect(isTemporaryId(`aw_${"a".repeat(65)}`)).toBe(false); // Too long
+      expect(isTemporaryId("aw_abc123def45-")).toBe(false); // Contains non-alphanumeric chars
+      expect(isTemporaryId("aw_abc123_def45")).toBe(false); // Contains underscore after prefix
       expect(isTemporaryId("")).toBe(false);
       expect(isTemporaryId("temp_abc123def456")).toBe(false); // Wrong prefix
     });
@@ -263,15 +265,14 @@ describe("temporary_id.cjs", () => {
       expect(result.errorMessage).toContain("Invalid issue number: -5");
     });
 
-    it("should return specific error for malformed temporary ID (contains non-hex chars)", async () => {
+    it("should return specific error for malformed temporary ID (contains non-alphanumeric chars)", async () => {
       const { resolveIssueNumber } = await import("./temporary_id.cjs");
       const map = new Map();
-      const result = resolveIssueNumber("aw_d0c5b3e1n3r5", map);
+      const result = resolveIssueNumber("aw_abc123def45-", map);
       expect(result.resolved).toBe(null);
       expect(result.wasTemporaryId).toBe(false);
       expect(result.errorMessage).toContain("Invalid temporary ID format");
-      expect(result.errorMessage).toContain("aw_d0c5b3e1n3r5");
-      expect(result.errorMessage).toContain("12 hexadecimal characters");
+      expect(result.errorMessage).toContain("aw_abc123def45-");
     });
 
     it("should return specific error for malformed temporary ID (too short)", async () => {
@@ -287,11 +288,11 @@ describe("temporary_id.cjs", () => {
     it("should return specific error for malformed temporary ID (too long)", async () => {
       const { resolveIssueNumber } = await import("./temporary_id.cjs");
       const map = new Map();
-      const result = resolveIssueNumber("aw_abc123def4567890", map);
+      const result = resolveIssueNumber(`aw_${"a".repeat(65)}`, map);
       expect(result.resolved).toBe(null);
       expect(result.wasTemporaryId).toBe(false);
       expect(result.errorMessage).toContain("Invalid temporary ID format");
-      expect(result.errorMessage).toContain("aw_abc123def4567890");
+      expect(result.errorMessage).toContain(`aw_${"a".repeat(65)}`);
     });
 
     it("should handle temporary ID with # prefix", async () => {
@@ -315,11 +316,11 @@ describe("temporary_id.cjs", () => {
     it("should handle malformed temporary ID with # prefix", async () => {
       const { resolveIssueNumber } = await import("./temporary_id.cjs");
       const map = new Map();
-      const result = resolveIssueNumber("#aw_d0c5b3e1n3r5", map);
+      const result = resolveIssueNumber("#aw_abc123def45-", map);
       expect(result.resolved).toBe(null);
       expect(result.wasTemporaryId).toBe(false);
       expect(result.errorMessage).toContain("Invalid temporary ID format");
-      expect(result.errorMessage).toContain("#aw_d0c5b3e1n3r5");
+      expect(result.errorMessage).toContain("#aw_abc123def45-");
     });
   });
 
