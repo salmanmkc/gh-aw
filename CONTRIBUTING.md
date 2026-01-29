@@ -289,6 +289,8 @@ This project uses GitHub Dependabot to automatically keep dependencies up-to-dat
 Dependabot is configured in `.github/dependabot.yml` to monitor:
 
 1. **Go modules** (`/go.mod`) - Weekly updates for Go dependencies
+   - **Security tools group**: gosec, govulncheck, and other security scanners are grouped together for coordinated updates
+   - Updates are labeled with `dependencies` and `go` labels
 2. **npm packages** - Weekly updates for:
    - Documentation site (`/docs/package.json`)
    - GitHub Actions setup scripts (`/actions/setup/js/package.json`)
