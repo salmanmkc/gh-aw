@@ -42,9 +42,9 @@ func collectDockerImages(tools map[string]any, workflowData *WorkflowData) []str
 	// Check for safe-outputs MCP server (uses node:lts-alpine container)
 	if workflowData != nil && workflowData.SafeOutputs != nil && HasSafeOutputsEnabled(workflowData.SafeOutputs) {
 		image := constants.DefaultNodeAlpineLTSImage
-		if !imageSet[image] {
-			images = append(images, image)
-			imageSet[image] = true
+		if !imageSet[string(image)] {
+			images = append(images, string(image))
+			imageSet[string(image)] = true
 			dockerLog.Printf("Added safe-outputs MCP server container: %s", image)
 		}
 	}
@@ -52,9 +52,9 @@ func collectDockerImages(tools map[string]any, workflowData *WorkflowData) []str
 	// Check for agentic-workflows tool (uses alpine container for gh-aw mcp-server)
 	if _, hasAgenticWorkflows := tools["agentic-workflows"]; hasAgenticWorkflows {
 		image := constants.DefaultAlpineImage
-		if !imageSet[image] {
-			images = append(images, image)
-			imageSet[image] = true
+		if !imageSet[string(image)] {
+			images = append(images, string(image))
+			imageSet[string(image)] = true
 			dockerLog.Printf("Added agentic-workflows MCP server container: %s", image)
 		}
 	}

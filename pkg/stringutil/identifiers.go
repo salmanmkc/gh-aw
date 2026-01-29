@@ -163,5 +163,5 @@ func FormatCampaignLabel(campaignID string) string {
 	sanitized = strings.ReplaceAll(sanitized, " ", "-")
 	sanitized = strings.ReplaceAll(sanitized, "_", "-")
 
-	return constants.CampaignLabelPrefix + sanitized
+	return string(constants.CampaignLabelPrefix) + sanitized
 }

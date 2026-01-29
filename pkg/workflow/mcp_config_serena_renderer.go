@@ -45,14 +45,14 @@ func selectSerenaContainer(serenaTool any) string {
 
 	// If no languages specified, use default container
 	if len(requestedLanguages) == 0 {
-		return constants.DefaultSerenaMCPServerContainer
+		return string(constants.DefaultSerenaMCPServerContainer)
 	}
 
 	// Check if all requested languages are supported by the default container
 	defaultSupported := true
 	for _, lang := range requestedLanguages {
 		supported := false
-		for _, supportedLang := range constants.SerenaLanguageSupport[constants.DefaultSerenaMCPServerContainer] {
+		for _, supportedLang := range constants.SerenaLanguageSupport[string(constants.DefaultSerenaMCPServerContainer)] {
 			if lang == supportedLang {
 				supported = true
 				break
@@ -66,14 +66,14 @@ func selectSerenaContainer(serenaTool any) string {
 	}
 
 	if defaultSupported {
-		return constants.DefaultSerenaMCPServerContainer
+		return string(constants.DefaultSerenaMCPServerContainer)
 	}
 
 	// Check if Oraios container supports the languages
 	oraiosSupported := true
 	for _, lang := range requestedLanguages {
 		supported := false
-		for _, supportedLang := range constants.SerenaLanguageSupport[constants.OraiosSerenaContainer] {
+		for _, supportedLang := range constants.SerenaLanguageSupport[string(constants.OraiosSerenaContainer)] {
 			if lang == supportedLang {
 				supported = true
 				break
@@ -87,12 +87,12 @@ func selectSerenaContainer(serenaTool any) string {
 
 	if oraiosSupported {
 		mcpSerenaLog.Printf("Using Oraios Serena container as fallback for languages: %v", requestedLanguages)
-		return constants.OraiosSerenaContainer
+		return string(constants.OraiosSerenaContainer)
 	}
 
 	// Default to the new GitHub container if neither supports all languages
 	mcpSerenaLog.Printf("Using default Serena container (some languages may not be supported): %v", requestedLanguages)
-	return constants.DefaultSerenaMCPServerContainer
+	return string(constants.DefaultSerenaMCPServerContainer)
 }
 
 // renderSerenaMCPConfigWithOptions generates the Serena MCP server configuration with engine-specific options

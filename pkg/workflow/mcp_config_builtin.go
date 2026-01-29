@@ -20,7 +20,7 @@ func renderSafeOutputsMCPConfig(yaml *strings.Builder, isLast bool, workflowData
 // Now uses HTTP transport instead of stdio, similar to safe-inputs
 // The server is started in a separate step before the agent job
 func renderSafeOutputsMCPConfigWithOptions(yaml *strings.Builder, isLast bool, includeCopilotFields bool, workflowData *WorkflowData) {
-	yaml.WriteString("              \"" + constants.SafeOutputsMCPServerID + "\": {\n")
+	yaml.WriteString("              \"" + string(constants.SafeOutputsMCPServerID) + "\": {\n")
 
 	// HTTP transport configuration - server started in separate step
 	// Add type field for HTTP (required by MCP specification for HTTP transport)
@@ -77,11 +77,11 @@ func renderAgenticWorkflowsMCPConfigWithOptions(yaml *strings.Builder, isLast bo
 	}
 
 	// MCP Gateway spec fields for containerized stdio servers
-	yaml.WriteString("                \"container\": \"" + constants.DefaultAlpineImage + "\",\n")
+	yaml.WriteString("                \"container\": \"" + string(constants.DefaultAlpineImage) + "\",\n")
 	yaml.WriteString("                \"entrypoint\": \"/opt/gh-aw/gh-aw\",\n")
 	yaml.WriteString("                \"entrypointArgs\": [\"mcp-server\"],\n")
 	// Mount gh-aw binary (read-only), workspace (read-write for status/compile), and temp directory (read-write for logs)
-	yaml.WriteString("                \"mounts\": [\"" + constants.DefaultGhAwMount + "\", \"" + constants.DefaultWorkspaceMount + "\", \"" + constants.DefaultTmpGhAwMount + "\"],\n")
+	yaml.WriteString("                \"mounts\": [\"" + string(constants.DefaultGhAwMount) + "\", \"" + string(constants.DefaultWorkspaceMount) + "\", \"" + string(constants.DefaultTmpGhAwMount) + "\"],\n")
 
 	// Note: tools field is NOT included here - the converter script adds it back
 	// for Copilot. This keeps the gateway config compatible with the schema.
@@ -117,11 +117,11 @@ func renderAgenticWorkflowsMCPConfigWithOptions(yaml *strings.Builder, isLast bo
 // Uses MCP Gateway spec format: container, entrypoint, entrypointArgs, and mounts fields.
 func renderSafeOutputsMCPConfigTOML(yaml *strings.Builder) {
 	yaml.WriteString("          \n")
-	yaml.WriteString("          [mcp_servers." + constants.SafeOutputsMCPServerID + "]\n")
+	yaml.WriteString("          [mcp_servers." + string(constants.SafeOutputsMCPServerID) + "]\n")
 	yaml.WriteString("          type = \"http\"\n")
 	yaml.WriteString("          url = \"http://host.docker.internal:$GH_AW_SAFE_OUTPUTS_PORT\"\n")
 	yaml.WriteString("          \n")
-	yaml.WriteString("          [mcp_servers." + constants.SafeOutputsMCPServerID + ".headers]\n")
+	yaml.WriteString("          [mcp_servers." + string(constants.SafeOutputsMCPServerID) + ".headers]\n")
 	yaml.WriteString("          Authorization = \"$GH_AW_SAFE_OUTPUTS_API_KEY\"\n")
 }
 
@@ -131,11 +131,11 @@ func renderSafeOutputsMCPConfigTOML(yaml *strings.Builder) {
 func renderAgenticWorkflowsMCPConfigTOML(yaml *strings.Builder) {
 	yaml.WriteString("          \n")
 	yaml.WriteString("          [mcp_servers.agentic_workflows]\n")
-	yaml.WriteString("          container = \"" + constants.DefaultAlpineImage + "\"\n")
+	yaml.WriteString("          container = \"" + string(constants.DefaultAlpineImage) + "\"\n")
 	yaml.WriteString("          entrypoint = \"/opt/gh-aw/gh-aw\"\n")
 	yaml.WriteString("          entrypointArgs = [\"mcp-server\"]\n")
 	// Mount gh-aw binary (read-only), workspace (read-write for status/compile), and temp directory (read-write for logs)
-	yaml.WriteString("          mounts = [\"" + constants.DefaultGhAwMount + "\", \"" + constants.DefaultWorkspaceMount + "\", \"" + constants.DefaultTmpGhAwMount + "\"]\n")
+	yaml.WriteString("          mounts = [\"" + string(constants.DefaultGhAwMount) + "\", \"" + string(constants.DefaultWorkspaceMount) + "\", \"" + string(constants.DefaultTmpGhAwMount) + "\"]\n")
 	// Use env_vars array to reference environment variables instead of embedding secrets
 	yaml.WriteString("          env_vars = [\"GITHUB_TOKEN\"]\n")
 }

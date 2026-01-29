@@ -321,7 +321,7 @@ func extractHTTPMCPDomains(tools map[string]any) []string {
 			if modeField, hasMode := configMap["mode"]; hasMode {
 				if modeStr, ok := modeField.(string); ok && modeStr == "remote" {
 					domainsLog.Printf("Detected GitHub MCP remote mode, adding %s to domains", constants.GitHubCopilotMCPDomain)
-					domains = append(domains, constants.GitHubCopilotMCPDomain)
+					domains = append(domains, string(constants.GitHubCopilotMCPDomain))
 					continue
 				}
 			}

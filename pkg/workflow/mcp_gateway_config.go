@@ -23,14 +23,14 @@ func ensureDefaultMCPGatewayConfig(workflowData *WorkflowData) {
 	if workflowData.SandboxConfig.MCP == nil {
 		mcpGatewayConfigLog.Print("No MCP gateway configuration found, setting default configuration")
 		workflowData.SandboxConfig.MCP = &MCPGatewayRuntimeConfig{
-			Container: constants.DefaultMCPGatewayContainer,
+			Container: string(constants.DefaultMCPGatewayContainer),
 			Version:   string(constants.DefaultMCPGatewayVersion),
 			Port:      int(DefaultMCPGatewayPort),
 		}
 	} else {
 		// Fill in defaults for missing fields
 		if workflowData.SandboxConfig.MCP.Container == "" {
-			workflowData.SandboxConfig.MCP.Container = constants.DefaultMCPGatewayContainer
+			workflowData.SandboxConfig.MCP.Container = string(constants.DefaultMCPGatewayContainer)
 		}
 		// Only replace empty version with default - preserve user-specified versions including "latest"
 		if workflowData.SandboxConfig.MCP.Version == "" {

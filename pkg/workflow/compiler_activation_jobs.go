@@ -242,7 +242,7 @@ func (c *Compiler) buildPreActivationJob(data *WorkflowData, needsPermissionChec
 	// Add matched_command output if this is a command workflow
 	// This allows the activation job to access the matched command via needs.pre_activation.outputs.matched_command
 	if len(data.Command) > 0 {
-		outputs[constants.MatchedCommandOutput] = fmt.Sprintf("${{ steps.%s.outputs.%s }}", constants.CheckCommandPositionStepID, constants.MatchedCommandOutput)
+		outputs[string(constants.MatchedCommandOutput)] = fmt.Sprintf("${{ steps.%s.outputs.%s }}", constants.CheckCommandPositionStepID, constants.MatchedCommandOutput)
 	}
 
 	// Merge custom outputs from jobs.pre-activation if present

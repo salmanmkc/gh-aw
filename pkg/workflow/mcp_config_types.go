@@ -15,11 +15,11 @@ type WellKnownContainer struct {
 func getWellKnownContainer(command string) *WellKnownContainer {
 	wellKnownContainers := map[string]*WellKnownContainer{
 		"npx": {
-			Image:      constants.DefaultNodeAlpineLTSImage,
+			Image:      string(constants.DefaultNodeAlpineLTSImage),
 			Entrypoint: "npx",
 		},
 		"uvx": {
-			Image:      constants.DefaultPythonAlpineLTSImage,
+			Image:      string(constants.DefaultPythonAlpineLTSImage),
 			Entrypoint: "uvx",
 		},
 	}

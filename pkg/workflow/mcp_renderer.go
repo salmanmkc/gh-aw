@@ -273,11 +273,11 @@ func (r *MCPConfigRendererUnified) renderSafeOutputsTOML(yaml *strings.Builder, 
 	}
 
 	yaml.WriteString("          \n")
-	yaml.WriteString("          [mcp_servers." + constants.SafeOutputsMCPServerID + "]\n")
+	yaml.WriteString("          [mcp_servers." + string(constants.SafeOutputsMCPServerID) + "]\n")
 	yaml.WriteString("          type = \"http\"\n")
 	yaml.WriteString("          url = \"http://" + host + ":$GH_AW_SAFE_OUTPUTS_PORT\"\n")
 	yaml.WriteString("          \n")
-	yaml.WriteString("          [mcp_servers." + constants.SafeOutputsMCPServerID + ".headers]\n")
+	yaml.WriteString("          [mcp_servers." + string(constants.SafeOutputsMCPServerID) + ".headers]\n")
 	yaml.WriteString("          Authorization = \"$GH_AW_SAFE_OUTPUTS_API_KEY\"\n")
 }
 
@@ -298,7 +298,7 @@ func (r *MCPConfigRendererUnified) RenderSafeInputsMCP(yaml *strings.Builder, sa
 // Uses HTTP transport exclusively
 func (r *MCPConfigRendererUnified) renderSafeInputsTOML(yaml *strings.Builder, safeInputs *SafeInputsConfig, workflowData *WorkflowData) {
 	yaml.WriteString("          \n")
-	yaml.WriteString("          [mcp_servers." + constants.SafeInputsMCPServerID + "]\n")
+	yaml.WriteString("          [mcp_servers." + string(constants.SafeInputsMCPServerID) + "]\n")
 	yaml.WriteString("          type = \"http\"\n")
 
 	// Determine host based on whether agent is disabled
@@ -335,10 +335,10 @@ func (r *MCPConfigRendererUnified) RenderAgenticWorkflowsMCP(yaml *strings.Build
 func (r *MCPConfigRendererUnified) renderAgenticWorkflowsTOML(yaml *strings.Builder) {
 	yaml.WriteString("          \n")
 	yaml.WriteString("          [mcp_servers.agentic_workflows]\n")
-	yaml.WriteString("          container = \"" + constants.DefaultAlpineImage + "\"\n")
+	yaml.WriteString("          container = \"" + string(constants.DefaultAlpineImage) + "\"\n")
 	yaml.WriteString("          entrypoint = \"/opt/gh-aw/gh-aw\"\n")
 	yaml.WriteString("          entrypointArgs = [\"mcp-server\"]\n")
-	yaml.WriteString("          mounts = [\"" + constants.DefaultGhAwMount + "\"]\n")
+	yaml.WriteString("          mounts = [\"" + string(constants.DefaultGhAwMount) + "\"]\n")
 	yaml.WriteString("          env_vars = [\"GITHUB_TOKEN\"]\n")
 }
 

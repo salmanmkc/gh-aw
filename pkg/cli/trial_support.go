@@ -322,7 +322,7 @@ func downloadAllArtifacts(hostRepoSlug, runID string, verbose bool) (*TrialArtif
 
 		// Handle specific artifact types
 		switch {
-		case strings.HasSuffix(path, constants.AgentOutputFilename):
+		case strings.HasSuffix(path, string(constants.AgentOutputFilename)):
 			// Parse safe outputs
 			if safeOutputs := parseJSONArtifact(path, verbose); safeOutputs != nil {
 				artifacts.SafeOutputs = safeOutputs

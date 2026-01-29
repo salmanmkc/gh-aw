@@ -14,7 +14,7 @@ import (
 func filterOutSafeOutputs(configs []parser.MCPServerConfig) []parser.MCPServerConfig {
 	var filteredConfigs []parser.MCPServerConfig
 	for _, config := range configs {
-		if config.Name != constants.SafeOutputsMCPServerID {
+		if config.Name != string(constants.SafeOutputsMCPServerID) {
 			filteredConfigs = append(filteredConfigs, config)
 		}
 	}

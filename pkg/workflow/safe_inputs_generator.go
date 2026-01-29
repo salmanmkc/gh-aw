@@ -37,7 +37,7 @@ func generateSafeInputsToolsConfig(safeInputs *SafeInputsConfig) string {
 
 	config := SafeInputsConfigJSON{
 		ServerName: "safeinputs",
-		Version:    constants.SafeInputsMCPVersion,
+		Version:    string(constants.SafeInputsMCPVersion),
 		LogDir:     SafeInputsDirectory + "/logs",
 		Tools:      []SafeInputsToolJSON{},
 	}
