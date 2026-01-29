@@ -152,6 +152,13 @@ mcp-servers:
       API_KEY: "${{ secrets.MCP_API_KEY }}"
 ```
 
+**For comprehensive MCP troubleshooting**, see the [MCP Troubleshooting Guide](/gh-aw/troubleshooting/mcp-issues/) which covers:
+- Connection timeouts and container issues
+- Authentication errors (GitHub and custom servers)
+- Configuration validation and toolset conflicts
+- Network access and firewall issues
+- Performance and resource problems
+
 ### Deprecated `mode` Field in Custom MCP Servers
 
 **Error Message:**

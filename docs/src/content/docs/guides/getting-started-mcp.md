@@ -327,6 +327,9 @@ gh aw compile my-workflow --validate --strict
 
 Continue learning with these resources:
 
+- [MCP Configuration Quick Start](/gh-aw/guides/mcp-configuration/) — Common configuration patterns and examples
+- [Real-World MCP Examples](/gh-aw/guides/mcp-real-world-examples/) — Production workflows from gh-aw
+- [MCP Troubleshooting](/gh-aw/troubleshooting/mcp-issues/) — Solutions to common issues
 - [Using MCPs](/gh-aw/guides/mcps/) — Complete MCP configuration reference
 - [Tools Reference](/gh-aw/reference/tools/) — All available tools and options
 - [Security Guide](/gh-aw/guides/security/) — MCP security best practices

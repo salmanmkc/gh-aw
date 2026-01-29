@@ -289,6 +289,10 @@ tools:
 
 ## Related Documentation
 
+- [Getting Started with MCP](/gh-aw/guides/getting-started-mcp/) - Step-by-step tutorial
+- [MCP Configuration Quick Start](/gh-aw/guides/mcp-configuration/) - Common patterns and examples
+- [Real-World MCP Examples](/gh-aw/guides/mcp-real-world-examples/) - Production workflows
+- [MCP Troubleshooting](/gh-aw/troubleshooting/mcp-issues/) - Solutions to common issues
 - [Safe Inputs](/gh-aw/reference/safe-inputs/) - Define custom inline tools without external MCP servers
 - [Tools](/gh-aw/reference/tools/) - Complete tools reference
 - [CLI Commands](/gh-aw/setup/cli/) - CLI commands including `mcp inspect`
