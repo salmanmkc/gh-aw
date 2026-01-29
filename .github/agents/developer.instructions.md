@@ -20,6 +20,7 @@ This document consolidates development guidelines, architectural patterns, and i
 - [Testing Framework](#testing-framework)
 - [Repo-Memory System](#repo-memory-system)
 - [Hierarchical Agent Management](#hierarchical-agent-management)
+- [Multi-Repository Patterns](#multi-repository-patterns)
 - [Release Management](#release-management)
 - [Quick Reference](#quick-reference)
 
@@ -588,6 +589,288 @@ graph TD
 - Quality assessment
 
 **Implementation**: See specs/agents/hierarchical-agents.md and `.github/workflows/` meta-orchestrator files
+
+---
+
+## Multi-Repository Patterns
+
+GitHub Agentic Workflows can coordinate automation across multiple repositories through cross-repository safe outputs and GitHub API integration. Understanding when and how to suggest multi-repository patterns helps users build scalable automation for monorepos, microservices, and shared libraries.
+
+### Common Multi-Repository Patterns
+
+#### 1. Monorepo Pattern
+
+**Use Case**: Single workflow managing multiple projects or components within separate directories of the same repository.
+
+**Repository Structure**:
+```text
+monorepo/
+├── packages/
+│   ├── service-a/
+│   ├── service-b/
+│   └── shared-lib/
+├── .github/
+│   └── workflows/
+│       └── component-tester.md
+```
+
+**Workflow Configuration**:
+```aw
+---
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'packages/service-a/**'
+      - 'packages/service-b/**'
+permissions:
+  contents: read
+  issues: write
+tools:
+  github:
+    toolsets: [repos, issues]
+  bash:
+    - "git:*"
+    - "npm:*"
+safe-outputs:
+  create-issue:
+    max: 5
+    labels: [component-test-report]
+---
+
+# Component Test Reporter
+
+Analyze which components changed in this push. For each modified package:
+1. Identify the component from the path
+2. Run tests for that component
+3. Summarize test results
+4. Create an issue if tests fail
+
+Use GitHub tools to check for existing test failure issues before creating new ones.
+```
+
+**GitHub MCP Queries**:
+```markdown
+# List commits affecting specific component
+List commits in githubnext/gh-aw that modified files in packages/service-a/
+
+# Search for component-specific issues
+Search issues in githubnext/gh-aw with label "service-a" and state "open"
+
+# Get files changed in a commit
+Get commit details for githubnext/gh-aw SHA abc123 including file changes
+```
+
+**When to Suggest**: DevOps workflows testing/deploying multiple services, PM workflows generating component-specific release notes, QA workflows running component-specific test suites.
+
+#### 2. Microservices Pattern
+
+**Use Case**: Coordinated workflows across independent service repositories with centralized tracking or orchestration.
+
+**Repository Structure**:
+```text
+Organization: myorg
+├── control-plane (central coordination)
+├── auth-service
+├── api-service
+├── web-frontend
+└── mobile-backend
+```
+
+**Workflow Configuration**:
+```aw
+---
+on:
+  issues:
+    types: [opened, labeled]
+permissions:
+  contents: read
+  actions: read
+tools:
+  github:
+    toolsets: [repos, issues, pull_requests]
+safe-outputs:
+  github-token: ${{ secrets.CROSS_REPO_PAT }}
+  create-issue:
+    max: 10
+    target-repo: "myorg/control-plane"
+    title-prefix: "[tracking] "
+    labels: [multi-service, tracking]
+---
+
+# Cross-Service Issue Tracker
+
+When issues are labeled with "needs-coordination", create a tracking issue in the central control-plane repository.
+
+Analyze the issue context:
+1. Determine which services are affected
+2. Query related issues in affected service repos
+3. Summarize dependencies and impact
+4. Create tracking issue linking to all related issues
+5. Tag relevant teams
+```
+
+**GitHub MCP Queries**:
+```markdown
+# List recent releases across service repos
+Get latest release from myorg/auth-service
+Get latest release from myorg/api-service
+Get latest release from myorg/web-frontend
+
+# Search for related issues across repos
+Search issues in myorg with query "is:open label:auth-integration"
+
+# Check workflow status across services
+List workflow runs for myorg/auth-service workflow "deploy.yml"
+List workflow runs for myorg/api-service workflow "deploy.yml"
+```
+
+**When to Suggest**: DevOps workflows coordinating deployments across services, PM workflows tracking features spanning multiple services, QA workflows orchestrating integration tests across service boundaries.
+
+#### 3. Shared Library Pattern
+
+**Use Case**: Central repository changes triggering automated updates or notifications in dependent repositories.
+
+**Repository Structure**:
+```text
+Organization: myorg
+├── shared-ui-components (source)
+├── web-app (consumer)
+├── mobile-app (consumer)
+└── admin-portal (consumer)
+```
+
+**Workflow Configuration**:
+```aw
+---
+on:
+  release:
+    types: [published]
+permissions:
+  contents: read
+  actions: read
+tools:
+  github:
+    toolsets: [repos, pull_requests]
+  edit:
+  bash:
+    - "git:*"
+safe-outputs:
+  github-token: ${{ secrets.CROSS_REPO_PAT }}
+  create-pull-request:
+    max: 5
+    title-prefix: "[deps] Update shared-ui-components to "
+    labels: [dependencies, automated-update]
+    draft: true
+---
+
+# Propagate Shared Library Updates
+
+When a new release of shared-ui-components is published (version ${{ github.event.release.tag_name }}):
+
+1. Query dependent repositories (web-app, mobile-app, admin-portal)
+2. For each dependent repo:
+   - Check current version in package.json/requirements.txt
+   - If outdated, create a PR updating to new version
+   - Include release notes and breaking change warnings
+   - Link to the source release
+
+Use GitHub tools to check for existing update PRs before creating new ones.
+```
+
+**GitHub MCP Queries**:
+```markdown
+# Find repositories using the shared library
+Search code for "shared-ui-components" in myorg repositories
+
+# Check current version in dependent repos
+Get file contents of myorg/web-app path "package.json"
+Get file contents of myorg/mobile-app path "package.json"
+
+# List existing update PRs
+Search pull requests in myorg with query "is:open 'Update shared-ui-components'"
+```
+
+**Trigger Event Reference**: Use `repository_dispatch` for custom cross-repo events or `workflow_run` for triggering based on other workflow completions. See [GitHub Triggers Documentation](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows).
+
+**When to Suggest**: DevOps workflows propagating security patches, PM workflows notifying about API changes, QA workflows triggering integration tests in dependent repos.
+
+### Multi-Repository Best Practices
+
+#### Authentication
+- Use `github-token: ${{ secrets.CROSS_REPO_PAT }}` with PAT having `repo`, `contents:write`, `issues:write`, `pull-requests:write` permissions
+- For enhanced security, use GitHub App tokens with automatic revocation
+- Scope tokens minimally to required repositories and permissions
+
+#### GitHub MCP Toolsets
+- Enable `repos` toolset for reading files and searching code across repositories
+- Enable `issues` toolset for listing and searching issues
+- Enable `pull_requests` toolset for managing PRs across repos
+- Enable `actions` toolset for querying workflow runs and artifacts
+
+#### Error Handling
+- Validate repository access before operations using GitHub tools
+- Set appropriate `max` limits on safe outputs (typically 3-10)
+- Handle rate limits by spacing operations
+- Provide clear error messages when cross-repo access fails
+
+#### Cross-Repository Safe Outputs
+Most safe output types support the `target-repo` parameter:
+- `create-issue`: Create tracking issues in central repos
+- `add-comment`: Comment on issues in other repos
+- `create-pull-request`: Create PRs in downstream repos
+- `create-discussion`: Create discussions in any repo
+- `create-agent-session`: Create tasks in target repos
+
+### When to Proactively Suggest Multi-Repo Patterns
+
+**Indicators from User Requirements**:
+- Mentions of "multiple repositories", "microservices", "monorepo", or "shared library"
+- Coordination needs across teams or components
+- Centralized tracking or reporting requirements
+- Dependency management across projects
+
+**Use Case Categories**:
+
+1. **DevOps Workflows**
+   - Deployment coordination across services
+   - Security patch propagation
+   - Infrastructure updates across repos
+   - Monitoring and alerting aggregation
+
+2. **PM Workflows**
+   - Release notes spanning multiple components
+   - Feature digest across services
+   - Roadmap tracking for multi-repo projects
+   - Cross-component impact analysis
+
+3. **QA Workflows**
+   - Integration testing across services
+   - End-to-end test orchestration
+   - Test result aggregation from multiple repos
+   - Regression test coordination
+
+**Proactive Suggestion Template**:
+```markdown
+Based on your requirement to [user's goal], I recommend a multi-repository pattern:
+
+Pattern: [Monorepo/Microservices/Shared Library]
+Structure: [Brief architecture description]
+Key Benefits: [Why this pattern fits]
+Authentication: [PAT or GitHub App recommendation]
+GitHub Tools: [Required toolsets]
+
+Would you like me to create a workflow following this pattern?
+```
+
+### Related Documentation
+
+- [MultiRepoOps Design Pattern](../../docs/src/content/docs/guides/multirepoops.md) - Complete multi-repo guide
+- [Feature Synchronization Example](../../docs/src/content/docs/examples/multi-repo/feature-sync.md) - Cross-repo sync patterns
+- [Cross-Repo Issue Tracking Example](../../docs/src/content/docs/examples/multi-repo/issue-tracking.md) - Hub-and-spoke architecture
+- [Safe Outputs Reference](../../docs/src/content/docs/reference/safe-outputs.md) - Cross-repo configuration
+- [GitHub Workflow Events](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#repository_dispatch) - `repository_dispatch` trigger
+- [GitHub Workflow Run Events](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#workflow_run) - `workflow_run` trigger
 
 ---
 
