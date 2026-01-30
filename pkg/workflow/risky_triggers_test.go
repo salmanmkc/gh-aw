@@ -12,8 +12,8 @@ func TestHasRiskyTriggers(t *testing.T) {
 	compiler := NewCompiler()
 
 	tests := []struct {
-		name       string
-		onSection  string
+		name        string
+		onSection   string
 		expectRisky bool
 	}{
 		{
