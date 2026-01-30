@@ -258,14 +258,25 @@ func (c *Compiler) hasRiskyTriggers(onSection string) bool {
 		"workflow_run:",
 		"pull_request_review_comment:",
 	}
-	
-	for _, trigger := range riskyTriggers {
-		if strings.Contains(onSection, trigger) {
-			toolsLog.Printf("Detected risky trigger: %s", trigger)
-			return true
+
+	// Split into lines and check each line to avoid false positives from comments
+	lines := strings.Split(onSection, "\n")
+	for _, line := range lines {
+		// Skip empty lines and comments
+		trimmedLine := strings.TrimSpace(line)
+		if trimmedLine == "" || strings.HasPrefix(trimmedLine, "#") {
+			continue
+		}
+
+		// Check if this line contains a risky trigger
+		for _, trigger := range riskyTriggers {
+			if strings.Contains(line, trigger) {
+				toolsLog.Printf("Detected risky trigger: %s", trigger)
+				return true
+			}
 		}
 	}
-	
+
 	toolsLog.Print("No risky triggers detected")
 	return false
 }
