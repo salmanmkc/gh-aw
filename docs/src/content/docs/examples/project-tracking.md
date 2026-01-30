@@ -37,6 +37,14 @@ Use a GitHub Project URL directly:
 project: https://github.com/orgs/github/projects/123
 ```
 
+:::note[YAML Quoting]
+The project URL can be written with or without quotes in YAML:
+- **Unquoted**: `project: https://github.com/orgs/github/projects/123` ✅ (recommended)
+- **Quoted**: `project: "https://github.com/orgs/github/projects/123"` ✅ (also valid)
+
+Both forms are equivalent. Quotes are required only if the URL contains special YAML characters like `#`, `:` at the start, or other special sequences. For standard GitHub Project URLs, quotes are optional.
+:::
+
 ### Full Configuration (Object)
 
 Customize behavior with additional options:
