@@ -1,6 +1,9 @@
 package cli
 
 import (
+	"fmt"
+	"path/filepath"
+
 	"github.com/githubnext/gh-aw/pkg/logger"
 	"github.com/githubnext/gh-aw/pkg/stringutil"
 )
@@ -107,4 +110,37 @@ func sanitizeValidationResults(results []ValidationResult) []ValidationResult {
 	}
 
 	return sanitized
+}
+
+// validateCompileConfig validates the configuration flags before compilation
+// This is extracted for faster testing without full compilation
+func validateCompileConfig(config CompileConfig) error {
+	compileConfigLog.Printf("Validating compile config: files=%d, dependabot=%v, purge=%v, workflowDir=%s", len(config.MarkdownFiles), config.Dependabot, config.Purge, config.WorkflowDir)
+
+	// Validate dependabot flag usage
+	if config.Dependabot {
+		if len(config.MarkdownFiles) > 0 {
+			compileConfigLog.Print("Config validation failed: dependabot flag with specific files")
+			return fmt.Errorf("--dependabot flag cannot be used with specific workflow files")
+		}
+		if config.WorkflowDir != "" && config.WorkflowDir != ".github/workflows" {
+			compileConfigLog.Printf("Config validation failed: dependabot with custom dir: %s", config.WorkflowDir)
+			return fmt.Errorf("--dependabot flag cannot be used with custom --dir")
+		}
+	}
+
+	// Validate purge flag usage
+	if config.Purge && len(config.MarkdownFiles) > 0 {
+		compileConfigLog.Print("Config validation failed: purge flag with specific files")
+		return fmt.Errorf("--purge flag can only be used when compiling all markdown files (no specific files specified)")
+	}
+
+	// Validate workflow directory path
+	if config.WorkflowDir != "" && filepath.IsAbs(config.WorkflowDir) {
+		compileConfigLog.Printf("Config validation failed: absolute path in workflowDir: %s", config.WorkflowDir)
+		return fmt.Errorf("--dir must be a relative path, got: %s", config.WorkflowDir)
+	}
+
+	compileConfigLog.Print("Config validation successful")
+	return nil
 }

@@ -188,35 +188,3 @@ func CompileWorkflowDataWithValidation(compiler *workflow.Compiler, workflowData
 	return nil
 }
 
-// validateCompileConfig validates the configuration flags before compilation
-// This is extracted for faster testing without full compilation
-func validateCompileConfig(config CompileConfig) error {
-	compileValidationLog.Printf("Validating compile config: files=%d, dependabot=%v, purge=%v, workflowDir=%s", len(config.MarkdownFiles), config.Dependabot, config.Purge, config.WorkflowDir)
-
-	// Validate dependabot flag usage
-	if config.Dependabot {
-		if len(config.MarkdownFiles) > 0 {
-			compileValidationLog.Print("Config validation failed: dependabot flag with specific files")
-			return fmt.Errorf("--dependabot flag cannot be used with specific workflow files")
-		}
-		if config.WorkflowDir != "" && config.WorkflowDir != ".github/workflows" {
-			compileValidationLog.Printf("Config validation failed: dependabot with custom dir: %s", config.WorkflowDir)
-			return fmt.Errorf("--dependabot flag cannot be used with custom --dir")
-		}
-	}
-
-	// Validate purge flag usage
-	if config.Purge && len(config.MarkdownFiles) > 0 {
-		compileValidationLog.Print("Config validation failed: purge flag with specific files")
-		return fmt.Errorf("--purge flag can only be used when compiling all markdown files (no specific files specified)")
-	}
-
-	// Validate workflow directory path
-	if config.WorkflowDir != "" && filepath.IsAbs(config.WorkflowDir) {
-		compileValidationLog.Printf("Config validation failed: absolute path in workflowDir: %s", config.WorkflowDir)
-		return fmt.Errorf("--dir must be a relative path, got: %s", config.WorkflowDir)
-	}
-
-	compileValidationLog.Print("Config validation successful")
-	return nil
-}
