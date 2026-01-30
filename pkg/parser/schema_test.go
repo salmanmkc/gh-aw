@@ -176,14 +176,6 @@ func TestValidateMainWorkflowFrontmatterWithSchema(t *testing.T) {
 			errContains: "additional properties",
 		},
 		{
-			name: "invalid type for timeout_minutes",
-			frontmatter: map[string]any{
-				"timeout_minutes": "not-a-number",
-			},
-			wantErr:     true,
-			errContains: "got string, want integer",
-		},
-		{
 			name: "valid frontmatter with complex on object",
 			frontmatter: map[string]any{
 				"on": map[string]any{

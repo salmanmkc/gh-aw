@@ -700,10 +700,13 @@ var IgnoredFrontmatterFields = []string{
 //
 // Forbidden fields fall into these categories:
 //   - Workflow triggers: on (defines it as a main workflow)
-//   - Workflow execution: command, run-name, runs-on, concurrency, if, timeout-minutes, timeout_minutes
+//   - Workflow execution: command, run-name, runs-on, concurrency, if, timeout-minutes
 //   - Workflow metadata: name, tracker-id, strict
 //   - Workflow features: container, env, environment, sandbox, features
 //   - Access control: roles, github-token
+//
+// Note: timeout_minutes (deprecated underscore variant) is not in this list because it's in
+// IgnoredFrontmatterFields and bypasses validation entirely for backwards compatibility.
 //
 // All other fields defined in main_workflow_schema.json can be used in shared workflows
 // and will be properly imported and merged when the shared workflow is imported.
@@ -724,8 +727,9 @@ var SharedWorkflowForbiddenFields = []string{
 	"sandbox",         // Sandbox configuration
 	"strict",          // Strict mode
 	"timeout-minutes", // Timeout in minutes
-	"timeout_minutes", // Timeout in minutes (underscore variant)
-	"tracker-id",      // Tracker ID
+	// Note: timeout_minutes (underscore variant) is deprecated and in IgnoredFrontmatterFields,
+	// so it's not enforced as forbidden. Only the canonical timeout-minutes is forbidden.
+	"tracker-id", // Tracker ID
 }
 
 func GetWorkflowDir() string {
