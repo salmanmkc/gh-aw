@@ -34,6 +34,8 @@ type ImportsResult struct {
 	MergedJobs          string   // Merged jobs from imported YAML workflows (JSON format)
 	ImportedFiles       []string // List of imported file paths (for manifest)
 	AgentFile           string   // Path to custom agent file (if imported)
+	AgentImportSpec     string   // Original import specification for agent file (e.g., "owner/repo/path@ref")
+	RepositoryImports   []string // List of repository imports (format: "owner/repo@ref") for .github folder merging
 	// ImportInputs uses map[string]any because input values can be different types (string, number, boolean).
 	// This is parsed from YAML frontmatter where the structure is dynamic and not known at compile time.
 	// This is an appropriate use of 'any' for dynamic YAML/JSON data.
@@ -181,11 +183,22 @@ func processImportsFromFrontmatterWithManifestAndSource(frontmatter map[string]a
 	var caches []string                  // Track cache configurations (appended in order)
 	var jobsBuilder strings.Builder      // Track jobs from imported YAML workflows
 	var agentFile string                 // Track custom agent file
+	var agentImportSpec string           // Track agent import specification for remote imports
+	var repositoryImports []string       // Track repository-only imports for .github folder merging
 	importInputs := make(map[string]any) // Aggregated input values from all imports
 
 	// Seed the queue with initial imports
 	for _, importSpec := range importSpecs {
 		importPath := importSpec.Path
+
+		// Check if this is a repository-only import (owner/repo@ref without file path)
+		if isRepositoryImport(importPath) {
+			log.Printf("Detected repository import: %s", importPath)
+			repositoryImports = append(repositoryImports, importPath)
+			// Repository imports don't need further processing - they're handled at runtime
+			continue
+		}
+
 		// Handle section references (file.md#Section)
 		var filePath, sectionName string
 		if strings.Contains(importPath, "#") {
@@ -279,6 +292,11 @@ func processImportsFromFrontmatterWithManifestAndSource(frontmatter map[string]a
 				agentFile = item.fullPath
 			}
 			log.Printf("Found agent file: %s (resolved to: %s)", item.fullPath, agentFile)
+
+			// Store the original import specification for remote agents
+			// This allows runtime detection and .github folder merging
+			agentImportSpec = item.importPath
+			log.Printf("Agent import specification: %s", agentImportSpec)
 
 			// For agent files, only extract markdown content
 			markdownContent, err := processIncludedFileWithVisited(item.fullPath, item.sectionName, false, visited)
@@ -567,6 +585,8 @@ func processImportsFromFrontmatterWithManifestAndSource(frontmatter map[string]a
 		MergedJobs:          jobsBuilder.String(),
 		ImportedFiles:       topologicalOrder,
 		AgentFile:           agentFile,
+		AgentImportSpec:     agentImportSpec,
+		RepositoryImports:   repositoryImports,
 		ImportInputs:        importInputs,
 	}, nil
 }
