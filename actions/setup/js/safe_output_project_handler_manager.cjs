@@ -7,10 +7,11 @@
  * This module manages the dispatch of project-related safe output messages to dedicated handlers.
  * It handles safe output types that require GH_AW_PROJECT_GITHUB_TOKEN:
  * - create_project
- * - create_project_status_update
+ * - copy_project
  *
  * These types are separated from the main handler manager because they require a different
  * GitHub token (GH_AW_PROJECT_GITHUB_TOKEN) than other safe output types.
+ * Note: update_project and create_project_status_update have been moved to the regular handler manager.
  */
 
 const { loadAgentOutput } = require("./load_agent_output.cjs");
@@ -22,11 +23,10 @@ const { loadTemporaryIdMap } = require("./temporary_id.cjs");
  * Handler map configuration for project-related safe outputs
  * Maps safe output types to their handler module file paths
  * All these types require GH_AW_PROJECT_GITHUB_TOKEN
+ * Note: update_project and create_project_status_update have been moved to the regular handler manager
  */
 const PROJECT_HANDLER_MAP = {
   create_project: "./create_project.cjs",
-  create_project_status_update: "./create_project_status_update.cjs",
-  update_project: "./update_project.cjs",
   copy_project: "./copy_project.cjs",
 };
 

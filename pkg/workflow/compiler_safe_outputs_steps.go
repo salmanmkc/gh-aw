@@ -162,9 +162,8 @@ func (c *Compiler) buildHandlerManagerStep(data *WorkflowData) []string {
 
 	// Check if any project-handler types are enabled
 	// If so, pass the temporary project map from the project handler step
+	// Note: update_project and create_project_status_update are now in the regular handler manager
 	hasProjectHandlerTypes := data.SafeOutputs.CreateProjects != nil ||
-		data.SafeOutputs.CreateProjectStatusUpdates != nil ||
-		data.SafeOutputs.UpdateProjects != nil ||
 		data.SafeOutputs.CopyProjects != nil
 
 	if hasProjectHandlerTypes {
@@ -198,8 +197,9 @@ func (c *Compiler) buildHandlerManagerStep(data *WorkflowData) []string {
 }
 
 // buildProjectHandlerManagerStep builds a single step that uses the safe output project handler manager
-// to dispatch project-related messages (create_project, update_project, copy_project, create_project_status_update) to appropriate handlers.
+// to dispatch project-related messages (create_project, copy_project) to appropriate handlers.
 // These types require GH_AW_PROJECT_GITHUB_TOKEN and are separated from the main handler manager.
+// Note: update_project and create_project_status_update have been moved to the regular handler manager.
 func (c *Compiler) buildProjectHandlerManagerStep(data *WorkflowData) []string {
 	consolidatedSafeOutputsStepsLog.Print("Building project handler manager step")
 
@@ -226,13 +226,10 @@ func (c *Compiler) buildProjectHandlerManagerStep(data *WorkflowData) []string {
 	// Add GH_AW_PROJECT_GITHUB_TOKEN - this is the critical difference from the main handler manager
 	// Project operations require this special token that has Projects permissions
 	// Determine which custom token to use: check all project-related types
+	// Note: update_project and create_project_status_update have been moved to regular handler manager
 	var customToken string
 	if data.SafeOutputs.CreateProjects != nil && data.SafeOutputs.CreateProjects.GitHubToken != "" {
 		customToken = data.SafeOutputs.CreateProjects.GitHubToken
-	} else if data.SafeOutputs.CreateProjectStatusUpdates != nil && data.SafeOutputs.CreateProjectStatusUpdates.GitHubToken != "" {
-		customToken = data.SafeOutputs.CreateProjectStatusUpdates.GitHubToken
-	} else if data.SafeOutputs.UpdateProjects != nil && data.SafeOutputs.UpdateProjects.GitHubToken != "" {
-		customToken = data.SafeOutputs.UpdateProjects.GitHubToken
 	} else if data.SafeOutputs.CopyProjects != nil && data.SafeOutputs.CopyProjects.GitHubToken != "" {
 		customToken = data.SafeOutputs.CopyProjects.GitHubToken
 	}
@@ -240,7 +237,7 @@ func (c *Compiler) buildProjectHandlerManagerStep(data *WorkflowData) []string {
 	steps = append(steps, fmt.Sprintf("          GH_AW_PROJECT_GITHUB_TOKEN: %s\n", token))
 
 	// Add GH_AW_PROJECT_URL if project is configured in frontmatter
-	// This provides a default project URL for update-project and create-project-status-update operations
+	// This provides a default project URL for project operations
 	// when target=context (or target not specified). Users can override by setting target=* and
 	// providing an explicit project field in the safe output message.
 	if data.ParsedFrontmatter != nil && data.ParsedFrontmatter.Project != nil && data.ParsedFrontmatter.Project.URL != "" {

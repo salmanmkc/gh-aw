@@ -144,6 +144,8 @@ const HANDLER_MAP = {
   missing_tool: "./missing_tool.cjs",
   create_missing_data_issue: "./create_missing_data_issue.cjs",
   missing_data: "./missing_data.cjs",
+  update_project: "./update_project.cjs",
+  create_project_status_update: "./create_project_status_update.cjs",
   noop: "./noop_handler.cjs",
 };
 

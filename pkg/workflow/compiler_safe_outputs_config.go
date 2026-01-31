@@ -422,28 +422,6 @@ var handlerRegistry = map[string]handlerBuilder{
 			AddIfNotEmpty("github-token", c.GitHubToken).
 			Build()
 	},
-}
-
-// projectHandlerRegistry maps project handler names to their builder functions
-var projectHandlerRegistry = map[string]handlerBuilder{
-	"create_project": func(cfg *SafeOutputsConfig) map[string]any {
-		if cfg.CreateProjects == nil {
-			return nil
-		}
-		c := cfg.CreateProjects
-		builder := newHandlerConfigBuilder().
-			AddIfPositive("max", c.Max).
-			AddIfNotEmpty("target_owner", c.TargetOwner).
-			AddIfNotEmpty("title_prefix", c.TitlePrefix).
-			AddIfNotEmpty("github-token", c.GitHubToken)
-		if len(c.Views) > 0 {
-			builder.AddDefault("views", c.Views)
-		}
-		if len(c.FieldDefinitions) > 0 {
-			builder.AddDefault("field_definitions", c.FieldDefinitions)
-		}
-		return builder.Build()
-	},
 	"create_project_status_update": func(cfg *SafeOutputsConfig) map[string]any {
 		if cfg.CreateProjectStatusUpdates == nil {
 			return nil
@@ -461,6 +439,29 @@ var projectHandlerRegistry = map[string]handlerBuilder{
 		c := cfg.UpdateProjects
 		builder := newHandlerConfigBuilder().
 			AddIfPositive("max", c.Max).
+			AddIfNotEmpty("github-token", c.GitHubToken)
+		if len(c.Views) > 0 {
+			builder.AddDefault("views", c.Views)
+		}
+		if len(c.FieldDefinitions) > 0 {
+			builder.AddDefault("field_definitions", c.FieldDefinitions)
+		}
+		return builder.Build()
+	},
+}
+
+// projectHandlerRegistry maps project handler names to their builder functions
+// These handlers require GH_AW_PROJECT_GITHUB_TOKEN and are processed in a separate step
+var projectHandlerRegistry = map[string]handlerBuilder{
+	"create_project": func(cfg *SafeOutputsConfig) map[string]any {
+		if cfg.CreateProjects == nil {
+			return nil
+		}
+		c := cfg.CreateProjects
+		builder := newHandlerConfigBuilder().
+			AddIfPositive("max", c.Max).
+			AddIfNotEmpty("target_owner", c.TargetOwner).
+			AddIfNotEmpty("title_prefix", c.TitlePrefix).
 			AddIfNotEmpty("github-token", c.GitHubToken)
 		if len(c.Views) > 0 {
 			builder.AddDefault("views", c.Views)

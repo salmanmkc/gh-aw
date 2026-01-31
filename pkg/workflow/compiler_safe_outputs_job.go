@@ -109,17 +109,18 @@ func (c *Compiler) buildConsolidatedSafeOutputsJob(data *WorkflowData, mainJobNa
 	//
 	// IMPORTANT: Step order matters for safe outputs that depend on each other.
 	// The execution order ensures dependencies are satisfied:
-	// 1. Project Handler Manager - processes create_project, update_project, copy_project, create_project_status_update
-	// 2. Handler Manager - processes create_issue, update_issue, add_comment, etc.
+	// 1. Project Handler Manager - processes create_project, copy_project
+	// 2. Handler Manager - processes create_issue, update_issue, add_comment, update_project, create_project_status_update, etc.
 	// 3. Assign To Agent - assigns issue to agent (after handler managers complete)
 	// 4. Create Agent Session - creates agent session (after assignment)
 	//
-	// Note: Project-related operations (step 1) run first to ensure projects exist before
+	// Note: Project creation operations (step 1) run first to ensure projects exist before
 	// issues/PRs are created (step 2) and potentially added to those projects.
-	// All project-related operations require GH_AW_PROJECT_GITHUB_TOKEN for proper token isolation.
+	// Only create_project and copy_project require GH_AW_PROJECT_GITHUB_TOKEN; update_project and
+	// create_project_status_update now run with regular safe outputs in the handler manager (step 2).
 
 	// Check if any handler-manager-supported types are enabled
-	// Note: Project-related types are handled by the project handler manager
+	// Note: update_project and create_project_status_update now run with regular safe outputs
 	hasHandlerManagerTypes := data.SafeOutputs.CreateIssues != nil ||
 		data.SafeOutputs.AddComments != nil ||
 		data.SafeOutputs.CreateDiscussions != nil ||
@@ -142,18 +143,20 @@ func (c *Compiler) buildConsolidatedSafeOutputsJob(data *WorkflowData, mainJobNa
 		data.SafeOutputs.CreateCodeScanningAlerts != nil ||
 		data.SafeOutputs.AutofixCodeScanningAlert != nil ||
 		data.SafeOutputs.MissingTool != nil ||
-		data.SafeOutputs.MissingData != nil
+		data.SafeOutputs.MissingData != nil ||
+		data.SafeOutputs.UpdateProjects != nil ||
+		data.SafeOutputs.CreateProjectStatusUpdates != nil
 
 	// Check if any project-handler-manager-supported types are enabled
 	// These types require GH_AW_PROJECT_GITHUB_TOKEN and are processed separately
+	// Note: update_project and create_project_status_update have been moved to regular safe outputs
 	hasProjectHandlerManagerTypes := data.SafeOutputs.CreateProjects != nil ||
-		data.SafeOutputs.CreateProjectStatusUpdates != nil ||
-		data.SafeOutputs.UpdateProjects != nil ||
 		data.SafeOutputs.CopyProjects != nil
 
-	// 1. Project Handler Manager step (processes create_project, update_project, copy_project, etc.)
+	// 1. Project Handler Manager step (processes create_project, copy_project)
 	// These types require GH_AW_PROJECT_GITHUB_TOKEN and must be processed separately from the main handler manager
 	// This runs FIRST to ensure projects exist before issues/PRs are created and potentially added to them
+	// Note: update_project and create_project_status_update have been moved to the regular handler manager
 	if hasProjectHandlerManagerTypes {
 		consolidatedSafeOutputsJobLog.Print("Using project handler manager for project-related safe outputs")
 		projectHandlerManagerSteps := c.buildProjectHandlerManagerStep(data)
@@ -170,20 +173,15 @@ func (c *Compiler) buildConsolidatedSafeOutputsJob(data *WorkflowData, mainJobNa
 		if data.SafeOutputs.CreateProjects != nil {
 			permissions.Merge(NewPermissionsContentsReadProjectsWrite())
 		}
-		if data.SafeOutputs.CreateProjectStatusUpdates != nil {
-			permissions.Merge(NewPermissionsContentsReadProjectsWrite())
-		}
-		if data.SafeOutputs.UpdateProjects != nil {
-			permissions.Merge(NewPermissionsContentsReadProjectsWrite())
-		}
 		if data.SafeOutputs.CopyProjects != nil {
 			permissions.Merge(NewPermissionsContentsReadProjectsWrite())
 		}
 	}
 
-	// 2. Handler Manager step (processes create_issue, update_issue, add_comment, etc.)
+	// 2. Handler Manager step (processes create_issue, update_issue, add_comment, update_project, create_project_status_update, etc.)
 	// This runs AFTER project operations, allowing projects to exist before issues/PRs reference them
 	// Critical for workflows that create projects and then add issues/PRs to those projects
+	// Note: update_project and create_project_status_update now run here with regular safe outputs
 	if hasHandlerManagerTypes {
 		consolidatedSafeOutputsJobLog.Print("Using handler manager for safe outputs")
 		handlerManagerSteps := c.buildHandlerManagerStep(data)
@@ -251,6 +249,12 @@ func (c *Compiler) buildConsolidatedSafeOutputsJob(data *WorkflowData, mainJobNa
 		}
 		if data.SafeOutputs.DispatchWorkflow != nil {
 			permissions.Merge(NewPermissionsActionsWrite())
+		}
+		if data.SafeOutputs.UpdateProjects != nil {
+			permissions.Merge(NewPermissionsContentsReadProjectsWrite())
+		}
+		if data.SafeOutputs.CreateProjectStatusUpdates != nil {
+			permissions.Merge(NewPermissionsContentsReadProjectsWrite())
 		}
 
 		// If create-issue is configured with assignees: copilot, run a follow-up step to
