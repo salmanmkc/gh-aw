@@ -19,6 +19,9 @@ func getPlaywrightDockerImageVersion(playwrightConfig *PlaywrightToolConfig) str
 	// Extract version setting from tool properties
 	if playwrightConfig != nil && playwrightConfig.Version != "" {
 		playwrightDockerImageVersion = playwrightConfig.Version
+		mcpPlaywrightLog.Printf("Using custom Playwright Docker image version: %s", playwrightDockerImageVersion)
+	} else {
+		mcpPlaywrightLog.Printf("Using default Playwright Docker image version: %s", playwrightDockerImageVersion)
 	}
 	return playwrightDockerImageVersion
 }
@@ -33,11 +36,13 @@ func getPlaywrightMCPPackageVersion(playwrightConfig *PlaywrightToolConfig) stri
 // generatePlaywrightAllowedDomains extracts domain list from Playwright tool configuration with bundle resolution
 // Uses the same domain bundle resolution as top-level network configuration, defaulting to localhost only
 func generatePlaywrightAllowedDomains(playwrightConfig *PlaywrightToolConfig) []string {
+	mcpPlaywrightLog.Print("Generating Playwright allowed domains")
 	// Default to localhost with all port variations (same as Copilot agent default)
 	allowedDomains := constants.DefaultAllowedDomains
 
 	// Extract allowed_domains from Playwright tool configuration
 	if playwrightConfig != nil && len(playwrightConfig.AllowedDomains) > 0 {
+		mcpPlaywrightLog.Printf("Found %d custom allowed domains in config", len(playwrightConfig.AllowedDomains))
 		// Create a mock NetworkPermissions structure to use the same domain resolution logic
 		playwrightNetwork := &NetworkPermissions{
 			Allowed: playwrightConfig.AllowedDomains.ToStringSlice(),
@@ -48,6 +53,9 @@ func generatePlaywrightAllowedDomains(playwrightConfig *PlaywrightToolConfig) []
 
 		// Ensure localhost domains are always included
 		allowedDomains = parser.EnsureLocalhostDomains(resolvedDomains)
+		mcpPlaywrightLog.Printf("Resolved to %d allowed domains", len(allowedDomains))
+	} else {
+		mcpPlaywrightLog.Print("Using default localhost-only domains")
 	}
 
 	return allowedDomains

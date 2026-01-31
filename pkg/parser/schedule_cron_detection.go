@@ -3,7 +3,11 @@ package parser
 import (
 	"regexp"
 	"strings"
+
+	"github.com/githubnext/gh-aw/pkg/logger"
 )
+
+var scheduleCronLog = logger.New("parser:schedule_cron_detection")
 
 // This file contains cron expression detection and classification functions.
 // These pure functions analyze cron strings and determine their type without
@@ -37,7 +41,11 @@ func IsDailyCron(cron string) bool {
 		}
 	}
 
-	return fields[2] == "*" && fields[3] == "*" && fields[4] == "*"
+	isDaily := fields[2] == "*" && fields[3] == "*" && fields[4] == "*"
+	if isDaily {
+		scheduleCronLog.Printf("Detected daily cron schedule: %s", cron)
+	}
+	return isDaily
 }
 
 // IsHourlyCron checks if a cron expression represents an hourly interval with a fixed minute
@@ -122,9 +130,11 @@ func IsFuzzyCron(cron string) bool {
 // IsCronExpression checks if the input looks like a valid cron expression
 // A valid cron expression has exactly 5 fields (minute, hour, day of month, month, day of week)
 func IsCronExpression(input string) bool {
+	scheduleCronLog.Printf("Checking if string is valid cron expression: %s", input)
 	// A cron expression has exactly 5 fields
 	fields := strings.Fields(input)
 	if len(fields) != 5 {
+		scheduleCronLog.Print("Invalid cron: does not have 5 fields")
 		return false
 	}
 
@@ -132,9 +142,11 @@ func IsCronExpression(input string) bool {
 	cronFieldPattern := regexp.MustCompile(`^[\d\*\-/,]+$`)
 	for _, field := range fields {
 		if !cronFieldPattern.MatchString(field) {
+			scheduleCronLog.Printf("Invalid cron field: %s", field)
 			return false
 		}
 	}
 
+	scheduleCronLog.Print("Valid cron expression detected")
 	return true
 }

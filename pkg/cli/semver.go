@@ -3,8 +3,11 @@ package cli
 import (
 	"strings"
 
+	"github.com/githubnext/gh-aw/pkg/logger"
 	"golang.org/x/mod/semver"
 )
+
+var semverLog = logger.New("cli:semver")
 
 // semanticVersion represents a parsed semantic version
 type semanticVersion struct {
@@ -28,6 +31,7 @@ func isSemanticVersionTag(ref string) bool {
 // parseVersion parses a semantic version string
 // Uses golang.org/x/mod/semver for proper semantic version parsing
 func parseVersion(v string) *semanticVersion {
+	semverLog.Printf("Parsing semantic version: %s", v)
 	// Ensure version has 'v' prefix for semver package
 	if !strings.HasPrefix(v, "v") {
 		v = "v" + v
@@ -35,6 +39,7 @@ func parseVersion(v string) *semanticVersion {
 
 	// Check if valid semantic version
 	if !semver.IsValid(v) {
+		semverLog.Printf("Invalid semantic version: %s", v)
 		return nil
 	}
 
@@ -61,6 +66,7 @@ func parseVersion(v string) *semanticVersion {
 	// semver.Prerelease includes the leading hyphen, strip it
 	ver.pre = strings.TrimPrefix(prerelease, "-")
 
+	semverLog.Printf("Parsed version: major=%d, minor=%d, patch=%d, pre=%s", ver.major, ver.minor, ver.patch, ver.pre)
 	return ver
 }
 
@@ -100,5 +106,7 @@ func (v *semanticVersion) isNewer(other *semanticVersion) bool {
 	// Use semver.Compare for comparison
 	result := semver.Compare(v1, v2)
 
-	return result > 0
+	isNewer := result > 0
+	semverLog.Printf("Version comparison: %s vs %s = isNewer:%v", v1, v2, isNewer)
+	return isNewer
 }

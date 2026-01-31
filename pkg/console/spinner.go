@@ -43,9 +43,12 @@ import (
 
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/githubnext/gh-aw/pkg/logger"
 	"github.com/githubnext/gh-aw/pkg/styles"
 	"github.com/githubnext/gh-aw/pkg/tty"
 )
+
+var log = logger.New("console:spinner")
 
 // updateMessageMsg is a custom message for updating the spinner message
 type updateMessageMsg string
@@ -100,6 +103,7 @@ type SpinnerWrapper struct {
 // Automatically disabled when not running in a TTY or when ACCESSIBLE env var is set.
 func NewSpinner(message string) *SpinnerWrapper {
 	enabled := tty.IsStderrTerminal() && os.Getenv("ACCESSIBLE") == ""
+	log.Printf("Creating spinner: message=%s, enabled=%v", message, enabled)
 	s := &SpinnerWrapper{enabled: enabled}
 
 	if enabled {
@@ -117,12 +121,14 @@ func (s *SpinnerWrapper) Start() {
 	if s.enabled && s.program != nil {
 		s.mu.Lock()
 		if s.running {
+			log.Print("Spinner already running, skipping start")
 			s.mu.Unlock()
 			return
 		}
 		s.running = true
 		s.wg.Add(1)
 		s.mu.Unlock()
+		log.Print("Starting spinner")
 		go func() {
 			defer s.wg.Done()
 			_, _ = s.program.Run()
@@ -134,6 +140,7 @@ func (s *SpinnerWrapper) Stop() {
 	if s.enabled && s.program != nil {
 		s.mu.Lock()
 		if s.running {
+			log.Print("Stopping spinner")
 			s.running = false
 			s.mu.Unlock()
 			s.program.Quit()

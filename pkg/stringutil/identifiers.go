@@ -5,7 +5,10 @@ import (
 	"strings"
 
 	"github.com/githubnext/gh-aw/pkg/constants"
+	"github.com/githubnext/gh-aw/pkg/logger"
 )
+
+var log = logger.New("stringutil:identifiers")
 
 // NormalizeWorkflowName removes .md and .lock.yml extensions from workflow names.
 // This is used to standardize workflow identifiers regardless of the file format.
@@ -25,16 +28,22 @@ import (
 //	NormalizeWorkflowName("weekly-research.lock.yml")  // returns "weekly-research"
 //	NormalizeWorkflowName("my.workflow.md")            // returns "my.workflow"
 func NormalizeWorkflowName(name string) string {
+	log.Printf("Normalizing workflow name: %s", name)
 	// Remove .lock.yml extension first (longer extension)
 	if strings.HasSuffix(name, ".lock.yml") {
-		return strings.TrimSuffix(name, ".lock.yml")
+		normalized := strings.TrimSuffix(name, ".lock.yml")
+		log.Printf("Removed .lock.yml extension: %s", normalized)
+		return normalized
 	}
 
 	// Remove .md extension
 	if strings.HasSuffix(name, ".md") {
-		return strings.TrimSuffix(name, ".md")
+		normalized := strings.TrimSuffix(name, ".md")
+		log.Printf("Removed .md extension: %s", normalized)
+		return normalized
 	}
 
+	log.Print("No extension removed")
 	return name
 }
 
@@ -141,11 +150,14 @@ func IsLockFile(path string) bool {
 //	FormatCampaignLabel("Security Q1 2025")                     // returns "z_campaign_security-q1-2025"
 //	FormatCampaignLabel("dependency_updates")                   // returns "z_campaign_dependency-updates"
 func FormatCampaignLabel(campaignID string) string {
+	log.Printf("Formatting campaign label: campaignID=%s", campaignID)
 	// Sanitize campaign ID for label compatibility
 	// Replace spaces and underscores with hyphens, convert to lowercase
 	sanitized := strings.ToLower(campaignID)
 	sanitized = strings.ReplaceAll(sanitized, " ", "-")
 	sanitized = strings.ReplaceAll(sanitized, "_", "-")
 
-	return constants.CampaignLabelPrefix + sanitized
+	label := constants.CampaignLabelPrefix + sanitized
+	log.Printf("Generated campaign label: %s", label)
+	return label
 }
