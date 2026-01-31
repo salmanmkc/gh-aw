@@ -10,6 +10,7 @@ import (
 	"github.com/githubnext/gh-aw/pkg/console"
 	"github.com/githubnext/gh-aw/pkg/constants"
 	"github.com/githubnext/gh-aw/pkg/logger"
+	"github.com/githubnext/gh-aw/pkg/sliceutil"
 	"github.com/githubnext/gh-aw/pkg/tty"
 	"github.com/spf13/cobra"
 )
@@ -216,11 +217,10 @@ func AddResolvedWorkflows(workflowStrings []string, resolved *ResolvedWorkflows,
 		}
 	}
 
-	// Extract the workflow specs for processing
-	processedWorkflows := make([]*WorkflowSpec, len(resolved.Workflows))
-	for i, rw := range resolved.Workflows {
-		processedWorkflows[i] = rw.Spec
-	}
+	// Extract the workflow specs using functional transformation
+	processedWorkflows := sliceutil.Map(resolved.Workflows, func(rw *ResolvedWorkflow) *WorkflowSpec {
+		return rw.Spec
+	})
 
 	// Set workflow_dispatch result
 	result.HasWorkflowDispatch = resolved.HasWorkflowDispatch
