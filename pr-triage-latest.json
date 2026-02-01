@@ -1,111 +1,112 @@
 {
-  "run_date": "2026-01-31T18:14:11.443050+00:00",
-  "run_id": "21548704016",
-  "total_prs_triaged": 4,
+  "run_date": "2026-02-01T00:44:30.142Z",
+  "run_id": "21553633835",
+  "total_prs_triaged": 3,
   "results": [
-    {
-      "number": 12664,
-      "title": "Fix MCP config generation when AWF firewall is disabled",
-      "url": "https://github.com/githubnext/gh-aw/pull/12664",
-      "category": "bug",
-      "risk": "high",
-      "priority_score": 52,
-      "impact_score": 40,
-      "urgency_score": 2,
-      "quality_score": 10,
-      "action": "batch_review",
-      "age_days": 1,
-      "draft": false,
-      "ci_status": "pending",
-      "files_count": 5,
-      "created_at": "2026-01-30T03:39:47Z",
-      "updated_at": "2026-01-31T12:20:43Z",
-      "merge_conflict": false
-    },
-    {
-      "number": 12574,
-      "title": "Parallelize setup operations with engine-agnostic installation",
-      "url": "https://github.com/githubnext/gh-aw/pull/12574",
-      "category": "chore",
-      "risk": "high",
-      "priority_score": 37,
-      "impact_score": 25,
-      "urgency_score": 2,
-      "quality_score": 10,
-      "action": "batch_review",
-      "age_days": 2,
-      "draft": false,
-      "ci_status": "pending",
-      "files_count": 156,
-      "created_at": "2026-01-29T15:36:11Z",
-      "updated_at": "2026-01-31T12:20:47Z",
-      "merge_conflict": false
-    },
     {
       "number": 12827,
       "title": "Update AWF to v0.13.0 and enable --enable-chroot",
       "url": "https://github.com/githubnext/gh-aw/pull/12827",
       "category": "chore",
       "risk": "high",
-      "priority_score": 37,
+      "priority_score": 40,
       "impact_score": 25,
-      "urgency_score": 2,
+      "impact_rationale": "AWF version update affects security/sandbox - critical infrastructure change",
+      "urgency_score": 5,
+      "urgency_rationale": "2 days old, pending CI, affects sandbox security",
       "quality_score": 10,
+      "quality_rationale": "CI pending, good description with examples, includes tests, 151 files changed",
       "action": "batch_review",
-      "age_days": 1,
+      "action_explanation": "High-risk infrastructure change needing review. Groups with other chore PRs.",
+      "age_days": 2,
       "draft": false,
       "ci_status": "pending",
       "files_count": 151,
       "created_at": "2026-01-30T22:11:39Z",
-      "updated_at": "2026-01-31T12:20:48Z",
-      "merge_conflict": false
+      "updated_at": "2026-01-31T18:17:32Z",
+      "additions": 619,
+      "deletions": 576,
+      "merge_conflict": false,
+      "agent_workflow": "copilot"
     },
     {
-      "number": 12967,
-      "title": "Unify safe output processing into single handler manager with compiler-managed flag",
-      "url": "https://github.com/githubnext/gh-aw/pull/12967",
-      "category": "refactor",
+      "number": 12664,
+      "title": "Fix MCP config generation when AWF firewall is disabled",
+      "url": "https://github.com/githubnext/gh-aw/pull/12664",
+      "category": "bug",
       "risk": "high",
-      "priority_score": 30,
-      "impact_score": 25,
-      "urgency_score": 0,
-      "quality_score": 5,
-      "action": "batch_review",
-      "age_days": 0,
+      "priority_score": 55,
+      "impact_score": 40,
+      "impact_rationale": "Bug fix for MCP config generation - critical functionality",
+      "urgency_score": 5,
+      "urgency_rationale": "2 days old, affects MCP server integration, pending CI",
+      "quality_score": 10,
+      "quality_rationale": "CI pending, excellent description with checklist, smoke tests added, 5 files changed",
+      "action": "fast_track",
+      "action_explanation": "Critical bug fix with good quality. High priority for review to unblock MCP usage.",
+      "age_days": 2,
       "draft": false,
       "ci_status": "pending",
-      "files_count": 192,
-      "created_at": "2026-01-31T16:04:19Z",
-      "updated_at": "2026-01-31T18:00:26Z",
-      "merge_conflict": true
+      "files_count": 5,
+      "created_at": "2026-01-30T03:39:47Z",
+      "updated_at": "2026-01-31T18:17:31Z",
+      "additions": 2119,
+      "deletions": 10,
+      "merge_conflict": false,
+      "agent_workflow": "copilot"
+    },
+    {
+      "number": 12574,
+      "title": "Parallelize setup operations with engine-agnostic installation",
+      "url": "https://github.com/githubnext/gh-aw/pull/12574",
+      "category": "feature",
+      "risk": "high",
+      "priority_score": 48,
+      "impact_score": 35,
+      "impact_rationale": "Performance improvement (8-12s savings) - high value feature affecting all workflows",
+      "urgency_score": 3,
+      "urgency_rationale": "3 days old, performance enhancement, pending CI",
+      "quality_score": 10,
+      "quality_rationale": "CI pending, detailed description with examples, 156 files changed, fixes issue #12554",
+      "action": "fast_track",
+      "action_explanation": "High-value performance improvement with significant impact. Needs review for correctness.",
+      "age_days": 3,
+      "draft": false,
+      "ci_status": "pending",
+      "files_count": 156,
+      "created_at": "2026-01-29T15:36:11Z",
+      "updated_at": "2026-01-31T18:17:29Z",
+      "additions": 2096,
+      "deletions": 843,
+      "merge_conflict": false,
+      "agent_workflow": "copilot",
+      "related_issue": "12554"
     }
   ],
   "statistics": {
-    "total": 4,
+    "total": 3,
     "by_category": {
       "bug": 1,
-      "chore": 2,
-      "refactor": 1
+      "chore": 1,
+      "feature": 1
     },
     "by_risk": {
-      "high": 4
+      "high": 3
     },
     "by_priority": {
       "high": 0,
-      "medium": 1,
-      "low": 3
+      "medium": 3,
+      "low": 0
     },
     "by_action": {
-      "batch_review": 4
+      "fast_track": 2,
+      "batch_review": 1
     }
   },
   "batches": {
-    "batch-chore-001": [
-      12574,
-      12827
-    ]
+    "batch-chore-001": [12827]
   },
   "auto_merge_candidates": [],
-  "fast_track_needed": [],
+  "fast_track_needed": [12664, 12574],
   "close_candidates": []
 }
