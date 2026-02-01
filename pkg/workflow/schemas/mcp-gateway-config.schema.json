@@ -189,6 +189,12 @@
           "description": "Tool invocation timeout in seconds. The gateway enforces this timeout for individual tool/method calls to MCP servers.",
           "minimum": 1,
           "default": 60
+        },
+        "payloadDir": {
+          "type": "string",
+          "description": "Directory path for storing large response payloads. When MCP server responses exceed the size threshold, the gateway stores payloads in this directory segmented by session ID. The directory should be mounted as a shared volume between the gateway and agent containers. Default: '/tmp/jq-payloads'.",
+          "minLength": 1,
+          "default": "/tmp/jq-payloads"
         }
       },
       "required": ["port", "domain", "apiKey"],
