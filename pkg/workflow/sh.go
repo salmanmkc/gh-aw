@@ -50,7 +50,7 @@ func WriteShellScriptToYAML(yaml *strings.Builder, script string, indent string)
 // WritePromptTextToYAML writes static prompt text to a YAML heredoc with proper indentation.
 // Use this function for prompt text that contains NO variable placeholders or expressions.
 // It chunks the text into groups of lines of less than MaxPromptChunkSize characters, with a maximum of MaxPromptChunks chunks.
-// Each chunk is written as a separate heredoc to avoid GitHub Actions step size limits (21KB).
+// Uses grouped redirects to avoid SC2129 shellcheck warnings.
 //
 // For prompt text with variable placeholders that need substitution, use WritePromptTextToYAMLWithPlaceholders instead.
 func WritePromptTextToYAML(yaml *strings.Builder, text string, indent string) {
@@ -59,14 +59,17 @@ func WritePromptTextToYAML(yaml *strings.Builder, text string, indent string) {
 	chunks := chunkLines(textLines, indent, MaxPromptChunkSize, MaxPromptChunks)
 	shLog.Printf("Created %d chunks for prompt text", len(chunks))
 
-	// Write each chunk as a separate heredoc
-	// For static prompt text without variables, use direct cat to file
-	for _, chunk := range chunks {
-		yaml.WriteString(indent + "cat << 'PROMPT_EOF' >> \"$GH_AW_PROMPT\"\n")
-		for _, line := range chunk {
-			fmt.Fprintf(yaml, "%s%s\n", indent, line)
+	// Use grouped redirects for better performance and to avoid SC2129
+	if len(chunks) > 0 {
+		yaml.WriteString(indent + "{\n")
+		for _, chunk := range chunks {
+			yaml.WriteString(indent + "  cat << 'PROMPT_EOF'\n")
+			for _, line := range chunk {
+				fmt.Fprintf(yaml, "%s  %s\n", indent, line)
+			}
+			yaml.WriteString(indent + "  PROMPT_EOF\n")
 		}
-		yaml.WriteString(indent + "PROMPT_EOF\n")
+		yaml.WriteString(indent + "} >> \"$GH_AW_PROMPT\"\n")
 	}
 }
 
@@ -74,20 +77,24 @@ func WritePromptTextToYAML(yaml *strings.Builder, text string, indent string) {
 // Use this function for prompt text containing __VAR__ placeholders that will be substituted with sed commands.
 // The caller is responsible for adding the sed substitution commands after calling this function.
 // It uses placeholder format (__VAR__) instead of shell variable expansion, to prevent template injection.
+// Uses grouped redirects to avoid SC2129 shellcheck warnings.
 //
 // For static prompt text without variables, use WritePromptTextToYAML instead.
 func WritePromptTextToYAMLWithPlaceholders(yaml *strings.Builder, text string, indent string) {
 	textLines := strings.Split(text, "\n")
 	chunks := chunkLines(textLines, indent, MaxPromptChunkSize, MaxPromptChunks)
 
-	// Write each chunk as a separate heredoc
-	// Use direct cat to file (append mode) - placeholders will be substituted with sed
-	for _, chunk := range chunks {
-		yaml.WriteString(indent + "cat << 'PROMPT_EOF' >> \"$GH_AW_PROMPT\"\n")
-		for _, line := range chunk {
-			fmt.Fprintf(yaml, "%s%s\n", indent, line)
+	// Use grouped redirects for better performance and to avoid SC2129
+	if len(chunks) > 0 {
+		yaml.WriteString(indent + "{\n")
+		for _, chunk := range chunks {
+			yaml.WriteString(indent + "  cat << 'PROMPT_EOF'\n")
+			for _, line := range chunk {
+				fmt.Fprintf(yaml, "%s  %s\n", indent, line)
+			}
+			yaml.WriteString(indent + "  PROMPT_EOF\n")
 		}
-		yaml.WriteString(indent + "PROMPT_EOF\n")
+		yaml.WriteString(indent + "} >> \"$GH_AW_PROMPT\"\n")
 	}
 }
 

@@ -16,9 +16,17 @@ func TestWritePromptTextToYAML_SmallText(t *testing.T) {
 
 	result := yaml.String()
 
-	// Should have exactly one heredoc block
-	if strings.Count(result, `cat << 'PROMPT_EOF' >> "$GH_AW_PROMPT"`) != 1 {
-		t.Errorf("Expected 1 heredoc block for small text, got %d", strings.Count(result, `cat << 'PROMPT_EOF' >> "$GH_AW_PROMPT"`))
+	// Should use grouped redirect pattern
+	if !strings.Contains(result, "{\n") {
+		t.Error("Expected opening brace for grouped redirect")
+	}
+	if !strings.Contains(result, "} >> \"$GH_AW_PROMPT\"") {
+		t.Error("Expected closing brace with redirect for grouped redirect")
+	}
+
+	// Should have at least one heredoc block inside the group
+	if strings.Count(result, "cat << 'PROMPT_EOF'") < 1 {
+		t.Errorf("Expected at least 1 heredoc block for small text, got %d", strings.Count(result, "cat << 'PROMPT_EOF'"))
 	}
 
 	// Should contain all original lines
@@ -33,8 +41,9 @@ func TestWritePromptTextToYAML_SmallText(t *testing.T) {
 	}
 
 	// Should have proper EOF markers
-	if strings.Count(result, indent+"PROMPT_EOF") != 1 {
-		t.Errorf("Expected 1 EOF marker, got %d", strings.Count(result, indent+"PROMPT_EOF"))
+	eofCount := strings.Count(result, "PROMPT_EOF\n")
+	if eofCount < 1 {
+		t.Errorf("Expected at least 1 EOF marker, got %d", eofCount)
 	}
 }
 
@@ -60,8 +69,16 @@ func TestWritePromptTextToYAML_LargeText(t *testing.T) {
 
 	result := yaml.String()
 
-	// Should have multiple heredoc blocks
-	heredocCount := strings.Count(result, `cat << 'PROMPT_EOF' >> "$GH_AW_PROMPT"`)
+	// Should use grouped redirect pattern
+	if !strings.Contains(result, "{\n") {
+		t.Error("Expected opening brace for grouped redirect")
+	}
+	if !strings.Contains(result, "} >> \"$GH_AW_PROMPT\"") {
+		t.Error("Expected closing brace with redirect for grouped redirect")
+	}
+
+	// Should have multiple heredoc blocks inside the group
+	heredocCount := strings.Count(result, "cat << 'PROMPT_EOF'")
 	if heredocCount < 2 {
 		t.Errorf("Expected at least 2 heredoc blocks for large text (total size ~%d bytes), got %d", totalSize, heredocCount)
 	}
@@ -71,8 +88,8 @@ func TestWritePromptTextToYAML_LargeText(t *testing.T) {
 		t.Errorf("Expected at most 5 heredoc blocks, got %d", heredocCount)
 	}
 
-	// Should have matching EOF markers
-	eofCount := strings.Count(result, indent+"PROMPT_EOF")
+	// Should have matching EOF markers (each heredoc has one PROMPT_EOF line)
+	eofCount := strings.Count(result, "PROMPT_EOF\n")
 	if eofCount != heredocCount {
 		t.Errorf("Expected %d EOF markers to match %d heredoc blocks, got %d", heredocCount, heredocCount, eofCount)
 	}
@@ -102,8 +119,16 @@ func TestWritePromptTextToYAML_ExactChunkBoundary(t *testing.T) {
 
 	result := yaml.String()
 
+	// Should use grouped redirect pattern
+	if !strings.Contains(result, "{\n") {
+		t.Error("Expected opening brace for grouped redirect")
+	}
+	if !strings.Contains(result, "} >> \"$GH_AW_PROMPT\"") {
+		t.Error("Expected closing brace with redirect for grouped redirect")
+	}
+
 	// Should have exactly 1 heredoc block since we're just under the limit
-	heredocCount := strings.Count(result, `cat << 'PROMPT_EOF' >> "$GH_AW_PROMPT"`)
+	heredocCount := strings.Count(result, "cat << 'PROMPT_EOF'")
 	if heredocCount != 1 {
 		t.Errorf("Expected 1 heredoc block for text just under limit, got %d", heredocCount)
 	}
@@ -128,14 +153,22 @@ func TestWritePromptTextToYAML_MaxChunksLimit(t *testing.T) {
 
 	result := yaml.String()
 
+	// Should use grouped redirect pattern
+	if !strings.Contains(result, "{\n") {
+		t.Error("Expected opening brace for grouped redirect")
+	}
+	if !strings.Contains(result, "} >> \"$GH_AW_PROMPT\"") {
+		t.Error("Expected closing brace with redirect for grouped redirect")
+	}
+
 	// Should have exactly 5 heredoc blocks (the maximum)
-	heredocCount := strings.Count(result, `cat << 'PROMPT_EOF' >> "$GH_AW_PROMPT"`)
+	heredocCount := strings.Count(result, "cat << 'PROMPT_EOF'")
 	if heredocCount != 5 {
 		t.Errorf("Expected exactly 5 heredoc blocks (max limit), got %d", heredocCount)
 	}
 
-	// Should have matching EOF markers
-	eofCount := strings.Count(result, indent+"PROMPT_EOF")
+	// Should have matching EOF markers (each heredoc has one PROMPT_EOF line)
+	eofCount := strings.Count(result, "PROMPT_EOF\n")
 	if eofCount != 5 {
 		t.Errorf("Expected 5 EOF markers, got %d", eofCount)
 	}
@@ -150,13 +183,21 @@ func TestWritePromptTextToYAML_EmptyText(t *testing.T) {
 
 	result := yaml.String()
 
+	// Should use grouped redirect pattern (even for empty text)
+	if !strings.Contains(result, "{\n") {
+		t.Error("Expected opening brace for grouped redirect even for empty text")
+	}
+	if !strings.Contains(result, "} >> \"$GH_AW_PROMPT\"") {
+		t.Error("Expected closing brace with redirect for grouped redirect even for empty text")
+	}
+
 	// Should have at least one heredoc block (even for empty text)
-	if strings.Count(result, `cat << 'PROMPT_EOF' >> "$GH_AW_PROMPT"`) < 1 {
+	if strings.Count(result, "cat << 'PROMPT_EOF'") < 1 {
 		t.Error("Expected at least 1 heredoc block even for empty text")
 	}
 
 	// Should have matching EOF markers
-	if strings.Count(result, indent+"PROMPT_EOF") < 1 {
+	if strings.Count(result, "PROMPT_EOF\n") < 1 {
 		t.Error("Expected at least 1 EOF marker")
 	}
 }

@@ -333,23 +333,18 @@ func TestGenerateUnifiedPromptCreationStep_FirstContentUsesCreate(t *testing.T) 
 
 	output := yaml.String()
 
-	// Find the first cat command (should use > for create)
-	firstCatPos := strings.Index(output, `cat "`)
-	require.NotEqual(t, -1, firstCatPos, "Should have cat command")
+	// Verify grouped redirect pattern
+	assert.Contains(t, output, "{\n", "Should use grouped redirect with opening brace")
+	assert.Contains(t, output, `} > "$GH_AW_PROMPT"`, "Should use grouped redirect with closing brace and > (create mode)")
 
-	// Extract the line containing the first cat command
-	firstCatLine := output[firstCatPos : firstCatPos+strings.Index(output[firstCatPos:], "\n")]
-
-	// Verify it uses > (create mode)
-	assert.Contains(t, firstCatLine, `> "$GH_AW_PROMPT"`,
-		"First content should use > (create mode): %s", firstCatLine)
-
-	// Find subsequent cat commands (should use >> for append)
-	remainingOutput := output[firstCatPos+len(firstCatLine):]
-	if strings.Contains(remainingOutput, `cat "`) || strings.Contains(remainingOutput, "cat << 'PROMPT_EOF'") {
-		// Verify subsequent operations use >> (append mode)
-		assert.Contains(t, remainingOutput, `>> "$GH_AW_PROMPT"`,
-			"Subsequent content should use >> (append mode)")
+	// Verify individual cat commands inside the group don't have redirects
+	lines := strings.Split(output, "\n")
+	for _, line := range lines {
+		if strings.Contains(line, "cat ") && !strings.Contains(line, "}") {
+			// Cat commands should not have individual redirects (only the group has a redirect)
+			assert.NotContains(t, line, `>> "$GH_AW_PROMPT"`,
+				"Individual cat commands should not have redirects in grouped mode: %s", line)
+		}
 	}
 }
 

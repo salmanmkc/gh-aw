@@ -36,8 +36,16 @@ func TestWritePromptTextToYAML_IntegrationWithCompiler(t *testing.T) {
 
 	result := yaml.String()
 
+	// Verify grouped redirect pattern
+	if !strings.Contains(result, "{\n") {
+		t.Error("Expected opening brace for grouped redirect")
+	}
+	if !strings.Contains(result, "} >> \"$GH_AW_PROMPT\"") {
+		t.Error("Expected closing brace with redirect")
+	}
+
 	// Verify multiple heredoc blocks were created
-	heredocCount := strings.Count(result, `cat << 'PROMPT_EOF' >> "$GH_AW_PROMPT"`)
+	heredocCount := strings.Count(result, "cat << 'PROMPT_EOF'")
 	if heredocCount < 2 {
 		t.Errorf("Expected multiple heredoc blocks for large text (%d bytes), got %d", totalSize, heredocCount)
 	}
@@ -48,7 +56,7 @@ func TestWritePromptTextToYAML_IntegrationWithCompiler(t *testing.T) {
 	}
 
 	// Verify each heredoc is closed
-	eofCount := strings.Count(result, indent+"PROMPT_EOF")
+	eofCount := strings.Count(result, "PROMPT_EOF\n")
 	if eofCount != heredocCount {
 		t.Errorf("Expected %d EOF markers to match %d heredoc blocks, got %d", heredocCount, heredocCount, eofCount)
 	}
@@ -64,7 +72,7 @@ func TestWritePromptTextToYAML_IntegrationWithCompiler(t *testing.T) {
 	}
 
 	// Verify the YAML structure is valid (basic check)
-	if !strings.Contains(result, `cat << 'PROMPT_EOF' >> "$GH_AW_PROMPT"`) {
+	if !strings.Contains(result, "cat << 'PROMPT_EOF'") {
 		t.Error("Expected proper heredoc syntax in output")
 	}
 
@@ -162,7 +170,7 @@ func TestWritePromptTextToYAML_RealWorldSizeSimulation(t *testing.T) {
 			WritePromptTextToYAML(&yaml, text, indent)
 
 			result := yaml.String()
-			heredocCount := strings.Count(result, `cat << 'PROMPT_EOF' >> "$GH_AW_PROMPT"`)
+			heredocCount := strings.Count(result, "cat << 'PROMPT_EOF'")
 
 			if heredocCount < tt.expectedChunks {
 				t.Errorf("Expected at least %d chunks for %s, got %d", tt.expectedChunks, tt.name, heredocCount)
@@ -172,7 +180,7 @@ func TestWritePromptTextToYAML_RealWorldSizeSimulation(t *testing.T) {
 				t.Errorf("Expected at most %d chunks for %s, got %d", tt.maxChunks, tt.name, heredocCount)
 			}
 
-			eofCount := strings.Count(result, indent+"PROMPT_EOF")
+			eofCount := strings.Count(result, "PROMPT_EOF\n")
 			if eofCount != heredocCount {
 				t.Errorf("EOF count (%d) doesn't match heredoc count (%d) for %s", eofCount, heredocCount, tt.name)
 			}
@@ -195,10 +203,23 @@ func TestWritePromptTextToYAML_RealWorldSizeSimulation(t *testing.T) {
 func extractLinesFromYAML(yamlOutput string, indent string) []string {
 	var lines []string
 	inHeredoc := false
+	inGroup := false
 
 	for _, line := range strings.Split(yamlOutput, "\n") {
-		// Check if we're starting a heredoc block
-		if strings.Contains(line, `cat << 'PROMPT_EOF' >> "$GH_AW_PROMPT"`) {
+		// Check if we're starting a grouped redirect
+		if strings.Contains(line, "{") && !inGroup {
+			inGroup = true
+			continue
+		}
+
+		// Check if we're ending a grouped redirect
+		if strings.Contains(line, "} >> \"$GH_AW_PROMPT\"") {
+			inGroup = false
+			continue
+		}
+
+		// Check if we're starting a heredoc block (within a group)
+		if strings.Contains(line, "cat << 'PROMPT_EOF'") {
 			inHeredoc = true
 			continue
 		}
@@ -210,10 +231,11 @@ func extractLinesFromYAML(yamlOutput string, indent string) []string {
 		}
 
 		// If we're in a heredoc block, extract the content line
-		if inHeredoc {
-			// Remove the indent from the line
-			if strings.HasPrefix(line, indent) {
-				contentLine := strings.TrimPrefix(line, indent)
+		if inHeredoc && inGroup {
+			// Remove the indent from the line (note: extra 2 spaces for grouped content)
+			expectedIndent := indent + "  "
+			if strings.HasPrefix(line, expectedIndent) {
+				contentLine := strings.TrimPrefix(line, expectedIndent)
 				lines = append(lines, contentLine)
 			}
 		}
@@ -334,9 +356,17 @@ func TestWritePromptTextToYAML_ChunkIntegrity(t *testing.T) {
 	result := yaml.String()
 
 	// Count heredoc blocks
-	heredocCount := strings.Count(result, `cat << 'PROMPT_EOF' >> "$GH_AW_PROMPT"`)
+	heredocCount := strings.Count(result, "cat << 'PROMPT_EOF'")
 
 	t.Logf("Created %d heredoc blocks for %d lines (%d bytes)", heredocCount, len(lines), len(text))
+
+	// Verify grouped redirect pattern
+	if !strings.Contains(result, "{\n") {
+		t.Error("Expected opening brace for grouped redirect")
+	}
+	if !strings.Contains(result, "} >> \"$GH_AW_PROMPT\"") {
+		t.Error("Expected closing brace with redirect")
+	}
 
 	// Verify we have multiple chunks but not exceeding max
 	if heredocCount < 2 {
@@ -348,7 +378,7 @@ func TestWritePromptTextToYAML_ChunkIntegrity(t *testing.T) {
 	}
 
 	// Verify all heredocs are properly closed
-	eofCount := strings.Count(result, indent+"PROMPT_EOF")
+	eofCount := strings.Count(result, "PROMPT_EOF\n")
 	if eofCount != heredocCount {
 		t.Errorf("Heredoc closure mismatch: %d opens, %d closes", heredocCount, eofCount)
 	}
