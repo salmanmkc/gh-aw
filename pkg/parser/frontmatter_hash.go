@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -11,7 +12,6 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/githubnext/gh-aw/pkg/constants"
 	"github.com/githubnext/gh-aw/pkg/logger"
 )
 
@@ -23,22 +23,6 @@ type FileReader func(filePath string) ([]byte, error)
 
 // DefaultFileReader reads files from disk using os.ReadFile
 var DefaultFileReader FileReader = os.ReadFile
-
-// compilerVersion holds the gh-aw version for hash computation
-var compilerVersion = "dev"
-
-// isReleaseVersion indicates whether the current version is a release
-var isReleaseVersion = false
-
-// SetCompilerVersion sets the compiler version for hash computation
-func SetCompilerVersion(version string) {
-	compilerVersion = version
-}
-
-// SetIsRelease sets whether the current version is a release build
-func SetIsRelease(isRelease bool) {
-	isReleaseVersion = isRelease
-}
 
 // ComputeFrontmatterHash computes a deterministic SHA-256 hash of frontmatter
 // including contributions from all imported workflows.
@@ -175,6 +159,20 @@ func buildCanonicalFrontmatter(frontmatter map[string]any, result *ImportsResult
 	return canonical
 }
 
+// marshalJSONWithoutHTMLEscape marshals a value to JSON without HTML escaping
+// This matches JavaScript's JSON.stringify behavior
+func marshalJSONWithoutHTMLEscape(v any) (string, error) {
+	var buf bytes.Buffer
+	enc := json.NewEncoder(&buf)
+	enc.SetEscapeHTML(false)
+	if err := enc.Encode(v); err != nil {
+		return "", err
+	}
+	// Remove the trailing newline that Encoder adds
+	result := buf.String()
+	return strings.TrimSuffix(result, "\n"), nil
+}
+
 // marshalCanonicalJSON marshals a map to canonical JSON with sorted keys
 func marshalCanonicalJSON(data map[string]any) (string, error) {
 	// Use a custom encoder to ensure sorted keys
@@ -203,13 +201,13 @@ func marshalSorted(data any) string {
 			if i > 0 {
 				result.WriteString(",")
 			}
-			// Marshal the key
-			keyJSON, err := json.Marshal(key)
+			// Marshal the key without HTML escaping
+			keyJSON, err := marshalJSONWithoutHTMLEscape(key)
 			if err != nil {
 				frontmatterHashLog.Printf("Warning: failed to marshal key %s: %v", key, err)
 				continue
 			}
-			result.Write(keyJSON)
+			result.WriteString(keyJSON)
 			result.WriteString(":")
 			// Marshal the value recursively
 			result.WriteString(marshalSorted(v[key]))
@@ -234,23 +232,23 @@ func marshalSorted(data any) string {
 		return result.String()
 
 	case string, int, int64, float64, bool, nil:
-		// Use standard JSON marshaling for primitives
-		jsonBytes, err := json.Marshal(v)
+		// Use JSON marshaling without HTML escaping to match JavaScript behavior
+		jsonStr, err := marshalJSONWithoutHTMLEscape(v)
 		if err != nil {
 			// This should rarely happen for primitives, but log it for debugging
 			frontmatterHashLog.Printf("Warning: failed to marshal primitive value: %v", err)
 			return "null"
 		}
-		return string(jsonBytes)
+		return jsonStr
 
 	default:
-		// Fallback to standard JSON marshaling
-		jsonBytes, err := json.Marshal(v)
+		// Fallback to JSON marshaling without HTML escaping
+		jsonStr, err := marshalJSONWithoutHTMLEscape(v)
 		if err != nil {
 			frontmatterHashLog.Printf("Warning: failed to marshal value of type %T: %v", v, err)
 			return "null"
 		}
-		return string(jsonBytes)
+		return jsonStr
 	}
 }
 
@@ -309,9 +307,6 @@ func ComputeFrontmatterHashWithExpressions(frontmatter map[string]any, baseDir s
 		canonical["template-expressions"] = sortedExpressions
 	}
 
-	// Add version information for reproducibility
-	canonical["versions"] = buildVersionInfo()
-
 	// Serialize to canonical JSON
 	canonicalJSON, err := marshalCanonicalJSON(canonical)
 	if err != nil {
@@ -326,27 +321,6 @@ func ComputeFrontmatterHashWithExpressions(frontmatter map[string]any, baseDir s
 
 	frontmatterHashLog.Printf("Computed hash: %s", hashHex)
 	return hashHex, nil
-}
-
-// buildVersionInfo builds version information for hash computation
-func buildVersionInfo() map[string]string {
-	versions := make(map[string]string)
-
-	// gh-aw version (compiler version) - only include for release builds
-	// This prevents hash changes during development when version is "dev"
-	if isReleaseVersion {
-		versions["gh-aw"] = compilerVersion
-	}
-
-	// awf (firewall) version
-	versions["awf"] = string(constants.DefaultFirewallVersion)
-
-	// agents (MCP gateway) version - also aliased as "gateway" for clarity
-	gatewayVersion := string(constants.DefaultMCPGatewayVersion)
-	versions["agents"] = gatewayVersion
-	versions["gateway"] = gatewayVersion
-
-	return versions
 }
 
 // extractRelevantTemplateExpressions extracts template expressions from markdown
@@ -580,9 +554,6 @@ func computeFrontmatterHashTextBasedWithReader(frontmatterText, markdown, baseDi
 	if len(expressions) > 0 {
 		canonical["template-expressions"] = expressions
 	}
-
-	// Add version information
-	canonical["versions"] = buildVersionInfo()
 
 	// Serialize to canonical JSON
 	canonicalJSON, err := marshalCanonicalJSON(canonical)

@@ -26,7 +26,7 @@
 #     - shared/jqschema.md
 #     - shared/reporting.md
 #
-# frontmatter-hash: dfab73000efd7c41ae53d3b67eb9fff33b089ac9154f703cde8a457052ae9a69
+# frontmatter-hash: d7c4b4b2ceac740da1e27536d6bda2e84e18bc4aa0ffac6d38594b354ad25bdf
 
 name: "CLI Version Checker"
 "on":
