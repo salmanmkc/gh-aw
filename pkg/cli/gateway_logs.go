@@ -140,6 +140,7 @@ func parseGatewayLogs(logDir string, verbose bool) (*GatewayMetrics, error) {
 
 // processGatewayLogEntry processes a single log entry and updates metrics
 func processGatewayLogEntry(entry *GatewayLogEntry, metrics *GatewayMetrics, verbose bool) {
+	gatewayLogsLog.Printf("Processing gateway log entry: event=%s, server=%s, tool=%s", entry.Event, entry.ServerName, entry.ToolName)
 	// Parse timestamp for time range
 	if entry.Timestamp != "" {
 		if t, err := time.Parse(time.RFC3339, entry.Timestamp); err == nil {
@@ -243,6 +244,7 @@ func getOrCreateTool(server *GatewayServerMetrics, toolName string) *GatewayTool
 
 // calculateGatewayAggregates calculates aggregate statistics
 func calculateGatewayAggregates(metrics *GatewayMetrics) {
+	gatewayLogsLog.Printf("Calculating aggregates for %d servers", len(metrics.Servers))
 	for _, server := range metrics.Servers {
 		for _, tool := range server.Tools {
 			if tool.CallCount > 0 {
@@ -378,6 +380,7 @@ func truncateString(s string, maxLen int) string {
 
 // extractMCPToolUsageData creates detailed MCP tool usage data from gateway metrics
 func extractMCPToolUsageData(logDir string, verbose bool) (*MCPToolUsageData, error) {
+	gatewayLogsLog.Printf("Extracting MCP tool usage data from: %s", logDir)
 	// Parse gateway logs
 	gatewayMetrics, err := parseGatewayLogs(logDir, verbose)
 	if err != nil {
@@ -531,6 +534,7 @@ func extractMCPToolUsageData(logDir string, verbose bool) (*MCPToolUsageData, er
 
 // displayAggregatedGatewayMetrics aggregates and displays gateway metrics across all processed runs
 func displayAggregatedGatewayMetrics(processedRuns []ProcessedRun, outputDir string, verbose bool) {
+	gatewayLogsLog.Printf("Aggregating gateway metrics from %d processed runs", len(processedRuns))
 	// Aggregate gateway metrics from all runs
 	aggregated := &GatewayMetrics{
 		Servers: make(map[string]*GatewayServerMetrics),

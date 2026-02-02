@@ -120,6 +120,7 @@ func ensureTrialRepository(repoSlug string, cloneRepoSlug string, forceDeleteHos
 }
 
 func cleanupTrialRepository(repoSlug string, verbose bool) error {
+	trialRepoLog.Printf("Cleaning up trial repository: %s", repoSlug)
 	if verbose {
 		fmt.Fprintln(os.Stderr, console.FormatInfoMessage(fmt.Sprintf("Cleaning up host repository: %s", repoSlug)))
 	}
@@ -139,6 +140,7 @@ func cleanupTrialRepository(repoSlug string, verbose bool) error {
 }
 
 func cloneTrialHostRepository(repoSlug string, verbose bool) (string, error) {
+	trialRepoLog.Printf("Cloning trial host repository: %s", repoSlug)
 	// Create temporary directory
 	tempDir := filepath.Join(os.TempDir(), fmt.Sprintf("gh-aw-trial-%x", time.Now().UnixNano()))
 

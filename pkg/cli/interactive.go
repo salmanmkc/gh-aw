@@ -86,6 +86,7 @@ func CreateWorkflowInteractively(workflowName string, verbose bool, force bool) 
 
 // promptForWorkflowName asks the user for a workflow name
 func (b *InteractiveWorkflowBuilder) promptForWorkflowName() error {
+	interactiveLog.Print("Prompting user for workflow name")
 	form := huh.NewForm(
 		huh.NewGroup(
 			huh.NewInput().
@@ -102,6 +103,7 @@ func (b *InteractiveWorkflowBuilder) promptForWorkflowName() error {
 
 // promptForConfiguration organizes all prompts into logical groups with titles and descriptions
 func (b *InteractiveWorkflowBuilder) promptForConfiguration() error {
+	interactiveLog.Print("Prompting user for workflow configuration")
 	// Prepare trigger options
 	triggerOptions := []huh.Option[string]{
 		huh.NewOption("Manual trigger (workflow_dispatch)", "workflow_dispatch"),
@@ -287,6 +289,7 @@ func (b *InteractiveWorkflowBuilder) generateWorkflow(force bool) error {
 
 // generateWorkflowContent creates the workflow markdown content
 func (b *InteractiveWorkflowBuilder) generateWorkflowContent() string {
+	interactiveLog.Printf("Generating workflow content: engine=%s, tools=%v, outputs=%v", b.Engine, b.Tools, b.SafeOutputs)
 	var content strings.Builder
 
 	// Write frontmatter
