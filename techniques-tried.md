@@ -522,3 +522,37 @@
 - [x] Technique 40: /dev/tcp Gateway Direct Bypass (result: failure)
 
 **Summary**: All 40 novel techniques blocked successfully. Sandbox secure. No escapes found.
+
+## Run 21573974919 - 2026-02-02
+
+- [x] Technique 1: eBPF/XDP Bypass (result: failure - bpftool not available, CAP_BPF dropped)
+- [x] Technique 2: Netfilter /proc/sys Manipulation (result: failure - read-only filesystem)
+- [x] Technique 3: cgroup Network Controller (result: failure - no network cgroup available)
+- [x] Technique 4: Linux Capabilities Audit (result: failure - only safe caps available)
+- [x] Technique 5: TTL Covert Channel (result: failure - ping not installed)
+- [x] Technique 6: TCP Timestamp Covert Channel (result: failure - redirected to Squid)
+- [x] Technique 7: DNS Query Name Length Timing (result: failure - DNS works but no HTTP bypass)
+- [x] Technique 8: HTTP 100-Continue Smuggling (result: failure - Squid returns 403)
+- [x] Technique 9: Squid Version Detection (result: success-info - Squid 6.13 detected)
+- [x] Technique 10: Squid CONNECT Upgrade Attack (result: failure - tunnel is TLS encrypted)
+- [x] Technique 11: Squid Buffer Overflow (result: failure - Squid handles gracefully)
+- [x] Technique 12: Squid Log Injection (result: failure - curl rejects null bytes)
+- [x] Technique 13: DNS NULL Records (result: failure - no HTTP bypass route)
+- [x] Technique 14: Docker API Version Negotiation (result: failure - socket not mounted)
+- [x] Technique 15: DNS TLSA Records (result: failure - syntax error, no bypass)
+- [x] Technique 16: DNS SVCB/HTTPS Records (result: failure - no ANSWER section)
+- [x] Technique 17: DNS EDNS Client Subnet (result: failure - Google DNS refuses /32)
+- [x] Technique 18: Python asyncio Low-Level Sockets (result: failure - iptables NAT intercepts at kernel level)
+- [x] Technique 19: Node.js Cluster Fork (result: error - restricted command)
+- [x] Technique 20: TLS SNI Manipulation (result: failure - wrong version number error)
+- [x] Technique 21: TLS ALPN Protocol Negotiation (result: failure - ALPN h2 but still ACL-bound)
+- [x] Technique 22: /proc/PID/mem Memory Analysis (result: failure - I/O error, CAP_SYS_PTRACE dropped)
+- [x] Technique 23: Shared Memory Segments (result: failure - no shm segments)
+- [x] Technique 24: Unix Socket Discovery (result: failure - no useful network sockets)
+- [x] Technique 25: Sysfs Network Manipulation (result: failure - read-only filesystem)
+- [x] Technique 26: Port Knocking Sequence (result: failure - no port knocking mechanism)
+- [x] Technique 27: IPv6 Raw Socket (result: failure - CAP_NET_RAW dropped)
+- [x] Technique 28: HTTP Proxy-Connection Header (result: failure - Squid returns 403)
+- [x] Technique 29: WebSocket Upgrade Forbidden Domain (result: failure - Squid returns 403)
+
+**Summary**: All 29 novel techniques blocked successfully (1 info gathering success). Achieved 93% novelty rate. Focus on kernel-level bypasses (eBPF, /proc/sys, /sys, cgroups), covert channels (TTL, TCP timestamps, DNS timing), Squid exploits (version detection, CONNECT upgrade, buffer overflow, log injection), advanced DNS (NULL, TLSA, SVCB, ECS), low-level application bypasses (asyncio, cluster fork), TLS tricks (SNI, ALPN), and IPC methods (shm, Unix sockets). **Key finding**: iptables NAT operates at kernel level and intercepts ALL TCP connections regardless of proxy environment variables or application-layer attempts. Cumulative: 395 techniques (16 runs), 1 escape found (patched in v0.9.1). **Sandbox currently secure.**
