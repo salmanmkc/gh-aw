@@ -9,7 +9,7 @@ sidebar:
 
 In this guide you will add the automated [**Daily Repo Status Report**](https://github.com/githubnext/agentics/blob/main/workflows/daily-repo-status.md?plain=1) to an existing GitHub repository where you are a maintainer, running in GitHub Actions.
 
-Remember the aim here is _automated AI_: to install something that will run _automatically_ every day, in the context of your repository, and create a fresh status report issue in your repository without any further manual intervention. If you're familiar with GitHub Actions, you will be aware of the power of automation.
+The aim here is **automated AI**: to install something that will run **automatically** every day, in the context of your repository. The workflow will regularly create or update a fresh status report issue in your repository, without any further manual intervention. If you're familiar with GitHub Actions, you will be aware of the power of automation in repositories; this is simply taking that to the next level with AI.
 
 ## Prerequisites
 
