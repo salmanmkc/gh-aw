@@ -83,11 +83,10 @@ Some ideas for customization:
 
 ## What's next?
 
-There are hundreds of other ways to use GitHub Agentic Workflows, which you can explore in [Peli's Agent Factory](https://github.github.com/gh-aw/blog/2026-01-12-welcome-to-pelis-agent-factory/). This workflow is just the start of what's possible.
+There are hundreds of other ways to use GitHub Agentic Workflows. Explore these in [Peli's Agent Factory](https://github.github.com/gh-aw/blog/2026-01-12-welcome-to-pelis-agent-factory/).
 
-Explore further with:
+Or continue learning with these resources:
 
-- [Creating Agentic Workflows](/gh-aw/setup/creating-workflows/) where you will learn how to create automated workflows using your coding agent
-- Explore the samples in [Peli's Agent Factory](/gh-aw/blog/2026-01-12-welcome-to-pelis-agent-factory/).
-- Understand [How Agentic Workflows Work](/gh-aw/introduction/how-they-work/).
-- Check the [Frequently Asked Questions](/gh-aw/reference/faq/) for answers to common questions.
+- [Creating Agentic Workflows](/gh-aw/setup/creating-workflows/)
+- [How Agentic Workflows Work](/gh-aw/introduction/how-they-work/)
+- [Frequently Asked Questions](/gh-aw/reference/faq/)
