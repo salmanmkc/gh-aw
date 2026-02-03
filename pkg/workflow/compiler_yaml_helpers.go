@@ -115,6 +115,7 @@ func (c *Compiler) generateCheckoutActionsFolder(data *WorkflowData) []string {
 	}
 
 	// Script mode: checkout .github folder from github/gh-aw to /tmp/gh-aw/actions-source/
+	// Always include workflows folder since all workflows use runtime-import for main content
 	if c.actionMode.IsScript() {
 		return []string{
 			"      - name: Checkout actions folder\n",
@@ -123,6 +124,7 @@ func (c *Compiler) generateCheckoutActionsFolder(data *WorkflowData) []string {
 			"          repository: github/gh-aw\n",
 			"          sparse-checkout: |\n",
 			"            actions\n",
+			"            workflows\n",
 			"          path: /tmp/gh-aw/actions-source\n",
 			"          depth: 1\n",
 			"          persist-credentials: false\n",
@@ -130,6 +132,7 @@ func (c *Compiler) generateCheckoutActionsFolder(data *WorkflowData) []string {
 	}
 
 	// Dev mode: checkout local actions folder
+	// Always include workflows folder since all workflows use runtime-import for main content
 	if c.actionMode.IsDev() {
 		return []string{
 			"      - name: Checkout actions folder\n",
@@ -137,6 +140,7 @@ func (c *Compiler) generateCheckoutActionsFolder(data *WorkflowData) []string {
 			"        with:\n",
 			"          sparse-checkout: |\n",
 			"            actions\n",
+			"            workflows\n",
 			"          persist-credentials: false\n",
 		}
 	}

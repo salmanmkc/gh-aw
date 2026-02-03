@@ -340,3 +340,87 @@ func TestGenerateYAMLRefactored(t *testing.T) {
 		})
 	}
 }
+
+// TestGenerateCheckoutActionsFolder tests the generateCheckoutActionsFolder function
+// and verifies that workflows folder is always included in sparse-checkout
+func TestGenerateCheckoutActionsFolder(t *testing.T) {
+	tests := []struct {
+		name           string
+		actionMode     ActionMode
+		data           *WorkflowData
+		expectCheckout bool
+		expectSteps    []string // Expected strings in the checkout step
+	}{
+		{
+			name:           "dev mode includes workflows folder",
+			actionMode:     ActionModeDev,
+			data:           &WorkflowData{},
+			expectCheckout: true,
+			expectSteps: []string{
+				"Checkout actions folder",
+				"sparse-checkout: |",
+				"actions",
+				"workflows",
+			},
+		},
+		{
+			name:           "script mode includes workflows folder",
+			actionMode:     ActionModeScript,
+			data:           &WorkflowData{},
+			expectCheckout: true,
+			expectSteps: []string{
+				"Checkout actions folder",
+				"repository: github/gh-aw",
+				"sparse-checkout: |",
+				"actions",
+				"workflows",
+				"path: /tmp/gh-aw/actions-source",
+			},
+		},
+		{
+			name:           "release mode has no checkout",
+			actionMode:     ActionModeRelease,
+			data:           &WorkflowData{},
+			expectCheckout: false,
+		},
+		{
+			name:       "action-tag feature disables checkout",
+			actionMode: ActionModeDev,
+			data: &WorkflowData{
+				Features: map[string]any{
+					"action-tag": "v1.0.0",
+				},
+			},
+			expectCheckout: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			compiler := NewCompiler()
+			compiler.actionMode = tt.actionMode
+
+			steps := compiler.generateCheckoutActionsFolder(tt.data)
+
+			if tt.expectCheckout && len(steps) == 0 {
+				t.Error("generateCheckoutActionsFolder() expected checkout step but got none")
+				return
+			}
+			if !tt.expectCheckout && len(steps) > 0 {
+				t.Errorf("generateCheckoutActionsFolder() expected no checkout step but got %d lines", len(steps))
+				return
+			}
+
+			if tt.expectCheckout {
+				// Join all step lines into a single string for easier assertion
+				stepsStr := strings.Join(steps, "")
+				
+				for _, expected := range tt.expectSteps {
+					if !strings.Contains(stepsStr, expected) {
+						t.Errorf("generateCheckoutActionsFolder() missing %q\nGot:\n%s", expected, stepsStr)
+					}
+				}
+			}
+		})
+	}
+}

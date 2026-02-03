@@ -70,6 +70,7 @@ jobs:
         with:
           sparse-checkout: |
             actions
+            workflows
           persist-credentials: false
       - name: Setup Scripts
         uses: ./actions/setup
@@ -130,6 +131,7 @@ jobs:
         with:
           sparse-checkout: |
             actions
+            workflows
           persist-credentials: false
       - name: Setup Scripts
         uses: ./actions/setup
@@ -1622,6 +1624,7 @@ jobs:
         with:
           sparse-checkout: |
             actions
+            workflows
           persist-credentials: false
       - name: Setup Scripts
         uses: ./actions/setup
@@ -1728,6 +1731,7 @@ jobs:
         with:
           sparse-checkout: |
             actions
+            workflows
           persist-credentials: false
       - name: Setup Scripts
         uses: ./actions/setup
@@ -1837,6 +1841,7 @@ jobs:
         with:
           sparse-checkout: |
             actions
+            workflows
           persist-credentials: false
       - name: Setup Scripts
         uses: ./actions/setup
@@ -1897,6 +1902,7 @@ jobs:
         with:
           sparse-checkout: |
             actions
+            workflows
           persist-credentials: false
       - name: Setup Scripts
         uses: ./actions/setup
@@ -1975,6 +1981,7 @@ jobs:
         with:
           sparse-checkout: |
             actions
+            workflows
           persist-credentials: false
       - name: Setup Scripts
         uses: ./actions/setup
