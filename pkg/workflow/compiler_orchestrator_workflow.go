@@ -163,43 +163,30 @@ func (c *Compiler) processAndMergeSteps(frontmatter map[string]any, workflowData
 
 	workflowData.CustomSteps = c.extractTopLevelYAMLSection(frontmatter, "steps")
 
-	// Parse copilot-setup-steps if present (these go at the start)
 	var copilotSetupSteps []any
 	if importsResult.CopilotSetupSteps != "" {
 		if err := yaml.Unmarshal([]byte(importsResult.CopilotSetupSteps), &copilotSetupSteps); err != nil {
 			orchestratorWorkflowLog.Printf("Failed to unmarshal copilot-setup steps: %v", err)
+		} else if typedCopilotSteps, err := SliceToSteps(copilotSetupSteps); err != nil {
+			orchestratorWorkflowLog.Printf("Failed to convert copilot-setup steps to typed steps: %v", err)
 		} else {
-			// Convert to typed steps for action pinning
-			typedCopilotSteps, err := SliceToSteps(copilotSetupSteps)
-			if err != nil {
-				orchestratorWorkflowLog.Printf("Failed to convert copilot-setup steps to typed steps: %v", err)
-			} else {
-				// Apply action pinning to copilot-setup steps
-				typedCopilotSteps = ApplyActionPinsToTypedSteps(typedCopilotSteps, workflowData)
-				// Convert back to []any for YAML marshaling
-				copilotSetupSteps = StepsToSlice(typedCopilotSteps)
-			}
+			typedCopilotSteps = ApplyActionPinsToTypedSteps(typedCopilotSteps, workflowData)
+			copilotSetupSteps = StepsToSlice(typedCopilotSteps)
 		}
 	}
 
-	// Parse other imported steps if present (these go after copilot-setup but before main steps)
 	var otherImportedSteps []any
 	if importsResult.MergedSteps != "" {
 		if err := yaml.Unmarshal([]byte(importsResult.MergedSteps), &otherImportedSteps); err == nil {
-			// Convert to typed steps for action pinning
-			typedOtherSteps, err := SliceToSteps(otherImportedSteps)
-			if err != nil {
+			if typedOtherSteps, err := SliceToSteps(otherImportedSteps); err != nil {
 				orchestratorWorkflowLog.Printf("Failed to convert other imported steps to typed steps: %v", err)
 			} else {
-				// Apply action pinning to other imported steps
 				typedOtherSteps = ApplyActionPinsToTypedSteps(typedOtherSteps, workflowData)
-				// Convert back to []any for YAML marshaling
 				otherImportedSteps = StepsToSlice(typedOtherSteps)
 			}
 		}
 	}
 
-	// If there are main workflow steps, parse them
 	var mainSteps []any
 	if workflowData.CustomSteps != "" {
 		var mainStepsWrapper map[string]any
@@ -207,14 +194,10 @@ func (c *Compiler) processAndMergeSteps(frontmatter map[string]any, workflowData
 			if mainStepsVal, hasSteps := mainStepsWrapper["steps"]; hasSteps {
 				if steps, ok := mainStepsVal.([]any); ok {
 					mainSteps = steps
-					// Convert to typed steps for action pinning
-					typedMainSteps, err := SliceToSteps(mainSteps)
-					if err != nil {
+					if typedMainSteps, err := SliceToSteps(mainSteps); err != nil {
 						orchestratorWorkflowLog.Printf("Failed to convert main steps to typed steps: %v", err)
 					} else {
-						// Apply action pinning to main steps
 						typedMainSteps = ApplyActionPinsToTypedSteps(typedMainSteps, workflowData)
-						// Convert back to []any for YAML marshaling
 						mainSteps = StepsToSlice(typedMainSteps)
 					}
 				}
@@ -222,21 +205,14 @@ func (c *Compiler) processAndMergeSteps(frontmatter map[string]any, workflowData
 		}
 	}
 
-	// Merge steps in the correct order:
-	// 1. copilot-setup-steps (at start)
-	// 2. other imported steps (after copilot-setup)
-	// 3. main frontmatter steps (last)
 	var allSteps []any
-	if len(copilotSetupSteps) > 0 || len(mainSteps) > 0 || len(otherImportedSteps) > 0 {
-		allSteps = append(allSteps, copilotSetupSteps...)
-		allSteps = append(allSteps, otherImportedSteps...)
-		allSteps = append(allSteps, mainSteps...)
+	allSteps = append(allSteps, copilotSetupSteps...)
+	allSteps = append(allSteps, otherImportedSteps...)
+	allSteps = append(allSteps, mainSteps...)
 
-		// Convert back to YAML with "steps:" wrapper
+	if len(allSteps) > 0 {
 		stepsWrapper := map[string]any{"steps": allSteps}
-		stepsYAML, err := yaml.Marshal(stepsWrapper)
-		if err == nil {
-			// Remove quotes from uses values with version comments
+		if stepsYAML, err := yaml.Marshal(stepsWrapper); err == nil {
 			workflowData.CustomSteps = unquoteUsesWithComments(string(stepsYAML))
 		}
 	}
@@ -248,29 +224,20 @@ func (c *Compiler) processAndMergePostSteps(frontmatter map[string]any, workflow
 
 	workflowData.PostSteps = c.extractTopLevelYAMLSection(frontmatter, "post-steps")
 
-	// Apply action pinning to post-steps if any
 	if workflowData.PostSteps != "" {
 		var postStepsWrapper map[string]any
 		if err := yaml.Unmarshal([]byte(workflowData.PostSteps), &postStepsWrapper); err == nil {
 			if postStepsVal, hasPostSteps := postStepsWrapper["post-steps"]; hasPostSteps {
 				if postSteps, ok := postStepsVal.([]any); ok {
-					// Convert to typed steps for action pinning
-					typedPostSteps, err := SliceToSteps(postSteps)
-					if err != nil {
+					if typedPostSteps, err := SliceToSteps(postSteps); err != nil {
 						orchestratorWorkflowLog.Printf("Failed to convert post-steps to typed steps: %v", err)
 					} else {
-						// Apply action pinning to post steps using type-safe version
 						typedPostSteps = ApplyActionPinsToTypedSteps(typedPostSteps, workflowData)
-						// Convert back to []any for YAML marshaling
 						postSteps = StepsToSlice(typedPostSteps)
-					}
-
-					// Convert back to YAML with "post-steps:" wrapper
-					stepsWrapper := map[string]any{"post-steps": postSteps}
-					stepsYAML, err := yaml.Marshal(stepsWrapper)
-					if err == nil {
-						// Remove quotes from uses values with version comments
-						workflowData.PostSteps = unquoteUsesWithComments(string(stepsYAML))
+						stepsWrapper := map[string]any{"post-steps": postSteps}
+						if stepsYAML, err := yaml.Marshal(stepsWrapper); err == nil {
+							workflowData.PostSteps = unquoteUsesWithComments(string(stepsYAML))
+						}
 					}
 				}
 			}
@@ -284,38 +251,32 @@ func (c *Compiler) processAndMergeServices(frontmatter map[string]any, workflowD
 
 	workflowData.Services = c.extractTopLevelYAMLSection(frontmatter, "services")
 
-	// Merge imported services if any
 	if importsResult.MergedServices != "" {
-		// Parse imported services from YAML
 		var importedServices map[string]any
 		if err := yaml.Unmarshal([]byte(importsResult.MergedServices), &importedServices); err == nil {
-			// If there are main workflow services, parse and merge them
+			var mainServices map[string]any
 			if workflowData.Services != "" {
-				// Parse main workflow services
 				var mainServicesWrapper map[string]any
 				if err := yaml.Unmarshal([]byte(workflowData.Services), &mainServicesWrapper); err == nil {
-					if mainServices, ok := mainServicesWrapper["services"].(map[string]any); ok {
-						// Merge: main workflow services take precedence over imported
-						for key, value := range importedServices {
-							if _, exists := mainServices[key]; !exists {
-								mainServices[key] = value
-							}
-						}
-						// Convert back to YAML with "services:" wrapper
-						servicesWrapper := map[string]any{"services": mainServices}
-						servicesYAML, err := yaml.Marshal(servicesWrapper)
-						if err == nil {
-							workflowData.Services = string(servicesYAML)
-						}
+					if services, ok := mainServicesWrapper["services"].(map[string]any); ok {
+						mainServices = services
 					}
 				}
-			} else {
-				// Only imported services exist, wrap in "services:" format
-				servicesWrapper := map[string]any{"services": importedServices}
-				servicesYAML, err := yaml.Marshal(servicesWrapper)
-				if err == nil {
-					workflowData.Services = string(servicesYAML)
+			}
+
+			if mainServices == nil {
+				mainServices = make(map[string]any)
+			}
+
+			for key, value := range importedServices {
+				if _, exists := mainServices[key]; !exists {
+					mainServices[key] = value
 				}
+			}
+
+			servicesWrapper := map[string]any{"services": mainServices}
+			if servicesYAML, err := yaml.Marshal(servicesWrapper); err == nil {
+				workflowData.Services = string(servicesYAML)
 			}
 		}
 	}

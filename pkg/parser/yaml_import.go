@@ -57,11 +57,9 @@ func isActionDefinitionFile(filePath string, content []byte) (bool, error) {
 
 // isCopilotSetupStepsFile checks if a file is the special copilot-setup-steps file
 // This file receives special handling - only steps are extracted from the setup job
-// Supports both .yml and .yaml extensions for consistency with GitHub Actions
 func isCopilotSetupStepsFile(filePath string) bool {
-	base := filepath.Base(filePath)
-	lower := strings.ToLower(base)
-	return lower == "copilot-setup-steps.yml" || lower == "copilot-setup-steps.yaml"
+	base := strings.ToLower(filepath.Base(filePath))
+	return base == "copilot-setup-steps.yml" || base == "copilot-setup-steps.yaml"
 }
 
 // processYAMLWorkflowImport processes an imported YAML workflow file
@@ -174,7 +172,6 @@ func extractStepsFromCopilotSetup(workflow map[string]any) (string, error) {
 		return "", fmt.Errorf("jobs field is not a map in copilot-setup-steps.yml")
 	}
 
-	// Look for the copilot-setup-steps job
 	setupJob, ok := jobsMap["copilot-setup-steps"]
 	if !ok {
 		return "", fmt.Errorf("copilot-setup-steps job not found in copilot-setup-steps.yml")
@@ -185,20 +182,16 @@ func extractStepsFromCopilotSetup(workflow map[string]any) (string, error) {
 		return "", fmt.Errorf("copilot-setup-steps job is not a map")
 	}
 
-	// Extract steps from the job
 	stepsValue, ok := setupJobMap["steps"]
 	if !ok {
 		return "", fmt.Errorf("no steps found in copilot-setup-steps job")
 	}
 
-	// Verify steps is actually a list
 	stepsSlice, ok := stepsValue.([]any)
 	if !ok {
 		return "", fmt.Errorf("steps field is not a list in copilot-setup-steps job")
 	}
 
-	// Marshal steps array directly to YAML format (without "steps:" wrapper)
-	// This matches the format expected by the compiler which unmarshals into []any
 	stepsYAML, err := yaml.Marshal(stepsSlice)
 	if err != nil {
 		return "", fmt.Errorf("failed to marshal steps to YAML: %w", err)
