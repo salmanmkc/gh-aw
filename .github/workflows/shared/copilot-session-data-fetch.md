@@ -96,12 +96,68 @@ steps:
             if [ -f "/tmp/gh-aw/session-data/logs/${run_id}.zip" ] && [ -s "/tmp/gh-aw/session-data/logs/${run_id}.zip" ]; then
               unzip -q "/tmp/gh-aw/session-data/logs/${run_id}.zip" -d "/tmp/gh-aw/session-data/logs/${run_id}/" 2>/dev/null || true
               rm "/tmp/gh-aw/session-data/logs/${run_id}.zip"
+              
+              # Validate log content
+              if [ -d "/tmp/gh-aw/session-data/logs/${run_id}" ]; then
+                log_file_count=$(find "/tmp/gh-aw/session-data/logs/${run_id}" -name "*.txt" -type f | wc -l)
+                if [ "$log_file_count" -eq 0 ]; then
+                  echo "⚠️  WARNING: No .txt log files found in run ${run_id}"
+                else
+                  total_log_size=$(find "/tmp/gh-aw/session-data/logs/${run_id}" -name "*.txt" -type f -exec cat {} \; 2>/dev/null | wc -c)
+                  if [ "$total_log_size" -lt 100 ]; then
+                    echo "⚠️  WARNING: Minimal log content in run ${run_id} (${total_log_size} bytes)"
+                  else
+                    echo "✓ Run ${run_id}: ${log_file_count} log files, ${total_log_size} bytes"
+                  fi
+                fi
+              fi
             fi
           fi
         done
         
         LOG_COUNT=$(find /tmp/gh-aw/session-data/logs/ -type d -mindepth 1 | wc -l)
         echo "Session logs downloaded: $LOG_COUNT log directories"
+        
+        # Count sessions with and without logs
+        SESSIONS_WITH_LOGS=0
+        SESSIONS_NO_LOGS=0
+        SESSIONS_MINIMAL_LOGS=0
+        
+        for run_dir in /tmp/gh-aw/session-data/logs/*/; do
+          if [ -d "$run_dir" ]; then
+            log_files=$(find "$run_dir" -name "*.txt" -type f 2>/dev/null)
+            if [ -z "$log_files" ]; then
+              SESSIONS_NO_LOGS=$((SESSIONS_NO_LOGS + 1))
+            else
+              total_size=$(find "$run_dir" -name "*.txt" -type f -exec cat {} \; 2>/dev/null | wc -c)
+              if [ "$total_size" -lt 100 ]; then
+                SESSIONS_MINIMAL_LOGS=$((SESSIONS_MINIMAL_LOGS + 1))
+              else
+                SESSIONS_WITH_LOGS=$((SESSIONS_WITH_LOGS + 1))
+              fi
+            fi
+          fi
+        done
+        
+        echo ""
+        echo "=== LOG COLLECTION SUMMARY ==="
+        echo "Sessions with full logs: $SESSIONS_WITH_LOGS"
+        echo "Sessions with minimal logs (< 100 bytes): $SESSIONS_MINIMAL_LOGS"
+        echo "Sessions with no logs: $SESSIONS_NO_LOGS"
+        
+        TOTAL_SESSIONS=$((SESSIONS_WITH_LOGS + SESSIONS_MINIMAL_LOGS + SESSIONS_NO_LOGS))
+        if [ "$TOTAL_SESSIONS" -gt 0 ]; then
+          NO_LOG_PERCENTAGE=$((SESSIONS_NO_LOGS * 100 / TOTAL_SESSIONS))
+          echo "Percentage with no logs: ${NO_LOG_PERCENTAGE}%"
+          
+          if [ "$NO_LOG_PERCENTAGE" -gt 50 ]; then
+            echo "::warning::⚠️  CRITICAL: ${NO_LOG_PERCENTAGE}% of sessions have no logs - this limits observability"
+          elif [ "$NO_LOG_PERCENTAGE" -gt 25 ]; then
+            echo "::warning::⚠️  HIGH: ${NO_LOG_PERCENTAGE}% of sessions have no logs"
+          fi
+        fi
+        echo "=============================="
+        echo ""
 
         # Store in cache with today's date
         cp /tmp/gh-aw/session-data/sessions-list.json "$CACHE_DIR/copilot-sessions-${TODAY}.json"

@@ -95,11 +95,33 @@ Create a comprehensive report and publish it as a GitHub Discussion for team rev
 
 For each downloaded session log in `/tmp/gh-aw/session-data/logs/`:
 
-1. **Load Historical Context**: Check cache memory for previous analysis results, known strategies, and identified patterns (see `session-analysis-strategies` shared module)
+1. **Validate Log Content**: Before analyzing, check if the log file actually contains analyzable content:
+   ```bash
+   # For each session directory
+   if [ -d "/tmp/gh-aw/session-data/logs/$run_id" ]; then
+     # Check if directory has any .txt log files
+     log_files=$(find "/tmp/gh-aw/session-data/logs/$run_id" -name "*.txt" -type f)
+     if [ -z "$log_files" ]; then
+       echo "WARNING: No log files found for run $run_id"
+       # Track this as a missing log session
+     else
+       # Check if log files have content (not just empty or minimal)
+       total_size=$(find "/tmp/gh-aw/session-data/logs/$run_id" -name "*.txt" -type f -exec cat {} \; | wc -c)
+       if [ "$total_size" -lt 100 ]; then
+         echo "WARNING: Minimal log content for run $run_id (${total_size} bytes)"
+         # Track this as a low-quality log session
+       fi
+     fi
+   fi
+   ```
+
+2. **Load Historical Context**: Check cache memory for previous analysis results, known strategies, and identified patterns (see `session-analysis-strategies` shared module)
 
 2. **Apply Analysis Strategies**: Use the standard and experimental strategies defined in the imported `session-analysis-strategies` module
 
 3. **Collect Session Data**: Gather metrics for each session as defined in the shared module
+   - **For sessions with analyzable logs**: Extract completion status, tool usage, error patterns, prompt quality
+   - **For sessions with missing logs**: Track as "no_log_data" and record in missing logs report
 
 ### Phase 2: Generate Trend Charts
 
@@ -148,11 +170,51 @@ Daily Copilot Agent Session Analysis — [YYYY-MM-DD]
 | Metric | Value | Trend |
 |--------|-------|-------|
 | Total Sessions | [N] | [↑↓→] |
+| Sessions with Logs | [N] ([%]) | [↑↓→] |
+| Sessions without Logs | [N] ([%]) | [↑↓→] |
 | Successful Completions | [N] ([%]) | [↑↓→] |
 | Failed/Abandoned | [N] ([%]) | [↑↓→] |
 | Average Duration | [TIME] | [↑↓→] |
 | Loop Detection Rate | [N] ([%]) | [↑↓→] |
 | Context Issues | [N] ([%]) | [↑↓→] |
+
+## Log Collection Health ⚠️
+
+**CRITICAL OBSERVABILITY ISSUE**: [X]% of sessions have no analyzable log content.
+
+| Log Status | Count | Percentage |
+|------------|-------|------------|
+| ✅ Full logs | [N] | [%] |
+| ⚠️ Minimal logs (< 100 bytes) | [N] | [%] |
+| ❌ No logs | [N] | [%] |
+
+### Missing Log Sessions
+
+Sessions without analyzable logs (grouped by workflow name):
+
+| Workflow Name | Session Count | Run IDs |
+|---------------|---------------|---------|
+| [workflow-1] | [N] | [run IDs] |
+| [workflow-2] | [N] | [run IDs] |
+| ... | ... | ... |
+
+**Impact**: Without logs, we cannot:
+- Diagnose issues in [X] sessions
+- Learn from [Y]% of agent executions
+- Track behavioral patterns for majority of runs
+- Measure improvement over time
+
+**Root Causes**:
+- Workflows not using structured logging component
+- Silent failures with no output
+- Log collection failures during workflow execution
+- Agents completing without producing diagnostic output
+
+**Action Items**:
+1. Update workflows to import `shared/structured-logging.md`
+2. Ensure agents call logging functions at start, steps, and end
+3. Investigate why certain agent types produce no output
+4. Add log validation to workflow compilation
 
 ## Success Factors ✅
 
@@ -277,6 +339,9 @@ Common indicators of inefficiency or failure:
 
 ```
 Total Sessions Analyzed:     [N]
+Sessions with Logs:         [N] ([%])
+Sessions without Logs:      [N] ([%])
+  
 Successful Completions:      [N] ([%])
 Failed Sessions:            [N] ([%])
 Abandoned Sessions:         [N] ([%])
@@ -294,6 +359,11 @@ Tool Failures:             [N] occurrences
 High-Quality Prompts:      [N] ([%])
 Medium-Quality Prompts:    [N] ([%])
 Low-Quality Prompts:       [N] ([%])
+
+⚠️ LOG COLLECTION STATUS:
+  Full logs:               [N] ([%])
+  Minimal logs:            [N] ([%])
+  No logs:                 [N] ([%])
 ```
 
 ## Next Steps
@@ -361,8 +431,11 @@ If no sessions were downloaded:
 
 If some sessions have missing logs:
 - Note the count of incomplete sessions
-- Analyze available data only
+- **Create a detailed "Missing Logs" section in the report**
+- List workflow names and run IDs with missing logs
+- **Calculate percentage of sessions with no logs**
 - Report data quality issues
+- **Include actionable recommendations for fixing missing logs**
 
 ### Cache Corruption
 

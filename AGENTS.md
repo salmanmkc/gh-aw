@@ -363,6 +363,74 @@ Keep as-is
 
 See **[scratchpad/validation-refactoring.md](scratchpad/validation-refactoring.md)** for step-by-step refactoring guide and examples.
 
+## Structured Logging for Agent Workflows
+
+**CRITICAL REQUIREMENT**: All agent workflows MUST use structured logging to ensure session logs are collected and analyzable.
+
+### Problem
+
+56% of agent sessions produce no analyzable log content, making it impossible to:
+- Diagnose issues in failed sessions
+- Learn from successful patterns  
+- Track agent behavior over time
+- Measure improvement in agent performance
+
+### Solution
+
+**ALL agent workflows MUST**:
+1. Import the `shared/structured-logging.md` component
+2. Call logging functions at key points during execution
+3. Log session start, major steps, tool calls, and session end
+
+### Quick Start
+
+Add to your workflow frontmatter:
+
+```yaml
+imports:
+  - shared/structured-logging.md
+```
+
+Add to your workflow prompt instructions for the agent:
+
+```markdown
+**IMPORTANT - Initialize Session Logging:**
+
+Before starting your work, initialize structured logging:
+
+\```bash
+source /tmp/gh-aw/log-helpers.sh
+log_session_start "Agent Name" "Task description"
+\```
+
+As you work, log each major step and when complete:
+
+\```bash
+log_session_step "Phase 1" "Analyzing data"
+log_session_end "success" "Task completed successfully"
+\```
+```
+
+### Available Functions
+
+- `log_session_start <agent_name> <task>` - Start of session
+- `log_session_step <step_name> <details>` - Major step completion
+- `log_session_end <status> <summary>` - End of session (status: success/failure/partial/abandoned)
+- `log_tool_call <tool_name> <success> <details>` - Tool invocation
+- `log_error <error_type> <message>` - Error recording
+- `log_context_update <context_type> <update>` - Context changes
+
+### Examples
+
+See these workflows for reference:
+- `.github/workflows/q.md` - Q workflow optimizer
+- `.github/workflows/scout.md` - Scout research agent
+- `.github/workflows/archie.md` - Archie diagram generator
+- `.github/workflows/pr-nitpick-reviewer.md` - PR reviewer
+- `.github/workflows/cloclo.md` - Claude-powered assistant
+
+For complete documentation, see `.github/workflows/shared/structured-logging.md`.
+
 ## Console Message Formatting
 
 **ALWAYS use console formatting for user output:**
