@@ -166,7 +166,6 @@ export default defineConfig({
 					items: [
 						{ label: 'GitHub Actions Primer', link: '/guides/github-actions-primer/' },
 						{ label: 'Packaging & Distribution', link: '/guides/packaging-imports/' },
-						{ label: 'Security Best Practices', link: '/guides/security/' },
 						{ label: 'Using MCPs', link: '/guides/mcps/' },
 						{ label: 'Custom Safe Outputs', link: '/guides/custom-safe-outputs/' },
 						{ label: 'Threat Detection', link: '/guides/threat-detection/' },
@@ -191,16 +190,6 @@ export default defineConfig({
 						{ label: 'Orchestration', link: '/guides/orchestration/' },
 					],
 				},
-					{
-						label: 'Examples',
-						items: [
-							{ label: 'Research & Planning', link: '/examples/scheduled/research-planning/' },
-							{ label: 'Triage & Analysis', link: '/examples/issue-pr-events/triage-analysis/' },
-							{ label: 'Coding & Development', link: '/examples/issue-pr-events/coding-development/' },
-							{ label: 'Quality & Testing', link: '/examples/issue-pr-events/quality-testing/' },
-							{ label: "Peli's Agent Factory", link: '/blog/2026-01-12-welcome-to-pelis-agent-factory/' },
-						],
-					},
 				{
 					label: 'Reference',
 					items: [

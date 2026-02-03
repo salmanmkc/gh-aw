@@ -15,11 +15,11 @@ This guide introduces GitHub Actions—GitHub's native automation platform—and
 
 Understanding these fundamental concepts is essential for working with both traditional GitHub Actions and agentic workflows.
 
-### Workflows
+### YAML Workflows
 
-A **workflow** is an automated process defined in a YAML file stored in your repository's `.github/workflows/` directory. Each workflow consists of one or more jobs that execute when triggered by specific events.
+A traditional **YAML workflow** is an automated process defined in a YAML file stored in your repository's `.github/workflows/` directory. Each workflow consists of one or more jobs that execute when triggered by specific events.
 
-**Example workflow file** (`.github/workflows/ci.yml`):
+**Example YAML workflow file** (`.github/workflows/ci.yml`):
 
 ```yaml
 name: CI
@@ -39,10 +39,13 @@ jobs:
 ```
 
 **Key characteristics:**
+
 - Must be stored in `.github/workflows/` directory on the **main** or **default branch** to be active
 - Define triggers (events), jobs, and execution environments
 - Can be manually triggered, scheduled, or event-driven
 - Are versioned alongside your code
+
+Agentic workflows compile from markdown files into secure GitHub Actions YAML workflows, inheriting these core concepts while adding AI-driven decision-making and enhanced security.
 
 ### Jobs
 
@@ -283,7 +286,7 @@ While agentic workflows compile to GitHub Actions YAML and run on the same infra
 Now that you understand GitHub Actions fundamentals, explore how agentic workflows build upon this foundation:
 
 - **[Quick Start](/gh-aw/setup/quick-start/)** - Create your first agentic workflow
-- **[Security Best Practices](/gh-aw/guides/security/)** - Deep dive into agentic security model
+- **[Security Best Practices](/gh-aw/introduction/architecture/)** - Deep dive into agentic security model
 - **[Safe Outputs](/gh-aw/reference/safe-outputs/)** - Learn about validated GitHub operations
 - **[Workflow Structure](/gh-aw/reference/workflow-structure/)** - Understand markdown workflow syntax
 - **[Examples](/gh-aw/examples/scheduled/research-planning/)** - Real-world agentic workflow patterns

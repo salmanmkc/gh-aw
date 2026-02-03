@@ -307,6 +307,6 @@ If the detection process itself fails (e.g., network issues, tool errors), the w
 ## Related Documentation
 
 - [Safe Outputs Reference](/gh-aw/reference/safe-outputs/) - Complete safe outputs configuration
-- [Security Guide](/gh-aw/guides/security/) - Overall security best practices
+- [Security Guide](/gh-aw/introduction/architecture/) - Overall security best practices
 - [Custom Safe Outputs](/gh-aw/guides/custom-safe-outputs/) - Creating custom output types
 - [Frontmatter Reference](/gh-aw/reference/frontmatter/) - All configuration options

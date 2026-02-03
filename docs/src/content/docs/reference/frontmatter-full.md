@@ -1929,7 +1929,7 @@ safe-outputs:
   # github-token override). NOTE: Projects v2 requires a Personal Access Token (PAT)
   # or GitHub App token with appropriate permissions; the GITHUB_TOKEN cannot be
   # used for Projects v2. Safe output items produced by the agent use
-  # type=update_project Configuration also supports an optional views array for
+  # type=update_project. Configuration also supports an optional views array for
   # declaring project views to create. Safe output items produced by the agent use
   # type=update_project and may include: project (board name), content_type
   # (issue|pull_request), content_number, fields, and create_if_missing.
