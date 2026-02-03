@@ -1,34 +1,28 @@
-# PR Triage Summary - February 3, 2026
+# PR Triage Summary - February 3, 2026 18:26 UTC
 
-**Run ID:** 21629884904  
-**Timestamp:** 2026-02-03T12:19:05.629Z  
-**Total PRs Triaged:** 3
+## Quick Stats
+- **Total PRs Triaged:** 2
+- **Priority Distribution:** High (1), Medium (1)
+- **Fast-track:** 1 | **Batch Review:** 1
+- **Agent:** Copilot (2)
 
-## Summary
+## Key Highlights
 
-All 3 open agent PRs were successfully triaged with labels and comments applied. The backlog is manageable with no high-priority or auto-merge candidates at this time.
+### 🔥 Fast-track PR
+**PR #13538** (Priority: 78/100) - Add special import handling for copilot-setup-steps.yml
+- High-quality implementation with 3 new test files
+- Ready for review, actively engaged by maintainer
+- Affects core compiler logic
 
-## Key Findings
+### 📦 Batch: batch-feature-cli-001
+**PR #13518** (Priority: 52/100) - Conditionally include campaign routing in dispatcher
+- Still in draft
+- CLI enhancement for init command UX
 
-- **67% of PRs are in draft status** - Higher draft rate indicates PRs need faster completion
-- **No high-priority PRs** - All PRs scored between 18-52/100 priority
-- **No auto-merge candidates** - All PRs have pending CI or are drafts
-- **1 batch identified** - JavaScript refactoring PRs can be reviewed together
+## Trends vs Previous Run (6 hours ago)
+- ✅ Higher quality PRs (avg quality 12/20 vs 6/20)
+- ✅ More fast-track candidates (1 vs 0)
+- ✅ Focus on feature development (100% vs 33%)
 
-## PRs by Action
-
-### Batch Review (2 PRs)
-- #13420 - Refactor expired-entity cleanup scripts (Priority: 52, Ready)
-- #13468 - Configure gh-aw MCP server (Priority: 45, Draft)
-
-### Defer (1 PR)
-- #13469 - Update mcp-server startup script (Priority: 18, Draft, No code yet)
-
-## Next Triage
-
-Scheduled for: **6 hours from now** (2026-02-03T18:19 UTC)
-
-Expected activities:
-- Re-triage draft PRs if completed
-- Check CI status for pending PRs
-- Review any new PRs created in the interim
+## Next Scheduled Run
+- **6 hours from now** (2026-02-04 00:26 UTC)

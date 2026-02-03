@@ -1,145 +1,126 @@
 {
-  "run_date": "2026-02-03T12:19:05.629Z",
-  "run_id": "21629884904",
-  "total_prs_triaged": 3,
+  "run_date": "2026-02-03T18:26:00Z",
+  "run_id": "21642459631",
+  "total_prs_triaged": 2,
   "results": [
     {
-      "number": 13420,
-      "title": "Refactor expired-entity cleanup scripts to share expiration processing",
-      "url": "https://github.com/github/gh-aw/pull/13420",
-      "author": "Codex",
-      "category": "refactor",
+      "number": 13538,
+      "title": "Add special import handling for copilot-setup-steps.yml",
+      "url": "https://github.com/github/gh-aw/pull/13538",
+      "author": "Copilot",
+      "category": "feature",
+      "risk": "high",
+      "priority_score": 78,
+      "impact_score": 42,
+      "impact_rationale": "New feature adding special handling for copilot-setup-steps.yml import; High impact on compilation workflow (compiler_orchestrator_workflow.go, yaml_import.go, import_processor.go); 1393 additions across 41 files; Affects core compiler logic and step ordering; Includes comprehensive tests (3 new test files); Changes affect multiple workflow lock files (33 recompiled); Well-documented with examples",
+      "urgency_score": 20,
+      "urgency_rationale": "Created 2.3 hours ago; Not draft (ready for review); Active development with 9 commits, 16 comments, 5 review comments; CI pending but actively reviewed by pelikhan; Feature request with good engagement; Moderate age penalty (new PR)",
+      "quality_score": 16,
+      "quality_rationale": "CI pending; Ready for review (not draft); Excellent description with comprehensive checklist showing all completed work; Includes 3 dedicated test files; Good documentation updates to both source and template files; Active review process (5 review comments addressed); Well-structured with clear examples and technical details; Assigned to maintainer (pelikhan)",
+      "action": "fast_track",
+      "action_explanation": "This is a high-priority feature PR that adds critical functionality for importing copilot-setup-steps.yml with special handling. The PR is ready for review (not draft), has comprehensive testing, excellent documentation, and is actively being reviewed by the maintainer. While CI is pending, the quality of implementation (extensive tests, clear documentation, thorough checklist) and active engagement warrant fast-track review once CI passes. The changes affect core compiler logic and have been thoroughly tested with 3 new test files covering various scenarios.",
+      "draft": false,
+      "age_days": 0,
+      "age_hours": 2.3,
+      "changed_files": 41,
+      "additions": 1393,
+      "deletions": 265,
+      "ci_status": "pending",
+      "mergeable_state": "unknown",
+      "comments": 16,
+      "commits": 9,
+      "review_comments": 5,
+      "fixes_issue": null,
+      "agent_workflow": "copilot",
+      "batch_id": null,
+      "files_changed": [
+        "pkg/parser/yaml_import.go",
+        "pkg/parser/import_processor.go",
+        "pkg/workflow/compiler_orchestrator_workflow.go",
+        "pkg/parser/frontmatter_hash.go"
+      ],
+      "test_files_added": 3,
+      "lock_files_recompiled": 33,
+      "has_documentation": true
+    },
+    {
+      "number": 13518,
+      "title": "Conditionally include campaign routing in dispatcher based on --campaign flag",
+      "url": "https://github.com/github/gh-aw/pull/13518",
+      "author": "Copilot",
+      "category": "feature",
       "risk": "medium",
       "priority_score": 52,
       "impact_score": 30,
-      "impact_rationale": "Refactoring to reduce code duplication across 3 cleanup scripts; Medium-scale changes (5 files, -209 net lines); Improves maintainability; JavaScript code in actions/setup/js/",
+      "impact_rationale": "Feature adding conditional campaign routing based on --campaign flag; Medium impact on init command behavior (init.go, init_command.go, copilot-agents.go); 529 additions, 384 deletions across 14 files; Removes campaign-related files (agentic-campaign-designer.agent.md and 5 campaign workflow files); Improves UX by not creating references to non-existent files; Changes CLI flag handling",
       "urgency_score": 14,
-      "urgency_rationale": "6 hours old; Ready for review (not draft); Refactoring has moderate urgency; Addresses technical debt",
+      "urgency_rationale": "Created 3.6 hours ago; Draft status (not ready for final review); 5 commits but no review comments yet; CI pending; Medium urgency for UX improvement; Assigned to mnkiefer for review",
       "quality_score": 8,
-      "quality_rationale": "CI pending; Ready for review; Detailed description with code examples; Good refactoring approach (extracted shared helper); Has review comments",
+      "quality_rationale": "CI pending; Draft status indicates work in progress; Good description explaining the problem and solution; Only 1 test file changed (log_parser_shared.test.cjs - unrelated?); No issue reference; Clear explanation of changes and result",
       "action": "batch_review",
-      "action_explanation": "This is a well-structured refactoring PR that addresses code duplication detected by the duplicate-code-detector workflow. The changes are moderate in scope (net -209 lines) and improve maintainability by extracting shared expiration processing logic. The PR is ready for review (not draft) and has received some review comments. Once CI passes, it should be reviewed alongside other JavaScript refactoring PRs in batch batch-refactor-001.",
-      "draft": false,
+      "action_explanation": "This is a solid feature PR improving the init command UX by conditionally including campaign routing only when requested. The PR is still in draft status, indicating it needs more work before final review. Once CI passes and draft status is removed, it should be reviewed alongside other CLI enhancement PRs. The changes are well-documented and address a real UX issue (dispatcher pointing at non-existent campaign files).",
+      "draft": true,
       "age_days": 0,
-      "age_hours": 6,
-      "changed_files": 5,
-      "additions": 386,
-      "deletions": 595,
+      "age_hours": 3.6,
+      "changed_files": 14,
+      "additions": 529,
+      "deletions": 384,
       "ci_status": "pending",
       "mergeable_state": "unknown",
-      "comments": 1,
-      "commits": 3,
-      "fixes_issue": "13419",
-      "agent_workflow": "duplicate-code-detector",
-      "batch_id": "batch-refactor-001",
-      "files_changed": [
-        "actions/setup/js/close_expired_discussions.cjs",
-        "actions/setup/js/close_expired_issues.cjs",
-        "actions/setup/js/close_expired_pull_requests.cjs",
-        "actions/setup/js/expired_entity_cleanup_helpers.cjs"
-      ]
-    },
-    {
-      "number": 13468,
-      "title": "[WIP] Configure gh-aw MCP server to use tools.agentic-workflows",
-      "url": "https://github.com/github/gh-aw/pull/13468",
-      "author": "Claude",
-      "category": "feature",
-      "risk": "medium",
-      "priority_score": 45,
-      "impact_score": 30,
-      "impact_rationale": "New MCP server configuration feature using tools.agentic-workflows; Medium-scale changes (3 files, +620 lines); Enhances workflow capabilities",
-      "urgency_score": 8,
-      "urgency_rationale": "Less than 1 hour old; Draft status; Medium urgency for new feature",
-      "quality_score": 7,
-      "quality_rationale": "CI pending; Draft status; Good description with checklist showing progress; Missing final cleanup",
-      "action": "batch_review",
-      "action_explanation": "This is a well-structured feature PR adding MCP server configuration support. The changes are moderate in scope (620 additions) and follow good development practices with a clear checklist. Once CI passes and draft status is removed, it should be reviewed alongside other MCP/tooling enhancement PRs.",
-      "draft": true,
-      "age_days": 0,
-      "age_hours": 0,
-      "changed_files": 3,
-      "additions": 620,
-      "deletions": 0,
-      "ci_status": "pending",
-      "mergeable_state": "unstable",
       "comments": 0,
-      "commits": 2,
-      "fixes_issue": null,
-      "agent_workflow": "claude",
-      "batch_id": null
-    },
-    {
-      "number": 13469,
-      "title": "[WIP] Update mcp-server startup script to log to core.info",
-      "url": "https://github.com/github/gh-aw/pull/13469",
-      "author": "Copilot",
-      "category": "chore",
-      "risk": "low",
-      "priority_score": 18,
-      "impact_score": 10,
-      "impact_rationale": "Draft WIP PR with no code changes yet; Shell script logging improvement; Low immediate impact",
-      "urgency_score": 5,
-      "urgency_rationale": "Less than 1 hour old; Draft status; Low urgency chore task",
-      "quality_score": 3,
-      "quality_rationale": "CI pending; Draft status; No files changed yet; Minimal description",
-      "action": "defer",
-      "action_explanation": "This is a draft WIP PR with no code changes yet. The PR should be deferred until the implementation is complete and draft status is removed. Once ready for review, the PR can be re-triaged for fast-track or batch review consideration.",
-      "draft": true,
-      "age_days": 0,
-      "age_hours": 0,
-      "changed_files": 0,
-      "additions": 0,
-      "deletions": 0,
-      "ci_status": "pending",
-      "mergeable_state": "unstable",
-      "comments": 0,
-      "commits": 1,
+      "commits": 5,
+      "review_comments": 0,
       "fixes_issue": null,
       "agent_workflow": "copilot",
-      "batch_id": null
+      "batch_id": "batch-feature-cli-001",
+      "files_changed": [
+        "pkg/cli/init.go",
+        "pkg/cli/init_command.go",
+        "pkg/cli/copilot-agents.go",
+        "pkg/cli/fix_command.go",
+        "pkg/cli/upgrade_command.go"
+      ],
+      "test_files_added": 0,
+      "files_removed": 6,
+      "has_documentation": false
     }
   ],
   "statistics": {
-    "total": 3,
+    "total": 2,
     "by_category": {
-      "refactor": 1,
-      "feature": 1,
-      "chore": 1
+      "feature": 2
     },
     "by_risk": {
-      "low": 1,
-      "medium": 2
+      "high": 1,
+      "medium": 1
     },
     "by_priority": {
-      "low": 1,
-      "medium": 2
+      "high": 1,
+      "medium": 1
     },
     "by_action": {
-      "defer": 1,
-      "batch_review": 2
+      "fast_track": 1,
+      "batch_review": 1
     },
     "by_agent": {
-      "Codex": 1,
-      "Claude": 1,
-      "Copilot": 1
+      "Copilot": 2
     },
     "by_draft_status": {
-      "draft": 2,
+      "draft": 1,
       "ready": 1
     }
   },
   "auto_merge_candidates": [],
-  "fast_track_needed": [],
-  "batch_review": [13420, 13468],
-  "defer": [13469],
+  "fast_track_needed": [13538],
+  "batch_review": [13518],
+  "defer": [],
   "close_candidates": [],
   "batches": {
-    "batch-refactor-001": {
-      "category": "refactor",
+    "batch-feature-cli-001": {
+      "category": "feature",
       "risk": "medium",
-      "prs": [13420],
-      "description": "JavaScript refactoring PRs for code cleanup"
+      "prs": [13518],
+      "description": "CLI enhancement PRs improving init command and user experience"
     }
   }
 }
