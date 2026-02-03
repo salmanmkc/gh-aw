@@ -80,7 +80,7 @@ timeout-minutes: 15
 2. **Safe Inputs GH CLI Testing**: Use the `safeinputs-gh` tool to query 2 pull requests from ${{ github.repository }} (use args: "pr list --repo ${{ github.repository }} --limit 2 --json number,title,author")
 3. **Serena MCP Testing**: Use the Serena MCP server tool `activate_project` to initialize the workspace at `${{ github.workspace }}` and verify it succeeds (do NOT use bash to run go commands - use Serena's MCP tools or the safeinputs-go/safeinputs-make tools from the go-make shared workflow)
 4. **Make Build Testing**: Use the `safeinputs-make` tool to build the project (use args: "build") and verify it succeeds
-5. **Playwright Testing**: Use playwright to navigate to https://github.com and verify the page title contains "GitHub"
+5. **Playwright Testing**: Use the playwright tools to navigate to https://github.com and verify the page title contains "GitHub" (do NOT try to install playwright - use the provided MCP tools)
 6. **Tavily Web Search Testing**: Use the Tavily MCP server to perform a web search for "GitHub Agentic Workflows" and verify that results are returned with at least one item
 7. **File Writing Testing**: Create a test file `/tmp/gh-aw/agent/smoke-test-claude-${{ github.run_id }}.txt` with content "Smoke test passed for Claude at $(date)" (create the directory if it doesn't exist)
 8. **Bash Tool Testing**: Execute bash commands to verify file creation was successful (use `cat` to read the file back)
@@ -104,11 +104,11 @@ timeout-minutes: 15
      - Run URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
      - Timestamp
 
-2. Add a **very brief** comment (max 5-10 lines) to the current pull request with:
+2. **Only if this workflow was triggered by a pull_request event**: Use the `add_comment` tool to add a **very brief** comment (max 5-10 lines) to the triggering pull request (omit the `item_number` parameter to auto-target the triggering PR) with:
    - PR titles only (no descriptions)
    - ✅ or ❌ for each test result
    - Overall status: PASS or FAIL
 
-3. Use the `add_comment` tool to add a **fun comic-book style comment** to the latest discussion (using the `discussion_number` you extracted in step 9) - be playful and use comic-book language like "💥 WHOOSH!"
+3. Use the `add_comment` tool with `item_number` set to the discussion number you extracted in step 9 to add a **fun comic-book style comment** to that discussion - be playful and use comic-book language like "💥 WHOOSH!"
 
-If all tests pass, add the label `smoke-claude` to the pull request.
+If all tests pass, use the `add_labels` tool to add the label `smoke-claude` to the pull request (omit the `item_number` parameter to auto-target the triggering PR if this workflow was triggered by a pull_request event).

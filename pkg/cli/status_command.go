@@ -33,200 +33,47 @@ type WorkflowStatus struct {
 	RunConclusion string   `json:"run_conclusion,omitempty" console:"header:Run Conclusion,omitempty"`
 }
 
-func StatusWorkflows(pattern string, verbose bool, jsonOutput bool, ref string, labelFilter string, repoOverride string) error {
-	statusLog.Printf("Checking workflow status: pattern=%s, jsonOutput=%v, ref=%s, labelFilter=%s, repo=%s", pattern, jsonOutput, ref, labelFilter, repoOverride)
-	if verbose && !jsonOutput {
-		fmt.Fprintln(os.Stderr, console.FormatInfoMessage("Checking status of workflow files"))
-		if pattern != "" {
-			fmt.Fprintln(os.Stderr, console.FormatInfoMessage(fmt.Sprintf("Filtering by pattern: %s", pattern)))
-		}
-	}
+// GetWorkflowStatuses retrieves workflow status information and returns it as a slice.
+// This function is designed for programmatic access (e.g., from MCP server).
+// For CLI usage, use StatusWorkflows which handles output formatting.
+func GetWorkflowStatuses(pattern string, ref string, labelFilter string, repoOverride string) ([]WorkflowStatus, error) {
+	statusLog.Printf("Getting workflow statuses: pattern=%s, ref=%s, labelFilter=%s, repo=%s", pattern, ref, labelFilter, repoOverride)
 
 	mdFiles, err := getMarkdownWorkflowFiles("")
 	if err != nil {
 		statusLog.Printf("Failed to get markdown workflow files: %v", err)
-		fmt.Fprintln(os.Stderr, console.FormatErrorMessage(err.Error()))
-		return nil
+		return nil, fmt.Errorf("failed to get markdown workflow files: %w", err)
 	}
 
 	statusLog.Printf("Found %d markdown workflow files", len(mdFiles))
 	if len(mdFiles) == 0 {
-		if jsonOutput {
-			// Output empty array for JSON
-			output := []WorkflowStatus{}
-			jsonBytes, _ := json.MarshalIndent(output, "", "  ")
-			fmt.Println(string(jsonBytes))
-			return nil
-		}
-		fmt.Fprintln(os.Stderr, console.FormatInfoMessage("No workflow files found."))
-		return nil
-	}
-
-	if verbose && !jsonOutput {
-		fmt.Fprintln(os.Stderr, console.FormatInfoMessage(fmt.Sprintf("Found %d markdown workflow files", len(mdFiles))))
-		fmt.Fprintln(os.Stderr, console.FormatInfoMessage("Fetching GitHub workflow status..."))
+		return []WorkflowStatus{}, nil
 	}
 
 	// Get GitHub workflows data
 	statusLog.Print("Fetching GitHub workflow status")
-	githubWorkflows, err := fetchGitHubWorkflows(repoOverride, verbose && !jsonOutput)
+	githubWorkflows, err := fetchGitHubWorkflows(repoOverride, false)
 	if err != nil {
 		statusLog.Printf("Failed to fetch GitHub workflows: %v", err)
-		if verbose && !jsonOutput {
-			fmt.Fprintln(os.Stderr, console.FormatVerboseMessage(fmt.Sprintf("Failed to fetch GitHub workflows: %v", err)))
-		}
-		if !jsonOutput {
-			fmt.Fprintln(os.Stderr, console.FormatWarningMessage(fmt.Sprintf("Could not fetch GitHub workflow status: %v", err)))
-		}
 		githubWorkflows = make(map[string]*GitHubWorkflow)
 	} else {
 		statusLog.Printf("Successfully fetched %d GitHub workflows", len(githubWorkflows))
-		if verbose && !jsonOutput {
-			fmt.Fprintln(os.Stderr, console.FormatSuccessMessage(fmt.Sprintf("Successfully fetched %d GitHub workflows", len(githubWorkflows))))
-		}
 	}
 
 	// Fetch latest workflow runs for ref if specified
 	var latestRunsByWorkflow map[string]*WorkflowRun
 	if ref != "" {
-		if verbose && !jsonOutput {
-			fmt.Fprintln(os.Stderr, console.FormatInfoMessage(fmt.Sprintf("Fetching latest runs for ref: %s", ref)))
-		}
-		latestRunsByWorkflow, err = fetchLatestRunsByRef(ref, repoOverride, verbose && !jsonOutput)
+		latestRunsByWorkflow, err = fetchLatestRunsByRef(ref, repoOverride, false)
 		if err != nil {
 			statusLog.Printf("Failed to fetch workflow runs for ref %s: %v", ref, err)
-			if verbose && !jsonOutput {
-				fmt.Fprintln(os.Stderr, console.FormatVerboseMessage(fmt.Sprintf("Failed to fetch workflow runs for ref: %v", err)))
-			}
-			if !jsonOutput {
-				fmt.Fprintln(os.Stderr, console.FormatWarningMessage(fmt.Sprintf("Could not fetch workflow runs for ref '%s': %v", ref, err)))
-			}
 			latestRunsByWorkflow = make(map[string]*WorkflowRun)
 		} else {
 			statusLog.Printf("Successfully fetched %d workflow runs for ref %s", len(latestRunsByWorkflow), ref)
-			if verbose && !jsonOutput {
-				fmt.Fprintln(os.Stderr, console.FormatSuccessMessage(fmt.Sprintf("Successfully fetched %d workflow runs for ref", len(latestRunsByWorkflow))))
-			}
 		}
 	}
 
-	// Build table configuration or JSON output
-	if jsonOutput {
-		// Build JSON output
-		var statuses []WorkflowStatus
-		for _, file := range mdFiles {
-			base := filepath.Base(file)
-			name := strings.TrimSuffix(base, ".md")
-
-			// Skip if pattern specified and doesn't match
-			if pattern != "" && !strings.Contains(strings.ToLower(name), strings.ToLower(pattern)) {
-				continue
-			}
-
-			// Extract engine ID from workflow file
-			agent := extractEngineIDFromFile(file)
-
-			// Check if compiled (.lock.yml file is in .github/workflows)
-			lockFile := stringutil.MarkdownToLockFile(file)
-			compiled := "N/A"
-			timeRemaining := "N/A"
-
-			if _, err := os.Stat(lockFile); err == nil {
-				// Check if up to date
-				mdStat, _ := os.Stat(file)
-				lockStat, _ := os.Stat(lockFile)
-				if mdStat.ModTime().After(lockStat.ModTime()) {
-					compiled = "No"
-				} else {
-					compiled = "Yes"
-				}
-
-				// Extract stop-time from lock file
-				if stopTime := workflow.ExtractStopTimeFromLockFile(lockFile); stopTime != "" {
-					timeRemaining = calculateTimeRemaining(stopTime)
-				}
-			}
-
-			// Get GitHub workflow status
-			status := "Unknown"
-			if workflow, exists := githubWorkflows[name]; exists {
-				if workflow.State == "disabled_manually" {
-					status = "disabled"
-				} else {
-					status = workflow.State
-				}
-			}
-
-			// Extract "on" field and labels from frontmatter for JSON output
-			var onField any
-			var labels []string
-			if content, err := os.ReadFile(file); err == nil {
-				if result, err := parser.ExtractFrontmatterFromContent(string(content)); err == nil {
-					if result.Frontmatter != nil {
-						onField = result.Frontmatter["on"]
-						// Extract labels field if present
-						if labelsField, ok := result.Frontmatter["labels"]; ok {
-							if labelsArray, ok := labelsField.([]any); ok {
-								for _, label := range labelsArray {
-									if labelStr, ok := label.(string); ok {
-										labels = append(labels, labelStr)
-									}
-								}
-							}
-						}
-					}
-				}
-			}
-
-			// Skip if label filter specified and workflow doesn't have the label
-			if labelFilter != "" {
-				hasLabel := false
-				for _, label := range labels {
-					if strings.EqualFold(label, labelFilter) {
-						hasLabel = true
-						break
-					}
-				}
-				if !hasLabel {
-					continue
-				}
-			}
-
-			// Get run status for ref if available
-			var runStatus, runConclusion string
-			if latestRunsByWorkflow != nil {
-				if run, exists := latestRunsByWorkflow[name]; exists {
-					runStatus = run.Status
-					runConclusion = run.Conclusion
-				}
-			}
-
-			// Build status object
-			statuses = append(statuses, WorkflowStatus{
-				Workflow:      name,
-				EngineID:      agent,
-				Compiled:      compiled,
-				Status:        status,
-				TimeRemaining: timeRemaining,
-				Labels:        labels,
-				On:            onField,
-				RunStatus:     runStatus,
-				RunConclusion: runConclusion,
-			})
-		}
-
-		// Output JSON
-		jsonBytes, err := json.MarshalIndent(statuses, "", "  ")
-		if err != nil {
-			return fmt.Errorf("failed to marshal JSON: %w", err)
-		}
-		fmt.Println(string(jsonBytes))
-		return nil
-	}
-
-	// Build status list for text output
+	// Build status list
 	var statuses []WorkflowStatus
-
 	for _, file := range mdFiles {
 		base := filepath.Base(file)
 		name := strings.TrimSuffix(base, ".md")
@@ -270,20 +117,14 @@ func StatusWorkflows(pattern string, verbose bool, jsonOutput bool, ref string, 
 			}
 		}
 
-		// Get run status for ref if available
-		var runStatus, runConclusion string
-		if latestRunsByWorkflow != nil {
-			if run, exists := latestRunsByWorkflow[name]; exists {
-				runStatus = run.Status
-				runConclusion = run.Conclusion
-			}
-		}
-
-		// Extract labels from frontmatter
+		// Extract "on" field and labels from frontmatter
+		var onField any
 		var labels []string
 		if content, err := os.ReadFile(file); err == nil {
 			if result, err := parser.ExtractFrontmatterFromContent(string(content)); err == nil {
 				if result.Frontmatter != nil {
+					onField = result.Frontmatter["on"]
+					// Extract labels field if present
 					if labelsField, ok := result.Frontmatter["labels"]; ok {
 						if labelsArray, ok := labelsField.([]any); ok {
 							for _, label := range labelsArray {
@@ -311,6 +152,15 @@ func StatusWorkflows(pattern string, verbose bool, jsonOutput bool, ref string, 
 			}
 		}
 
+		// Get run status for ref if available
+		var runStatus, runConclusion string
+		if latestRunsByWorkflow != nil {
+			if run, exists := latestRunsByWorkflow[name]; exists {
+				runStatus = run.Status
+				runConclusion = run.Conclusion
+			}
+		}
+
 		// Build status object
 		statuses = append(statuses, WorkflowStatus{
 			Workflow:      name,
@@ -319,9 +169,57 @@ func StatusWorkflows(pattern string, verbose bool, jsonOutput bool, ref string, 
 			Status:        status,
 			TimeRemaining: timeRemaining,
 			Labels:        labels,
+			On:            onField,
 			RunStatus:     runStatus,
 			RunConclusion: runConclusion,
 		})
+	}
+
+	return statuses, nil
+}
+
+func StatusWorkflows(pattern string, verbose bool, jsonOutput bool, ref string, labelFilter string, repoOverride string) error {
+	statusLog.Printf("Checking workflow status: pattern=%s, jsonOutput=%v, ref=%s, labelFilter=%s, repo=%s", pattern, jsonOutput, ref, labelFilter, repoOverride)
+	if verbose && !jsonOutput {
+		fmt.Fprintln(os.Stderr, console.FormatInfoMessage("Checking status of workflow files"))
+		if pattern != "" {
+			fmt.Fprintln(os.Stderr, console.FormatInfoMessage(fmt.Sprintf("Filtering by pattern: %s", pattern)))
+		}
+	}
+
+	// Verbose logging for network operations
+	if verbose && !jsonOutput {
+		fmt.Fprintln(os.Stderr, console.FormatInfoMessage("Fetching GitHub workflow status..."))
+	}
+
+	// Get workflow statuses
+	statuses, err := GetWorkflowStatuses(pattern, ref, labelFilter, repoOverride)
+	if err != nil {
+		statusLog.Printf("Failed to get workflow statuses: %v", err)
+		fmt.Fprintln(os.Stderr, console.FormatErrorMessage(err.Error()))
+		return nil
+	}
+
+	// Additional verbose output after successful fetch
+	if verbose && !jsonOutput && len(statuses) > 0 {
+		fmt.Fprintln(os.Stderr, console.FormatSuccessMessage(fmt.Sprintf("Successfully fetched status for %d workflows", len(statuses))))
+	}
+
+	// Handle output
+	if jsonOutput {
+		// Output JSON
+		jsonBytes, err := json.MarshalIndent(statuses, "", "  ")
+		if err != nil {
+			return fmt.Errorf("failed to marshal JSON: %w", err)
+		}
+		fmt.Println(string(jsonBytes))
+		return nil
+	}
+
+	// Handle empty result for text output
+	if len(statuses) == 0 {
+		fmt.Fprintln(os.Stderr, console.FormatInfoMessage("No workflow files found."))
+		return nil
 	}
 
 	// Render the table using struct-based rendering
@@ -329,6 +227,8 @@ func StatusWorkflows(pattern string, verbose bool, jsonOutput bool, ref string, 
 
 	return nil
 }
+
+// Removed duplicate code - now everything goes through GetWorkflowStatuses
 
 // calculateTimeRemaining calculates and formats the time remaining until stop-time
 func calculateTimeRemaining(stopTimeStr string) string {
