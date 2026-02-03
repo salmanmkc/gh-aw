@@ -1,104 +1,113 @@
 {
-  "run_date": "2026-02-02T18:20:01.271688+00:00",
-  "run_id": "21602019795",
-  "total_prs_triaged": 3,
+  "run_date": "2026-02-03T06:24:51.368Z",
+  "run_id": "21619564765",
+  "total_prs_triaged": 2,
   "results": [
     {
-      "number": 12574,
-      "title": "Parallelize setup operations with engine-agnostic installation",
-      "url": "https://github.com/githubnext/gh-aw/pull/12574",
-      "category": "feature",
-      "risk": "high",
-      "priority_score": 65,
-      "impact_score": 45,
-      "impact_rationale": "New feature (medium-high impact); Performance improvement; 156 files changed (large-scale changes)",
-      "urgency_score": 13,
-      "urgency_rationale": "4 days old; Feature/maintenance has moderate urgency",
-      "quality_score": 7,
-      "quality_rationale": "CI pending; Detailed description; Iterative development (10 commits)",
-      "action": "batch_review",
-      "draft": false,
-      "age_days": 4,
-      "changed_files": 156,
-      "additions": 2096,
-      "deletions": 843,
-      "ci_status": "pending",
-      "mergeable_state": "unknown",
-      "comments": 14,
-      "commits": 10
-    },
-    {
-      "number": 12664,
-      "title": "Fix MCP config generation when AWF firewall is disabled",
-      "url": "https://github.com/githubnext/gh-aw/pull/12664",
-      "category": "bug",
-      "risk": "high",
-      "priority_score": 63,
-      "impact_score": 40,
-      "impact_rationale": "Bug fix (high impact on stability); 7 files changed",
-      "urgency_score": 16,
-      "urgency_rationale": "3 days old; Bug fixes are urgent",
-      "quality_score": 7,
-      "quality_rationale": "CI pending; Detailed description; Iterative development (13 commits)",
-      "action": "batch_review",
-      "draft": false,
-      "age_days": 3,
-      "changed_files": 7,
-      "additions": 2357,
-      "deletions": 20,
+      "number": 13421,
+      "title": "Document root cause of daily-regulatory discussion creation failure",
+      "url": "https://github.com/github/gh-aw/pull/13421",
+      "author": "Claude",
+      "category": "docs",
+      "risk": "low",
+      "priority_score": 29,
+      "impact_score": 15,
+      "impact_rationale": "Documentation-only PR explaining workflow failure root cause; No code changes; Investigation findings for issue #13417",
+      "urgency_score": 9,
+      "urgency_rationale": "Less than 1 day old (17 minutes); Documentation has low urgency; PR is draft",
+      "quality_score": 5,
+      "quality_rationale": "CI pending; Detailed description with investigation findings; Draft status; No files changed (doc-only explanation in PR body)",
+      "action": "defer",
+      "action_explanation": "This is a documentation/investigation PR with no code changes. Since it's in draft status and explains a repository settings issue rather than proposing code fixes, it should be deferred until ready for review. The actual fix requires repository settings changes, not code changes.",
+      "draft": true,
+      "age_days": 0,
+      "age_hours": 0,
+      "changed_files": 0,
+      "additions": 0,
+      "deletions": 0,
       "ci_status": "pending",
       "mergeable_state": "unstable",
-      "comments": 44,
-      "commits": 13
+      "comments": 0,
+      "commits": 1,
+      "fixes_issue": "13417",
+      "agent_workflow": "daily-regulatory",
+      "batch_id": null
     },
     {
-      "number": 12827,
-      "title": "Update AWF to v0.13.0 and enable --enable-chroot",
-      "url": "https://github.com/githubnext/gh-aw/pull/12827",
-      "category": "chore",
-      "risk": "high",
-      "priority_score": 54,
-      "impact_score": 40,
-      "impact_rationale": "Maintenance/dependency update; Infrastructure component; 154 files changed (large-scale changes)",
-      "urgency_score": 9,
-      "urgency_rationale": "2 days old; Feature/maintenance has moderate urgency",
-      "quality_score": 5,
-      "quality_rationale": "CI pending; Detailed description",
+      "number": 13420,
+      "title": "Refactor expired-entity cleanup scripts to share expiration processing",
+      "url": "https://github.com/github/gh-aw/pull/13420",
+      "author": "Codex",
+      "category": "refactor",
+      "risk": "medium",
+      "priority_score": 52,
+      "impact_score": 30,
+      "impact_rationale": "Refactoring to reduce code duplication across 3 cleanup scripts; Medium-scale changes (4 files, -210 net lines); Improves maintainability; JavaScript code in actions/setup/js/",
+      "urgency_score": 14,
+      "urgency_rationale": "Less than 1 day old (17 minutes); Refactoring has moderate urgency; PR is draft",
+      "quality_score": 8,
+      "quality_rationale": "CI pending; Detailed description with code examples; Draft status; Good refactoring approach (extracted shared helper)",
       "action": "batch_review",
-      "draft": false,
-      "age_days": 2,
-      "changed_files": 154,
-      "additions": 590,
-      "deletions": 664,
+      "action_explanation": "This is a well-structured refactoring PR that addresses code duplication. The changes are moderate in scope and improve maintainability. Once CI passes and draft status is removed, it should be reviewed alongside other JavaScript refactoring PRs.",
+      "draft": true,
+      "age_days": 0,
+      "age_hours": 0,
+      "changed_files": 4,
+      "additions": 383,
+      "deletions": 593,
       "ci_status": "pending",
-      "mergeable_state": "blocked",
-      "comments": 10,
-      "commits": 5
+      "mergeable_state": "unstable",
+      "comments": 0,
+      "commits": 2,
+      "fixes_issue": "13419",
+      "agent_workflow": "duplicate-code-detector",
+      "batch_id": "batch-refactor-001",
+      "files_changed": [
+        "actions/setup/js/close_expired_discussions.cjs",
+        "actions/setup/js/close_expired_issues.cjs",
+        "actions/setup/js/close_expired_pull_requests.cjs",
+        "actions/setup/js/expired_entity_cleanup_helpers.cjs"
+      ]
     }
   ],
   "statistics": {
-    "total": 3,
+    "total": 2,
     "by_category": {
-      "feature": 1,
-      "bug": 1,
-      "chore": 1
+      "docs": 1,
+      "refactor": 1
     },
     "by_risk": {
-      "high": 3
+      "low": 1,
+      "medium": 1
     },
     "by_priority": {
-      "medium": 3
+      "low": 1,
+      "medium": 1
     },
     "by_action": {
-      "batch_review": 3
+      "defer": 1,
+      "batch_review": 1
+    },
+    "by_agent": {
+      "Claude": 1,
+      "Codex": 1
+    },
+    "by_draft_status": {
+      "draft": 2,
+      "ready": 0
     }
   },
   "auto_merge_candidates": [],
   "fast_track_needed": [],
-  "batch_review": [
-    12574,
-    12664,
-    12827
-  ],
-  "close_candidates": []
+  "batch_review": [13420],
+  "defer": [13421],
+  "close_candidates": [],
+  "batches": {
+    "batch-refactor-001": {
+      "category": "refactor",
+      "risk": "medium",
+      "prs": [13420],
+      "description": "JavaScript refactoring PRs for code cleanup"
+    }
+  }
 }
