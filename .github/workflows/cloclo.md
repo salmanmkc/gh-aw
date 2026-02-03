@@ -224,17 +224,3 @@ log_session_end "failure" "Error during task: [brief description]"
 ```
 
 This ensures your session is captured in the session analysis for learning and improvement.
-
-**CRITICAL - Log Session Completion:**
-
-When your work is complete, log the session end:
-
-```bash
-# If successful:
-log_session_end "success" "Completed task: [brief summary of what was done]"
-
-# If failed:
-log_session_end "failure" "Error during task: [brief description]"
-```
-
-This ensures your session is captured in the session analysis for learning and improvement.

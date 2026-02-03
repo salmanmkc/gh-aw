@@ -101,11 +101,6 @@ steps:
         else
           echo "::warning::Session ended with status: $status - $summary"
         fi
-        
-        # Output log summary to GitHub Actions
-        echo "" >> "$SESSION_LOG"
-        echo "--- SESSION SUMMARY ---" >> "$SESSION_LOG"
-        cat "$SESSION_LOG" >> "$SESSION_LOG"
       }
       
       log_tool_call() {
