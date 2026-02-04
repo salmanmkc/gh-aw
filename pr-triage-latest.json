@@ -1,37 +1,8 @@
 {
-  "run_date": "2026-02-04T06:24:15Z",
-  "run_id": "21660997099",
+  "run_date": "2026-02-04T12:20:43.176596+00:00",
+  "run_id": "21671131149",
   "total_prs_triaged": 2,
   "results": [
-    {
-      "number": 13667,
-      "title": "Fix Playwright MCP --allowed-hosts to use comma separator per spec",
-      "url": "https://github.com/github/gh-aw/pull/13667",
-      "author": "Copilot",
-      "draft": true,
-      "category": "bug",
-      "risk": "low",
-      "priority_score": 68,
-      "impact_score": 30,
-      "impact_rationale": "Bug fix correcting Playwright MCP configuration to match specification; affects 11 workflow lock files but code change is minimal (16 additions/16 deletions); fixes incorrect separator in --allowed-hosts flag",
-      "urgency_score": 23,
-      "urgency_rationale": "Created 15 minutes ago (very recent); draft status; 0 comments (brand new); CI pending; Playwright MCP misconfiguration could cause runtime failures; assigned to pelikhan",
-      "quality_score": 15,
-      "quality_rationale": "CI pending (not failed); draft status but excellent description with documentation reference and before/after examples; small, focused change (32 line changeset); directly addresses spec compliance",
-      "action": "fast_track",
-      "action_explanation": "This is a critical bug fix that corrects Playwright MCP configuration to match the official specification. The PR has excellent documentation showing the issue and fix. While in draft and CI is pending, the change is small, focused, and addresses a real spec violation that could cause runtime issues. Should be fast-tracked for review once CI passes and draft is removed.",
-      "age_hours": 0.25,
-      "age_days": 0.01,
-      "changed_files": 11,
-      "additions": 16,
-      "deletions": 16,
-      "comments": 0,
-      "commits": 3,
-      "review_comments": 0,
-      "mergeable_state": "unstable",
-      "ci_status": "pending",
-      "batch_id": null
-    },
     {
       "number": 13576,
       "title": "Use AWF --enable-chroot mode and remove unnecessary --mount and --env flags",
@@ -40,50 +11,81 @@
       "draft": false,
       "category": "feature",
       "risk": "high",
-      "priority_score": 75,
-      "impact_score": 45,
-      "impact_rationale": "Major feature adopting AWF v0.13.1 chroot mode across all engines (Copilot, Claude, Codex); simplifies workflow generation by removing mount/env flags; 910 additions, 1379 deletions across 162 files; affects core engine execution; fixes issue #13379; net code reduction indicates cleanup",
-      "urgency_score": 18,
-      "urgency_rationale": "Created 10 hours ago; not draft (ready for review); 110 comments showing extensive engagement; 29 commits indicating iterative development; CI pending; assigned to Mossaka; blocks other work; architectural improvement",
-      "quality_score": 12,
-      "quality_rationale": "CI pending (mergeable_state: unknown); comprehensive PR description with full implementation checklist; very large changeset but well-documented; active discussion (110 comments); includes tests; fixes reported issue; changesets included",
+      "priority_score": 85,
+      "impact_score": 50,
+      "urgency_score": 25,
+      "quality_score": 10,
       "action": "fast_track",
-      "action_explanation": "This is a critical infrastructure improvement that adopts AWF chroot mode and simplifies the codebase significantly (net -469 lines). The PR has been actively developed with 29 commits and 110 comments, showing thorough iteration. Despite the large scope and pending CI, the architectural benefits and issue resolution (fixes #13379) warrant fast-track review. The work quality is high with comprehensive documentation and testing.",
-      "age_hours": 10.0,
-      "age_days": 0.42,
-      "changed_files": 162,
-      "additions": 910,
-      "deletions": 1379,
-      "comments": 110,
-      "commits": 29,
-      "review_comments": 0,
-      "mergeable_state": "unknown",
+      "age_hours": 16.08,
+      "age_days": 0.67,
+      "changed_files": 158,
+      "additions": 894,
+      "deletions": 1355,
+      "comments": 118,
+      "commits": 30,
       "ci_status": "pending",
+      "mergeable_state": "unknown",
       "fixes_issue": 13379,
-      "batch_id": null
+      "assignees": [
+        "Mossaka",
+        "Copilot"
+      ],
+      "impact_rationale": "Major infrastructure improvement adopting AWF chroot mode across all engines; simplifies codebase significantly (net -461 lines); affects core workflow generation; fixes issue #13379; 158 files changed indicating thorough implementation",
+      "urgency_rationale": "Created 16.1 hours ago (0.7 days); not draft (ready for review); 118 comments showing extensive engagement; 30 commits indicating iterative development; CI pending; fixes reported issue; architectural improvement with wide impact",
+      "quality_rationale": "CI pending (mergeable_state: unknown); comprehensive PR description with implementation checklist and changesets; very large changeset but well-documented; extremely active discussion (118 comments); includes tests; fixes reported issue; iterative development (30 commits)",
+      "action_explanation": "This is a critical infrastructure improvement that significantly simplifies the codebase while adopting AWF chroot mode. The PR has been actively developed with extensive discussion (118 comments, 30 commits), showing thorough iteration and collaboration. Despite the large scope and pending CI, the architectural benefits (net -461 lines), issue resolution (fixes #13379), and high engagement warrant fast-track review. The work quality is high with comprehensive documentation."
+    },
+    {
+      "number": 13706,
+      "title": "[WIP] Fix failing tests in the codebase",
+      "url": "https://github.com/github/gh-aw/pull/13706",
+      "author": "Copilot",
+      "draft": true,
+      "category": "test",
+      "risk": "low",
+      "priority_score": 52,
+      "impact_score": 35,
+      "urgency_score": 10,
+      "quality_score": 7,
+      "action": "defer",
+      "age_hours": 0.07,
+      "age_days": 0.0,
+      "changed_files": 0,
+      "additions": 0,
+      "deletions": 0,
+      "comments": 0,
+      "commits": 1,
+      "ci_status": "pending",
+      "mergeable_state": "unstable",
+      "fixes_issue": null,
+      "assignees": [
+        "pelikhan",
+        "Copilot"
+      ],
+      "impact_rationale": "Test fix addressing CI failures; no code changes yet (WIP); when implemented will improve test reliability; affects test suite quality",
+      "urgency_rationale": "Created 0.1 hours ago (very recent); draft status (not ready for review); 0 comments (brand new); CI pending; test fixes are important for code quality but not critical",
+      "quality_rationale": "CI pending (no failures yet); draft status with minimal description; no actual changes yet (0 additions/deletions); waiting for implementation",
+      "action_explanation": "This is a WIP PR with no actual code changes yet. The PR is in draft mode and appears to be in the planning phase. Should be deferred until actual test fixes are implemented and the draft status is removed."
     }
   ],
   "statistics": {
     "total": 2,
     "by_category": {
-      "bug": 1,
-      "feature": 1
+      "feature": 1,
+      "test": 1
     },
     "by_risk": {
-      "low": 1,
-      "high": 1
+      "high": 1,
+      "low": 1
     },
     "by_priority": {
-      "high": 2,
-      "medium": 0,
+      "high": 1,
+      "medium": 1,
       "low": 0
     },
     "by_action": {
-      "fast_track": 2,
-      "auto_merge": 0,
-      "batch_review": 0,
-      "defer": 0,
-      "close": 0
+      "fast_track": 1,
+      "defer": 1
     },
     "by_agent": {
       "Copilot": 2
@@ -97,9 +99,13 @@
     }
   },
   "auto_merge_candidates": [],
-  "fast_track_needed": [13576, 13667],
+  "fast_track_needed": [
+    13576
+  ],
   "batch_review": [],
-  "defer": [],
+  "defer": [
+    13706
+  ],
   "close_candidates": [],
   "batches": {}
 }

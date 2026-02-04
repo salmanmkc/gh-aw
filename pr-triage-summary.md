@@ -1,18 +1,24 @@
-# PR Triage Summary - 2026-02-04T06:24:15Z
+# PR Triage Summary
 
-## Quick Stats
-- **Total PRs:** 2
-- **Fast-track:** 2
-- **Priority High:** 2
+**Last Run:** 2026-02-04T12:20:43Z  
+**Run ID:** 21671131149
 
-## PRs Requiring Attention
-1. PR #13576 (Priority 75/100) - AWF chroot mode implementation - READY FOR REVIEW
-2. PR #13667 (Priority 68/100) - Playwright MCP separator fix - DRAFT
+## Current State
+- **Total Open PRs:** 2
+- **Fast-track:** 1
+- **Deferred:** 1
+- **Average Priority:** 68.5/100
 
-## Backlog Trend
-- Previous run (6 hours ago): 6 PRs
-- Current run: 2 PRs
-- **Improvement:** -67% (4 PRs merged)
+## Key Actions
+1. ⚡ **PR #13576** - Fast-track for review (Priority: 85/100)
+   - AWF chroot mode adoption
+   - 158 files changed, net -461 lines
+   - Fixes issue #13379
+   
+2. ⏸️ **PR #13706** - Deferred until ready (Priority: 52/100)
+   - WIP test fixes
+   - No code changes yet
+   - Draft status
 
-## Next Action
-Monitor CI completion for both PRs, then fast-track review.
+## Next Triage
+Scheduled for: **2026-02-04T18:20:00Z** (6 hours)
