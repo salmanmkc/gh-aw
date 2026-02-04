@@ -22,21 +22,31 @@ to upgrade to latest. If it is not installed, run the installation script from t
 curl -sL https://raw.githubusercontent.com/github/gh-aw/main/install-gh-aw.sh | bash
 ```
 
-**What this does**: Downloads and installs the gh-aw binary to `~/.local/share/gh/extensions/gh-aw/`
-
-**Note**: When installing with the script, the CLI will refuse to run if the GitHub token is not available. In this case, you should run the tool using the full local path: `~/.local/share/gh/extensions/gh-aw/gh-aw` instead of using `gh aw`.
+**What this does**: Downloads and installs the gh-aw binary to `~/.local/share/gh/extensions/gh-aw/gh-aw`
 
 **Verify installation**:
+
+The verification and usage approach depends on your environment:
+
+**Option 1: Local development environment (with GitHub token)**
+
+If you have GitHub CLI (`gh`) installed and authenticated:
 
 ```bash
 gh aw version
 ```
 
-You should see version information displayed. If you encounter an error, check that:
+You can use `gh aw` commands throughout this guide.
 
-- GitHub CLI (`gh`) is installed and authenticated
-- The installation script completed without errors
-- `~/.local/share/gh/extensions` is in your PATH
+**Option 2: Restricted environment (without GitHub token)**
+
+If you're in a restricted environment (like Copilot's coding agent) where the GitHub token is not available, use the full path to the binary:
+
+```bash
+~/.local/share/gh/extensions/gh-aw/gh-aw version
+```
+
+In this case, replace all `gh aw` commands in this guide with `~/.local/share/gh/extensions/gh-aw/gh-aw`.
 
 ## Step 2: Create the Workflow or do Other Actions
 
