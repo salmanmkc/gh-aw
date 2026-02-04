@@ -19,6 +19,56 @@ curl -sL https://raw.githubusercontent.com/github/gh-aw/main/install-gh-aw.sh | 
 
 After installation, the binary is installed to `~/.local/share/gh/extensions/gh-aw/gh-aw` and can be used with `gh aw` commands just like the extension installation.
 
+### Install Script Fails in Restricted Network Environments
+
+If the install script fails with "Failed to fetch latest release information from GitHub API" and exit code 22, your environment may have network restrictions blocking `api.github.com`. This commonly occurs in:
+
+- GitHub Copilot agent runtime
+- Corporate networks with MITM proxies
+- Environments with strict firewall rules
+
+**Solution 1: Specify Version with Skip Validation (Recommended)**
+
+Bypass API validation by specifying a version explicitly:
+
+```bash wrap
+# Use the latest version number from https://github.com/github/gh-aw/releases
+curl -sL https://raw.githubusercontent.com/github/gh-aw/main/install-gh-aw.sh | \
+  bash -s -- v0.40.0 --skip-validation
+```
+
+Replace `v0.40.0` with the current latest version from the [releases page](https://github.com/github/gh-aw/releases).
+
+**Solution 2: Use Direct Binary Download**
+
+If the install script fails completely, manually download and install the binary:
+
+```bash wrap
+# 1. Create installation directory
+mkdir -p ~/.local/share/gh/extensions/gh-aw
+
+# 2. Download binary for your platform
+# Linux (amd64)
+curl -L -o ~/.local/share/gh/extensions/gh-aw/gh-aw \
+  https://github.com/github/gh-aw/releases/download/v0.40.0/linux-amd64
+
+# macOS (arm64)
+curl -L -o ~/.local/share/gh/extensions/gh-aw/gh-aw \
+  https://github.com/github/gh-aw/releases/download/v0.40.0/darwin-arm64
+
+# 3. Make executable
+chmod +x ~/.local/share/gh/extensions/gh-aw/gh-aw
+
+# 4. Verify installation
+~/.local/share/gh/extensions/gh-aw/gh-aw version
+```
+
+Available platforms: `linux-amd64`, `linux-arm64`, `darwin-amd64`, `darwin-arm64`, `windows-amd64.exe`
+
+> [!TIP]
+> Network Restrictions
+> The `--skip-validation` flag is specifically designed for environments where GitHub API access is restricted. When used, the script skips version validation and attempts to download the binary directly from GitHub releases, which may be allowed even when API access is blocked.
+
 ### Extension Not Found After Installation
 
 If you installed the extension but `gh aw` command is not found:
