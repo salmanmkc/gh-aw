@@ -2,16 +2,27 @@
 
 # Script to download and install gh-aw binary for the current OS and architecture
 # Supports: Linux, macOS (Darwin), FreeBSD, Windows (Git Bash/MSYS/Cygwin)
-# Usage: ./install-gh-aw.sh [version]
+# Usage: ./install-gh-aw.sh [version] [options]
 # If no version is specified, it will fetch and use the latest release
 # Note: Checksum validation is currently skipped by default (will be enabled in future releases)
-# Example: ./install-gh-aw.sh v1.0.0
+# 
+# Examples:
+#   ./install-gh-aw.sh                           # Install latest version
+#   ./install-gh-aw.sh v1.0.0                    # Install specific version
+#   ./install-gh-aw.sh v1.0.0 --skip-validation  # Skip API validation (for restricted networks)
+#   ./install-gh-aw.sh --skip-checksum           # Skip checksum validation
+#
+# Options:
+#   --skip-validation, --no-validate  Skip version validation via GitHub API (useful in restricted networks)
+#   --skip-checksum                   Skip checksum verification
+#   --gh-install                      Try gh extension install first
 
 set -e  # Exit on any error
 
 # Parse arguments
 SKIP_CHECKSUM=true  # Default to true until checksums are available in releases
 TRY_GH_INSTALL=false  # Whether to try gh extension install first
+SKIP_VALIDATION=false  # Whether to skip version validation (for restricted networks)
 VERSION=""
 
 # Check if INPUT_VERSION is set (GitHub Actions context)
@@ -25,6 +36,10 @@ for arg in "$@"; do
     case $arg in
         --skip-checksum)
             SKIP_CHECKSUM=true
+            shift
+            ;;
+        --skip-validation|--no-validate)
+            SKIP_VALIDATION=true
             shift
             ;;
         --gh-install)
@@ -223,7 +238,14 @@ if [ -z "$VERSION" ]; then
     
     if ! LATEST_RELEASE=$(fetch_release_data "https://api.github.com/repos/$REPO/releases/latest"); then
         print_error "Failed to fetch latest release information from GitHub API"
-        print_info "You can specify a version directly: ./install-gh-aw.sh v1.0.0"
+        print_error "This may be due to network restrictions or rate limiting."
+        print_info ""
+        print_info "Solutions:"
+        print_info "  1. Specify a version directly:"
+        print_info "     curl -sL https://raw.githubusercontent.com/github/gh-aw/main/install-gh-aw.sh | bash -s -- v1.0.0"
+        print_info "  2. Skip validation (requires version):"
+        print_info "     curl -sL https://raw.githubusercontent.com/github/gh-aw/main/install-gh-aw.sh | bash -s -- v1.0.0 --skip-validation"
+        print_info "  3. Check available versions at: https://github.com/$REPO/releases"
         exit 1
     fi
     
@@ -247,14 +269,21 @@ else
     print_info "Using specified version: $VERSION"
 fi
 
-# Validate that the release exists
-print_info "Validating release $VERSION exists..."
-if ! RELEASE_CHECK=$(fetch_release_data "https://api.github.com/repos/$REPO/releases/tags/$VERSION"); then
-    print_error "Release $VERSION does not exist in $REPO"
-    print_info "Please check the releases at: https://github.com/$REPO/releases"
-    exit 1
+# Validate that the release exists (unless skipped)
+if [ "$SKIP_VALIDATION" = false ]; then
+    print_info "Validating release $VERSION exists..."
+    if ! RELEASE_CHECK=$(fetch_release_data "https://api.github.com/repos/$REPO/releases/tags/$VERSION"); then
+        print_error "Release $VERSION does not exist in $REPO"
+        print_warning "If you're in a restricted network environment, you can skip validation:"
+        print_info "  curl -sL https://raw.githubusercontent.com/github/gh-aw/main/install-gh-aw.sh | bash -s -- $VERSION --skip-validation"
+        print_info "Otherwise, check the releases at: https://github.com/$REPO/releases"
+        exit 1
+    fi
+    print_success "Release $VERSION validated"
+else
+    print_warning "Skipping version validation (--skip-validation flag used)"
+    print_info "Attempting to download $VERSION without validation..."
 fi
-print_success "Release $VERSION validated"
 
 # Try gh extension install if requested (and gh is available)
 if [ "$TRY_GH_INSTALL" = true ] && command -v gh &> /dev/null; then

@@ -352,5 +352,57 @@ else
     exit 1
 fi
 
+# Test 11: Verify skip-validation flag functionality
+echo ""
+echo "Test 11: Verify skip-validation flag functionality"
+
+# Check for --skip-validation flag
+if grep -q "\-\-skip-validation\|\-\-no-validate" "$PROJECT_ROOT/install-gh-aw.sh"; then
+    echo "  ✓ PASS: --skip-validation flag is documented"
+else
+    echo "  ✗ FAIL: --skip-validation flag not found"
+    exit 1
+fi
+
+# Check for SKIP_VALIDATION variable
+if grep -q "SKIP_VALIDATION=" "$PROJECT_ROOT/install-gh-aw.sh"; then
+    echo "  ✓ PASS: SKIP_VALIDATION variable exists"
+else
+    echo "  ✗ FAIL: SKIP_VALIDATION variable not found"
+    exit 1
+fi
+
+# Check for skip validation logic
+if grep -q 'if \[ "\$SKIP_VALIDATION" = false \]' "$PROJECT_ROOT/install-gh-aw.sh"; then
+    echo "  ✓ PASS: Skip validation conditional logic exists"
+else
+    echo "  ✗ FAIL: Skip validation conditional logic not found"
+    exit 1
+fi
+
+# Check for warning message about skipping validation
+if grep -q "Skipping version validation" "$PROJECT_ROOT/install-gh-aw.sh"; then
+    echo "  ✓ PASS: Skip validation warning message exists"
+else
+    echo "  ✗ FAIL: Skip validation warning message not found"
+    exit 1
+fi
+
+# Check for improved error message about network restrictions
+if grep -q "network restrictions" "$PROJECT_ROOT/install-gh-aw.sh"; then
+    echo "  ✓ PASS: Network restrictions error message exists"
+else
+    echo "  ✗ FAIL: Network restrictions error message not found"
+    exit 1
+fi
+
+# Check for solution suggestions in error message
+if grep -q "Solutions:" "$PROJECT_ROOT/install-gh-aw.sh"; then
+    echo "  ✓ PASS: Error message includes solution suggestions"
+else
+    echo "  ✗ FAIL: Error message does not include solution suggestions"
+    exit 1
+fi
+
 echo ""
 echo "=== All tests passed ==="
