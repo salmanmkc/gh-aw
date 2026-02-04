@@ -1,23 +1,18 @@
-# PR Triage Summary - 2026-02-04T00:35:56Z
+# PR Triage Summary - 2026-02-04T06:24:15Z
 
 ## Quick Stats
-- **Total PRs:** 6
-- **Auto-merge:** 2 (PRs #13609, #13613)
-- **Fast-track:** 2 (PRs #13576, #13612)
-- **Batch review:** 2 (PRs #13569, #13614)
-- **Draft PRs:** 3
-- **Ready PRs:** 3
+- **Total PRs:** 2
+- **Fast-track:** 2
+- **Priority High:** 2
 
-## Top Priority
-1. **#13576** (75 pts) - AWF chroot mode - Critical infrastructure change
-2. **#13612** (68 pts) - Remove embedded templates - Removes 5000+ lines of debt
-3. **#13614** (62 pts) - Secret modification barriers - Security enhancement
+## PRs Requiring Attention
+1. PR #13576 (Priority 75/100) - AWF chroot mode implementation - READY FOR REVIEW
+2. PR #13667 (Priority 68/100) - Playwright MCP separator fix - DRAFT
 
-## Actions Taken
-- ✅ Created discussion with full triage report
-- ✅ Added triage comments to all 6 PRs
-- ✅ Saved triage results to repo memory
+## Backlog Trend
+- Previous run (6 hours ago): 6 PRs
+- Current run: 2 PRs
+- **Improvement:** -67% (4 PRs merged)
 
-## Next Run
-- Recommended: 6 hours (high activity period)
-- Expected: 2-4 new PRs based on velocity
+## Next Action
+Monitor CI completion for both PRs, then fast-track review.
