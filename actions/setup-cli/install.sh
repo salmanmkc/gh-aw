@@ -36,15 +36,12 @@ for arg in "$@"; do
     case $arg in
         --skip-checksum)
             SKIP_CHECKSUM=true
-            shift
             ;;
         --skip-validation|--no-validate)
             SKIP_VALIDATION=true
-            shift
             ;;
         --gh-install)
             TRY_GH_INSTALL=true
-            shift
             ;;
         *)
             if [ -z "$VERSION" ]; then
