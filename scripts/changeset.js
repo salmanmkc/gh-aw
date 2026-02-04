@@ -427,12 +427,17 @@ async function runRelease(versionTag, skipConfirmation = false) {
   // Pull latest changes from remote to account for tags or commits created by other jobs
   console.log(formatInfoMessage("Pulling latest changes from remote..."));
   try {
-    execSync("git pull --rebase", { encoding: "utf8" });
-    console.log(formatSuccessMessage("Successfully pulled latest changes"));
+    const pullOutput = execSync("git pull --rebase", { encoding: "utf8" });
+    if (pullOutput.includes("Already up to date")) {
+      console.log(formatInfoMessage("Already up to date with remote"));
+    } else {
+      console.log(formatSuccessMessage("Successfully pulled latest changes"));
+    }
   } catch (error) {
     // If pull fails, it might be because there are no changes or remote is not configured
-    // Log a warning but continue (working tree check already passed)
-    console.log(formatInfoMessage("Pull from remote had no changes or failed (this may be expected)"));
+    // Log the error details but continue (working tree check already passed)
+    console.log(formatInfoMessage(`Pull from remote failed: ${error.message}`));
+    console.log(formatInfoMessage("Continuing with local state (working tree is clean)"));
   }
 
   const changesets = readChangesets();
