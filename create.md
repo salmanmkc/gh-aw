@@ -107,6 +107,99 @@ Here ROOT is the location where you found this file. For example,
 
 If you need to clarify requirements or discuss options, and you are working in an interactive agent chat system, do so interactively with the user. If running non-interactively, make reasonable assumptions based on the repository context.
 
+## Reusable Components
+
+GitHub Agentic Workflows supports modular, reusable components that can be imported into your workflows. This enables:
+
+- **DRY Principle**: Avoid duplicating configuration across multiple workflows
+- **Rapid Development**: Compose workflows by importing pre-built capabilities
+- **Separation of Concerns**: Maintain tool configs, permissions, and prompts independently
+- **Consistent Patterns**: Use battle-tested components for common patterns
+
+### Common Reusable Components
+
+**Orchestration** - Coordinate multiple workflows or agents
+
+Import `shared/orchestration.md` when your workflow needs to delegate work to other workflows or AI agents:
+
+```yaml
+imports:
+  - shared/orchestration.md
+safe-outputs:
+  dispatch-workflow:
+    workflows: [worker-a, worker-b]
+    max: 10
+  assign-to-agent:
+    name: copilot
+    max: 5
+```
+
+**Use cases**: Multi-phase initiatives, fan-out work distribution, coordinating specialized workers
+
+**Monitoring** - Track workflow progress in GitHub Projects
+
+Import `shared/projects.md` when your workflow should update project boards:
+
+```yaml
+imports:
+  - shared/projects.md
+safe-outputs:
+  update-project:
+    project: https://github.com/orgs/myorg/projects/123
+    max: 10
+  create-project-status-update:
+    project: https://github.com/orgs/myorg/projects/123
+    max: 1
+```
+
+**Use cases**: Tracking workflow-created issues, periodic status updates, operational dashboards
+
+**Reporting** - Consistent report formatting
+
+Import `shared/reporting.md` for standardized report structure:
+
+```yaml
+imports:
+  - shared/reporting.md
+```
+
+**Use cases**: Daily/weekly status reports, test results, analysis summaries
+
+### Discovering Available Components
+
+Repositories using gh-aw often organize shared components in:
+
+- `.github/workflows/shared/` - Core capabilities (reporting, data analysis, tool configs)
+- `.github/workflows/shared/mcp/` - MCP server configurations
+
+List available components:
+
+```bash
+ls .github/workflows/shared/
+```
+
+### Using Imports
+
+Add imports to your workflow frontmatter:
+
+```yaml
+---
+on: issues
+imports:
+  - shared/orchestration.md
+  - shared/projects.md
+  - shared/mcp/tavily.md
+---
+```
+
+The compiler merges imported configurations with your workflow's config. See [Packaging & Distribution](/gh-aw/guides/packaging-imports/) for complete details on import behavior and merge semantics.
+
+### Learn More
+
+- **[Orchestration Guide](/gh-aw/guides/orchestration/)** - Orchestrator/worker pattern for coordinating multiple workflows
+- **[Projects & Monitoring Guide](/gh-aw/guides/monitoring/)** - Track workflow activities in GitHub Projects boards
+- **[Packaging & Distribution Guide](/gh-aw/guides/packaging-imports/)** - Import system, versioning, and shared components
+
 ## Step 3: Review Changes
 
 Check what files were changed or created:
