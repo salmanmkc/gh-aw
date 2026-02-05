@@ -1,0 +1,64 @@
+---
+title: Embedding Videos
+description: How to embed videos and rich media in documentation pages
+sidebar:
+  order: 999
+---
+
+import { YouTube } from 'astro-embed';
+import { Vimeo } from 'astro-embed';
+
+The documentation site supports embedding videos and other rich media using the [astro-embed](https://astro-embed.netlify.app/) package.
+
+## YouTube Videos
+
+To embed a YouTube video, import the `YouTube` component and use the video ID:
+
+```mdx
+import { YouTube } from 'astro-embed';
+
+<YouTube id="dQw4w9WgXcQ" />
+```
+
+**Example:**
+
+<YouTube id="dQw4w9WgXcQ" />
+
+## Vimeo Videos
+
+Similarly, for Vimeo videos, import the `Vimeo` component:
+
+```mdx
+import { Vimeo } from 'astro-embed';
+
+<Vimeo id="1084537" />
+```
+
+**Example:**
+
+<Vimeo id="1084537" />
+
+## Other Supported Embeds
+
+The astro-embed package provides additional components for various platforms:
+
+- **Twitter/X posts**: `Tweet` component
+- **Mastodon posts**: `MastodonPost` component
+- **GitHub Gists**: `Gist` component
+- **Bluesky posts**: `BlueskyPost` component
+- **Link previews**: `LinkPreview` component
+
+## Performance
+
+The video embed components use lite-youtube-embed and lite-vimeo-embed under the hood, which means:
+
+- Videos don't load until the user clicks to play
+- Faster page load times
+- Reduced bandwidth usage
+- Better Core Web Vitals scores
+
+## Additional Options
+
+Each component supports various options for customization. For complete documentation and all available props, see the [astro-embed documentation](https://astro-embed.netlify.app/).
+
+

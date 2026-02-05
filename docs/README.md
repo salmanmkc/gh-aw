@@ -23,6 +23,41 @@ Images can be added to `src/assets/` and embedded in Markdown with a relative li
 
 Static assets, like favicons, can be placed in the `public/` directory.
 
+## Embedding Videos
+
+The documentation site supports video embeds using the [astro-embed](https://astro-embed.netlify.app/) package. To embed videos in MDX files:
+
+### YouTube Videos
+
+```mdx
+---
+title: Your Page
+---
+
+import { YouTube } from 'astro-embed';
+
+<YouTube id="dQw4w9WgXcQ" />
+```
+
+### Vimeo Videos
+
+```mdx
+import { Vimeo } from 'astro-embed';
+
+<Vimeo id="1084537" />
+```
+
+### Other Supported Embeds
+
+The astro-embed package also supports:
+- Twitter/X posts (`Tweet` component)
+- Mastodon posts (`MastodonPost` component)
+- GitHub Gists (`Gist` component)
+- Bluesky posts (`BlueskyPost` component)
+- Generic link previews (`LinkPreview` component)
+
+For complete documentation and component options, see the [astro-embed documentation](https://astro-embed.netlify.app/).
+
 ## 🧞 Commands
 
 All commands are run from the root of the project, from a terminal:
