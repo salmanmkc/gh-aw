@@ -6,6 +6,11 @@ engine: copilot
 imports:
   - shared/mcp/amplifier.md
 
+permissions:
+  contents: read
+  issues: read
+  pull-requests: read
+
 on:
   workflow_dispatch:
 ---

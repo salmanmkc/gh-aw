@@ -25,7 +25,7 @@
 #   Imports:
 #     - shared/mcp/amplifier.md
 #
-# frontmatter-hash: 24dd231cb03c58025cd54cc371e27c60fe23304922c5927b84d799d21027c8b3
+# frontmatter-hash: 487d6ee8acdf3227131953a4513c23306fcb725de629981f3da1766c20c5b28a
 
 name: "test-amplifier-integration"
 "on":
@@ -73,6 +73,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      issues: read
+      pull-requests: read
     concurrency:
       group: "gh-aw-copilot-${{ github.workflow }}"
     outputs:
@@ -165,7 +167,7 @@ jobs:
         env:
           TOKEN_CHECK: ${{ secrets.GH_AW_GITHUB_MCP_SERVER_TOKEN }}
         if: env.TOKEN_CHECK != ''
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        uses: actions/github-script@v8
         with:
           script: |
             const determineAutomaticLockdown = require('/opt/gh-aw/actions/determine_automatic_lockdown.cjs');
