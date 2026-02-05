@@ -41,7 +41,9 @@ The workflow performs comprehensive discovery by
 
 It then identifies functions that don't fit their current file's theme as outliers, uses Serena-powered semantic code analysis to detect potential duplicates, and creates issues recommending consolidated refactoring. These issues can then be reviewed and addressed by coding agents.
 
-The workflow follows a "one file per feature" principle: files should be named after their primary purpose, and functions within each file should align with that purpose. It closes existing open issues with the `[refactor]` prefix before creating new ones. This prevents issue accumulation and ensures recommendations stay current. 
+The workflow follows a "one file per feature" principle: files should be named after their primary purpose, and functions within each file should align with that purpose. It closes existing open issues with the `[refactor]` prefix before creating new ones. This prevents issue accumulation and ensures recommendations stay current.
+
+In our own use of Semantic Function Refactoring **36 out of 53 proposed PRs were merged** (67% acceptance rate). It's been impressive to see how many organizational improvements the workflow can identify that we missed, and how practical its suggestions are for improving code structure and maintainability.
 
 ### Large File Simplifier: The Size Monitor
 
