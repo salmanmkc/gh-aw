@@ -24,6 +24,7 @@ tools:
       - default
       - dependabot
       - projects
+    github-token: ${{ secrets.GH_AW_PROJECT_GITHUB_TOKEN }}
   bash:
     - "jq *"
 
