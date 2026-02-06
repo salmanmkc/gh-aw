@@ -133,10 +133,76 @@ func (c *Compiler) validateMaxTurnsSupport(frontmatter map[string]any, engine Co
 
 	// max-turns is specified, check if the engine supports it
 	if !engine.SupportsMaxTurns() {
-		return fmt.Errorf("max-turns not supported: engine '%s' does not support the max-turns feature. Use engine: copilot or remove max-turns from your configuration. Example:\nengine:\n  id: copilot\n  max-turns: 5", engine.GetID())
+		errorMsg := fmt.Sprintf("max-turns not supported: engine '%s' does not support the max-turns feature. Supported engines: claude, custom. Example:\nengine:\n  id: claude\n  max-turns: 5", engine.GetID())
+		if c.strictMode {
+			return fmt.Errorf("max-turns not supported: engine '%s' does not support the max-turns feature. Supported engines: claude, custom. Example:\nengine:\n  id: claude\n  max-turns: 5", engine.GetID())
+		}
+		// In non-strict mode, issue a warning
+		fmt.Fprintln(os.Stderr, console.FormatWarningMessage(errorMsg))
+		c.IncrementWarningCount()
 	}
 
 	// Engine supports max-turns - additional validation could be added here if needed
+	// For now, we rely on JSON schema validation for format checking
+
+	return nil
+}
+
+// validateMaxTokensSupport validates that max-tokens is only used with engines that support this feature
+func (c *Compiler) validateMaxTokensSupport(frontmatter map[string]any, engine CodingAgentEngine) error {
+	// Check if max-tokens is specified in the engine config
+	engineSetting, engineConfig := c.ExtractEngineConfig(frontmatter)
+	_ = engineSetting // Suppress unused variable warning
+
+	hasMaxTokens := engineConfig != nil && engineConfig.MaxTokens != ""
+
+	if !hasMaxTokens {
+		// No max-tokens specified, no validation needed
+		return nil
+	}
+
+	// max-tokens is specified, check if the engine supports it
+	if !engine.SupportsMaxTokens() {
+		errorMsg := fmt.Sprintf("max-tokens not supported: engine '%s' does not support the max-tokens feature. Supported engines: claude, custom. Example:\nengine:\n  id: claude\n  max-tokens: 4096", engine.GetID())
+		if c.strictMode {
+			return fmt.Errorf("max-tokens not supported: engine '%s' does not support the max-tokens feature. Supported engines: claude, custom. Example:\nengine:\n  id: claude\n  max-tokens: 4096", engine.GetID())
+		}
+		// In non-strict mode, issue a warning
+		fmt.Fprintln(os.Stderr, console.FormatWarningMessage(errorMsg))
+		c.IncrementWarningCount()
+	}
+
+	// Engine supports max-tokens - additional validation could be added here if needed
+	// For now, we rely on JSON schema validation for format checking
+
+	return nil
+}
+
+// validateMaxIterationsSupport validates that max-iterations is only used with engines that support this feature
+func (c *Compiler) validateMaxIterationsSupport(frontmatter map[string]any, engine CodingAgentEngine) error {
+	// Check if max-iterations is specified in the engine config
+	engineSetting, engineConfig := c.ExtractEngineConfig(frontmatter)
+	_ = engineSetting // Suppress unused variable warning
+
+	hasMaxIterations := engineConfig != nil && engineConfig.MaxIterations != ""
+
+	if !hasMaxIterations {
+		// No max-iterations specified, no validation needed
+		return nil
+	}
+
+	// max-iterations is specified, check if the engine supports it
+	if !engine.SupportsMaxIterations() {
+		errorMsg := fmt.Sprintf("max-iterations not supported: engine '%s' does not support the max-iterations feature. Supported engines: custom. Example:\nengine:\n  id: custom\n  max-iterations: 3", engine.GetID())
+		if c.strictMode {
+			return fmt.Errorf("max-iterations not supported: engine '%s' does not support the max-iterations feature. Supported engines: custom. Example:\nengine:\n  id: custom\n  max-iterations: 3", engine.GetID())
+		}
+		// In non-strict mode, issue a warning
+		fmt.Fprintln(os.Stderr, console.FormatWarningMessage(errorMsg))
+		c.IncrementWarningCount()
+	}
+
+	// Engine supports max-iterations - additional validation could be added here if needed
 	// For now, we rely on JSON schema validation for format checking
 
 	return nil

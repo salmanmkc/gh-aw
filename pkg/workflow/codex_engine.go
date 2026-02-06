@@ -38,6 +38,8 @@ func NewCodexEngine() *CodexEngine {
 			supportsToolsAllowlist: true,
 			supportsHTTPTransport:  true,  // Codex now supports HTTP transport for remote MCP servers
 			supportsMaxTurns:       false, // Codex does not support max-turns feature
+			supportsMaxTokens:      false, // Codex max-tokens needs verification
+			supportsMaxIterations:  false, // Codex max-iterations needs verification
 			supportsWebFetch:       false, // Codex does not have built-in web-fetch support
 			supportsWebSearch:      true,  // Codex has built-in web-search support
 			supportsFirewall:       true,  // Codex supports network firewalling via AWF

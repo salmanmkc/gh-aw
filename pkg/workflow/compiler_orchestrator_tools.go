@@ -179,6 +179,16 @@ func (c *Compiler) processToolsAndMarkdown(result *parser.FrontmatterResult, cle
 		return nil, err
 	}
 
+	// Validate max-tokens support for the current engine
+	if err := c.validateMaxTokensSupport(result.Frontmatter, agenticEngine); err != nil {
+		return nil, err
+	}
+
+	// Validate max-iterations support for the current engine
+	if err := c.validateMaxIterationsSupport(result.Frontmatter, agenticEngine); err != nil {
+		return nil, err
+	}
+
 	// Validate web-search support for the current engine (warning only)
 	c.validateWebSearchSupport(tools, agenticEngine)
 

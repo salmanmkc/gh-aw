@@ -12,19 +12,21 @@ var engineLog = logger.New("workflow:engine")
 
 // EngineConfig represents the parsed engine configuration
 type EngineConfig struct {
-	ID          string
-	Version     string
-	Model       string
-	MaxTurns    string
-	Concurrency string // Agent job-level concurrency configuration (YAML format)
-	UserAgent   string
-	Command     string // Custom executable path (when set, skip installation steps)
-	Env         map[string]string
-	Steps       []map[string]any
-	Config      string
-	Args        []string
-	Firewall    *FirewallConfig // AWF firewall configuration
-	Agent       string          // Agent identifier for copilot --agent flag (copilot engine only)
+	ID            string
+	Version       string
+	Model         string
+	MaxTurns      string
+	MaxTokens     string // Maximum number of tokens (input + output) per request
+	MaxIterations string // Maximum number of iterations (alias for MaxTurns for some engines)
+	Concurrency   string // Agent job-level concurrency configuration (YAML format)
+	UserAgent     string
+	Command       string // Custom executable path (when set, skip installation steps)
+	Env           map[string]string
+	Steps         []map[string]any
+	Config        string
+	Args          []string
+	Firewall      *FirewallConfig // AWF firewall configuration
+	Agent         string          // Agent identifier for copilot --agent flag (copilot engine only)
 }
 
 // NetworkPermissions represents network access permissions for workflow execution
@@ -113,6 +115,28 @@ func (c *Compiler) ExtractEngineConfig(frontmatter map[string]any) (string, *Eng
 					config.MaxTurns = fmt.Sprintf("%d", maxTurnsUint64)
 				} else if maxTurnsStr, ok := maxTurns.(string); ok {
 					config.MaxTurns = maxTurnsStr
+				}
+			}
+
+			// Extract optional 'max-tokens' field
+			if maxTokens, hasMaxTokens := engineObj["max-tokens"]; hasMaxTokens {
+				if maxTokensInt, ok := maxTokens.(int); ok {
+					config.MaxTokens = fmt.Sprintf("%d", maxTokensInt)
+				} else if maxTokensUint64, ok := maxTokens.(uint64); ok {
+					config.MaxTokens = fmt.Sprintf("%d", maxTokensUint64)
+				} else if maxTokensStr, ok := maxTokens.(string); ok {
+					config.MaxTokens = maxTokensStr
+				}
+			}
+
+			// Extract optional 'max-iterations' field
+			if maxIterations, hasMaxIterations := engineObj["max-iterations"]; hasMaxIterations {
+				if maxIterationsInt, ok := maxIterations.(int); ok {
+					config.MaxIterations = fmt.Sprintf("%d", maxIterationsInt)
+				} else if maxIterationsUint64, ok := maxIterations.(uint64); ok {
+					config.MaxIterations = fmt.Sprintf("%d", maxIterationsUint64)
+				} else if maxIterationsStr, ok := maxIterations.(string); ok {
+					config.MaxIterations = maxIterationsStr
 				}
 			}
 

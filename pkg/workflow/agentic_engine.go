@@ -116,6 +116,12 @@ type CapabilityProvider interface {
 	// SupportsMaxTurns returns true if this engine supports the max-turns feature
 	SupportsMaxTurns() bool
 
+	// SupportsMaxTokens returns true if this engine supports the max-tokens feature
+	SupportsMaxTokens() bool
+
+	// SupportsMaxIterations returns true if this engine supports the max-iterations feature
+	SupportsMaxIterations() bool
+
 	// SupportsWebFetch returns true if this engine has built-in support for the web-fetch tool
 	SupportsWebFetch() bool
 
@@ -196,6 +202,8 @@ type BaseEngine struct {
 	supportsToolsAllowlist bool
 	supportsHTTPTransport  bool
 	supportsMaxTurns       bool
+	supportsMaxTokens      bool
+	supportsMaxIterations  bool
 	supportsWebFetch       bool
 	supportsWebSearch      bool
 	supportsFirewall       bool
@@ -227,6 +235,14 @@ func (e *BaseEngine) SupportsHTTPTransport() bool {
 
 func (e *BaseEngine) SupportsMaxTurns() bool {
 	return e.supportsMaxTurns
+}
+
+func (e *BaseEngine) SupportsMaxTokens() bool {
+	return e.supportsMaxTokens
+}
+
+func (e *BaseEngine) SupportsMaxIterations() bool {
+	return e.supportsMaxIterations
 }
 
 func (e *BaseEngine) SupportsWebFetch() bool {

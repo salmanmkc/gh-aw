@@ -6308,6 +6308,15 @@
           "max-turns": 15
         },
         {
+          "id": "claude",
+          "model": "claude-3-5-sonnet-20241022",
+          "max-tokens": 4096
+        },
+        {
+          "id": "custom",
+          "max-iterations": 3
+        },
+        {
           "id": "copilot",
           "version": "beta"
         },
@@ -6354,7 +6363,33 @@
                   "description": "Maximum number of chat iterations per run as a string value"
                 }
               ],
-              "description": "Maximum number of chat iterations per run. Helps prevent runaway loops and control costs. Has sensible defaults and can typically be omitted. Note: Only supported by the claude engine."
+              "description": "Maximum number of chat iterations per run. Helps prevent runaway loops and control costs. Has sensible defaults and can typically be omitted. Note: Only supported by the claude and custom engines."
+            },
+            "max-tokens": {
+              "oneOf": [
+                {
+                  "type": "integer",
+                  "description": "Maximum number of tokens (input + output) per request as an integer value"
+                },
+                {
+                  "type": "string",
+                  "description": "Maximum number of tokens (input + output) per request as a string value"
+                }
+              ],
+              "description": "Maximum number of tokens to use per request. Controls the context window size and response length. Has sensible defaults and can typically be omitted. Note: Only supported by the claude and custom engines."
+            },
+            "max-iterations": {
+              "oneOf": [
+                {
+                  "type": "integer",
+                  "description": "Maximum number of iterations per run as an integer value"
+                },
+                {
+                  "type": "string",
+                  "description": "Maximum number of iterations per run as a string value"
+                }
+              ],
+              "description": "Maximum number of iterations per run. Similar to max-turns but used by some engines as an alias. Helps prevent runaway loops and control costs. Has sensible defaults and can typically be omitted. Note: Only supported by the custom engine."
             },
             "concurrency": {
               "oneOf": [

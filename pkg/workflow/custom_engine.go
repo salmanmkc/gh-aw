@@ -24,6 +24,8 @@ func NewCustomEngine() *CustomEngine {
 			supportsToolsAllowlist: false,
 			supportsHTTPTransport:  false,
 			supportsMaxTurns:       true,  // Custom engine supports max-turns for consistency
+			supportsMaxTokens:      true,  // Custom engine supports max-tokens for consistency
+			supportsMaxIterations:  true,  // Custom engine supports max-iterations for consistency
 			supportsWebFetch:       false, // Custom engine does not have built-in web-fetch support
 			supportsWebSearch:      false, // Custom engine does not have built-in web-search support
 		},
