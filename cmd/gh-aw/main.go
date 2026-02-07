@@ -196,7 +196,30 @@ Examples:
   ` + string(constants.CLIExtensionPrefix) + ` compile --watch ci-doctor     # Watch and auto-compile
   ` + string(constants.CLIExtensionPrefix) + ` compile --trial --logical-repo owner/repo  # Compile for trial mode
   ` + string(constants.CLIExtensionPrefix) + ` compile --dependabot        # Generate Dependabot manifests
-  ` + string(constants.CLIExtensionPrefix) + ` compile --dependabot --force  # Force overwrite existing dependabot.yml`,
+  ` + string(constants.CLIExtensionPrefix) + ` compile --dependabot --force  # Force overwrite existing dependabot.yml
+
+Common Workflows:
+  # Check for errors before compiling
+  ` + string(constants.CLIExtensionPrefix) + ` fix                        # Dry-run to check for deprecated fields
+  ` + string(constants.CLIExtensionPrefix) + ` fix --write                # Fix issues automatically
+
+  # Compile and validate a new workflow
+  ` + string(constants.CLIExtensionPrefix) + ` compile my-workflow
+  ` + string(constants.CLIExtensionPrefix) + ` compile my-workflow --validate  # With schema validation
+
+  # If compilation fails, debug with hash command
+  ` + string(constants.CLIExtensionPrefix) + ` hash my-workflow           # Check frontmatter rendering
+
+  # After deployment, monitor execution
+  ` + string(constants.CLIExtensionPrefix) + ` run my-workflow            # Test run the workflow
+  ` + string(constants.CLIExtensionPrefix) + ` logs my-workflow           # Check recent execution logs
+  ` + string(constants.CLIExtensionPrefix) + ` health my-workflow         # View success rates
+
+Related Commands:
+  ` + string(constants.CLIExtensionPrefix) + ` fix       Apply automatic fixes before compiling
+  ` + string(constants.CLIExtensionPrefix) + ` hash      Debug frontmatter and expression issues
+  ` + string(constants.CLIExtensionPrefix) + ` logs      View workflow execution logs after running
+  ` + string(constants.CLIExtensionPrefix) + ` health    Check workflow success rates and trends`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		engineOverride, _ := cmd.Flags().GetString("engine")
 		actionMode, _ := cmd.Flags().GetString("action-mode")

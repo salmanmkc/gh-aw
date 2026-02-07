@@ -68,7 +68,28 @@ Examples:
   ` + string(constants.CLIExtensionPrefix) + ` fix my-workflow         # Check specific workflow
   ` + string(constants.CLIExtensionPrefix) + ` fix my-workflow --write # Fix specific workflow
   ` + string(constants.CLIExtensionPrefix) + ` fix --dir custom/workflows # Fix workflows in custom directory
-  ` + string(constants.CLIExtensionPrefix) + ` fix --list-codemods     # List available codemods`,
+  ` + string(constants.CLIExtensionPrefix) + ` fix --list-codemods     # List available codemods
+
+Common Workflows:
+  # Check for issues before compiling
+  ` + string(constants.CLIExtensionPrefix) + ` fix                        # Dry-run to see what needs fixing
+  ` + string(constants.CLIExtensionPrefix) + ` fix --write                # Apply all fixes
+
+  # Fix and compile workflow
+  ` + string(constants.CLIExtensionPrefix) + ` fix my-workflow --write
+  ` + string(constants.CLIExtensionPrefix) + ` compile my-workflow        # Recompile after fixing
+
+  # Quick fix-compile-test cycle
+  ` + string(constants.CLIExtensionPrefix) + ` compile --fix my-workflow  # Fix and compile in one step
+  ` + string(constants.CLIExtensionPrefix) + ` run my-workflow            # Test the fixed workflow
+
+  # Discover available fixes
+  ` + string(constants.CLIExtensionPrefix) + ` fix --list-codemods        # See all available codemods
+
+Related Commands:
+  ` + string(constants.CLIExtensionPrefix) + ` compile   Use --fix flag for automatic fixing before compile
+  ` + string(constants.CLIExtensionPrefix) + ` update    Automatically applies fixes after updating workflows
+  ` + string(constants.CLIExtensionPrefix) + ` hash      Debug frontmatter issues after fixing`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			listCodemods, _ := cmd.Flags().GetBool("list-codemods")
 			write, _ := cmd.Flags().GetBool("write")

@@ -54,6 +54,28 @@ Examples:
   ` + string(constants.CLIExtensionPrefix) + ` add githubnext/agentics/*@v1.0.0
   ` + string(constants.CLIExtensionPrefix) + ` add githubnext/agentics/ci-doctor --dir shared   # Add to .github/workflows/shared/
 
+Common Workflows:
+  # Add and immediately run a workflow
+  ` + string(constants.CLIExtensionPrefix) + ` add githubnext/agentics/daily-plan
+  ` + string(constants.CLIExtensionPrefix) + ` run daily-plan             # Test the workflow
+
+  # Add workflow and create PR for review
+  ` + string(constants.CLIExtensionPrefix) + ` add githubnext/agentics/ci-doctor --pr
+
+  # Add multiple workflows from a repository
+  ` + string(constants.CLIExtensionPrefix) + ` add githubnext/agentics    # List available workflows
+  ` + string(constants.CLIExtensionPrefix) + ` add githubnext/agentics/*  # Add all workflows
+
+  # Keep workflows up-to-date
+  ` + string(constants.CLIExtensionPrefix) + ` add githubnext/agentics/my-workflow
+  ` + string(constants.CLIExtensionPrefix) + ` update my-workflow         # Update to latest version
+
+Related Commands:
+  ` + string(constants.CLIExtensionPrefix) + ` update    Keep workflows current with source repositories
+  ` + string(constants.CLIExtensionPrefix) + ` compile   Compile workflows after adding
+  ` + string(constants.CLIExtensionPrefix) + ` run       Test newly added workflows
+  ` + string(constants.CLIExtensionPrefix) + ` status    View all installed workflows
+
 Workflow specifications:
   - Two parts: "owner/repo[@version]" (lists available workflows in the repository)
   - Three parts: "owner/repo/workflow-name[@version]" (implicitly looks in workflows/ directory)

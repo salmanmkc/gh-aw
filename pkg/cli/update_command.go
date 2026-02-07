@@ -60,7 +60,29 @@ Examples:
   ` + string(constants.CLIExtensionPrefix) + ` update --force           # Force update even if no changes
   ` + string(constants.CLIExtensionPrefix) + ` update --dir custom/workflows  # Update workflows in custom directory
   ` + string(constants.CLIExtensionPrefix) + ` update --audit           # Check dependency health without updating
-  ` + string(constants.CLIExtensionPrefix) + ` update --dry-run         # Show what would be updated without making changes`,
+  ` + string(constants.CLIExtensionPrefix) + ` update --dry-run         # Show what would be updated without making changes
+
+Common Workflows:
+  # Regular update and sync workflow
+  ` + string(constants.CLIExtensionPrefix) + ` update                     # Update all workflows and actions
+  ` + string(constants.CLIExtensionPrefix) + ` compile                    # Recompile after updates
+
+  # Update with PR for review
+  ` + string(constants.CLIExtensionPrefix) + ` update --pr                # Create PR with all updates
+
+  # Check for updates without applying
+  ` + string(constants.CLIExtensionPrefix) + ` update --audit             # View dependency health report
+
+  # Update and test specific workflow
+  ` + string(constants.CLIExtensionPrefix) + ` update my-workflow
+  ` + string(constants.CLIExtensionPrefix) + ` compile my-workflow
+  ` + string(constants.CLIExtensionPrefix) + ` run my-workflow            # Test the updated workflow
+
+Related Commands:
+  ` + string(constants.CLIExtensionPrefix) + ` compile   Recompile workflows after updating
+  ` + string(constants.CLIExtensionPrefix) + ` fix       Apply automatic fixes to updated workflows
+  ` + string(constants.CLIExtensionPrefix) + ` logs      Check workflow logs after updating
+  ` + string(constants.CLIExtensionPrefix) + ` health    Monitor workflow health post-update`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			majorFlag, _ := cmd.Flags().GetBool("major")
 			forceFlag, _ := cmd.Flags().GetBool("force")

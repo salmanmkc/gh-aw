@@ -104,6 +104,23 @@ Advanced examples:
   ` + string(constants.CLIExtensionPrefix) + ` trial githubnext/agentics/my-workflow --host-repo . # Use current repo as host
   ` + string(constants.CLIExtensionPrefix) + ` trial ./local-workflow.md --clone-repo upstream/repo --repeat 2
 
+Common Workflows:
+  # Quick trial of a new workflow
+  ` + string(constants.CLIExtensionPrefix) + ` trial githubnext/agentics/my-workflow
+  ` + string(constants.CLIExtensionPrefix) + ` logs --trial                                        # View trial results
+
+  # Test workflow before adding to production
+  ` + string(constants.CLIExtensionPrefix) + ` trial githubnext/agentics/my-workflow --logical-repo myorg/myrepo
+  ` + string(constants.CLIExtensionPrefix) + ` add githubnext/agentics/my-workflow                # Add after successful trial
+
+  # Compare multiple workflow versions
+  ` + string(constants.CLIExtensionPrefix) + ` trial githubnext/agentics/workflow@v1.0 githubnext/agentics/workflow@v2.0
+  ` + string(constants.CLIExtensionPrefix) + ` logs --trial                                        # Compare results
+
+  # Debug workflow issues in isolation
+  ` + string(constants.CLIExtensionPrefix) + ` trial ./my-workflow.md --clone-repo myorg/myrepo --repeat 3
+  ` + string(constants.CLIExtensionPrefix) + ` logs --trial                                        # Analyze trial logs
+
 Repository modes:
 - Default mode (no flags): Creates a temporary trial repository and simulates execution as if running against the current repository (github.repository context points to current repo)
 - --logical-repo REPO: Simulates execution against a specified repository (github.repository context points to REPO while actually running in a temporary trial repository)
@@ -112,7 +129,12 @@ Repository modes:
 
 All workflows must support workflow_dispatch trigger to be used in trial mode.
 The host repository will be created as private and kept by default unless --delete-host-repo-after is specified.
-Trial results are saved both locally (in trials/ directory) and in the host repository for future reference.`,
+Trial results are saved both locally (in trials/ directory) and in the host repository for future reference.
+
+Related Commands:
+  ` + string(constants.CLIExtensionPrefix) + ` logs      View trial execution logs and outputs
+  ` + string(constants.CLIExtensionPrefix) + ` add       Add workflow to production after successful trial
+  ` + string(constants.CLIExtensionPrefix) + ` audit     Debug workflow execution with detailed analysis`,
 		Args: cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			workflowSpecs := args
