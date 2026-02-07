@@ -61,6 +61,7 @@ safe-outputs:
 
 # Dependabot Project Manager
 
-- Find all open Dependabot PRs and add them to the project.
-- Create bundle issues, each for exactly **one runtime + one manifest file**.
+- Find all open Dependabot PRs and add them to the project (up to max 50).
+- Create bundle issues, each for exactly **one runtime + one manifest file** (up to max 20).
+- Prioritize security updates first, then oldest PRs. If limits exceeded, create a summary issue noting overflow.
 - Add bundle issues to the project, and assign them to Copilot.
