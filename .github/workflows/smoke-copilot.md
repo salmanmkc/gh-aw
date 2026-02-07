@@ -18,6 +18,7 @@ engine: copilot
 plugins:
   - anthropics/claude-code/plugins/explanatory-output-style
 imports:
+  - shared/mood.md
   - shared/gh.md
   - shared/reporting.md
   - shared/github-queries-safe-input.md

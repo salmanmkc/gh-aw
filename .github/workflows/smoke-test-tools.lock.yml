@@ -21,7 +21,15 @@
 #
 # Smoke test to validate common development tools are available in the agent container
 #
+<<<<<<< HEAD
 # frontmatter-hash: 751749c1e89d903e362e78c316a5573962c7bb145a0e9eb95ce04ab7496cb8dd
+=======
+# Resolved workflow manifest:
+#   Imports:
+#     - shared/mood.md
+#
+# frontmatter-hash: 7d3e13ff178d7cd42b27a1498d76b1ba1b3ecda4d8027c84c8b6611647084fba
+>>>>>>> origin/main
 
 name: "Agent Container Smoke Test"
 "on":
@@ -555,6 +563,13 @@ jobs:
           PROMPT_EOF
           cat << 'PROMPT_EOF' >> "$GH_AW_PROMPT"
           </system>
+          PROMPT_EOF
+          cat << 'PROMPT_EOF' >> "$GH_AW_PROMPT"
+          ## Team Mood
+          
+          We are in release mode, focusing on quality and stability. Skip any work that does not directly improve quality or stability. Non-critical fixes or updates are not needed and should be skipped or canceled. If your task does not clearly contribute to product stability or is not mission critical, you should do nothing (call noop).
+          
+          
           PROMPT_EOF
           cat << 'PROMPT_EOF' >> "$GH_AW_PROMPT"
           {{#runtime-import .github/workflows/smoke-test-tools.md}}

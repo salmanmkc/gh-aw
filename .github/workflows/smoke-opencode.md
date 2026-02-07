@@ -17,6 +17,7 @@ name: Smoke OpenCode
 plugins:
   - anthropics/claude-code/plugins/explanatory-output-style
 imports:
+  - shared/mood.md
   - shared/opencode.md
   - shared/gh.md
   - shared/github-queries-safe-input.md
