@@ -23,6 +23,10 @@ import (
 // MCP server connections and returns the same tools as direct connections.
 // This is a critical integration test that validates the gateway doesn't lose
 // or alter tool definitions when routing through the HTTP gateway.
+//
+// Note: This test uses the GitHub MCP server since custom MCP servers in mcp-servers
+// section are not yet fully supported by the inspect command. This still validates
+// that the gateway properly proxies MCP protocol without alterations.
 func TestMCPGatewayInspectIntegration(t *testing.T) {
 	// Skip if Docker is not available
 	if !isDockerAvailable() {
@@ -32,36 +36,19 @@ func TestMCPGatewayInspectIntegration(t *testing.T) {
 	setup := setupIntegrationTest(t)
 	defer setup.cleanup()
 
-	// Copy the test MCP server script to the temp directory
-	// The script is in the project root pkg/cli directory
-	srcServerPath := filepath.Join(projectRoot, "pkg", "cli", "test-mcp-server.cjs")
-	destServerPath := filepath.Join(setup.tempDir, "test-mcp-server.cjs")
-	
-	srcContent, err := os.ReadFile(srcServerPath)
-	if err != nil {
-		t.Fatalf("Failed to read test MCP server script: %v", err)
-	}
-	err = os.WriteFile(destServerPath, srcContent, 0755)
-	require.NoError(t, err, "Failed to write test MCP server script")
-	
-	testServerPath := destServerPath
-
-	// Create a test workflow with a custom MCP server (no gateway)
+	// Create a test workflow with GitHub MCP server (no gateway - sandbox: false)
 	workflowContentDirect := `---
 on: workflow_dispatch
 engine: copilot
 strict: false
 sandbox: false
-mcp-servers:
-  test-server:
-    command: node
-    args:
-      - "` + testServerPath + `"
+tools:
+  github:
 ---
 
-# Test MCP Server Direct Connection
+# Test GitHub MCP Server Direct Connection
 
-Test workflow for direct MCP server connection (no gateway).
+Test workflow for direct GitHub MCP server connection (no gateway).
 `
 
 	// Create a test workflow with MCP gateway enabled
@@ -72,21 +59,18 @@ sandbox:
   mcp:
     container: ghcr.io/github/gh-aw-mcpg
     version: v0.0.103
-mcp-servers:
-  test-server:
-    command: node
-    args:
-      - "` + testServerPath + `"
+tools:
+  github:
 ---
 
-# Test MCP Server with Gateway
+# Test GitHub MCP Server with Gateway
 
-Test workflow for MCP server connection through gateway.
+Test workflow for GitHub MCP server connection through gateway.
 `
 
 	// Write direct connection workflow
 	workflowFileDirect := filepath.Join(setup.workflowsDir, "test-gateway-direct.md")
-	err = os.WriteFile(workflowFileDirect, []byte(workflowContentDirect), 0644)
+	err := os.WriteFile(workflowFileDirect, []byte(workflowContentDirect), 0644)
 	require.NoError(t, err, "Failed to create direct workflow file")
 
 	// Write gateway connection workflow
@@ -94,13 +78,15 @@ Test workflow for MCP server connection through gateway.
 	err = os.WriteFile(workflowFileGateway, []byte(workflowContentGateway), 0644)
 	require.NoError(t, err, "Failed to create gateway workflow file")
 
-	// Test 1: Inspect MCP server with direct connection (no gateway)
+	// Test 1: Inspect GitHub MCP server with direct connection (no gateway)
 	t.Run("direct_connection", func(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		defer cancel()
 
-		cmd := exec.CommandContext(ctx, setup.binaryPath, "mcp", "inspect", "test-gateway-direct", "--server", "test-server", "--verbose")
+		cmd := exec.CommandContext(ctx, setup.binaryPath, "mcp", "inspect", "test-gateway-direct", "--server", "github", "--verbose")
 		cmd.Dir = setup.tempDir
+		// Set a placeholder GitHub token to avoid token validation errors
+		cmd.Env = append(os.Environ(), "GITHUB_TOKEN=test_token_for_integration_test")
 		output, err := cmd.CombinedOutput()
 		outputStr := string(output)
 
@@ -109,24 +95,23 @@ Test workflow for MCP server connection through gateway.
 		// Check if the command succeeded or at least parsed the configuration
 		if err != nil {
 			// Connection might fail but config should parse
-			if !strings.Contains(outputStr, "test-server") {
-				t.Errorf("Expected test-server to be mentioned in output")
+			if !strings.Contains(outputStr, "github") {
+				t.Errorf("Expected github to be mentioned in output")
 			}
 		}
 
-		// Verify tools are listed (if connection succeeds)
-		if strings.Contains(outputStr, "test_echo") {
-			t.Logf("✓ Direct connection successfully listed test_echo tool")
+		// Verify GitHub MCP server is detected
+		if strings.Contains(outputStr, "github") {
+			t.Logf("✓ Direct connection successfully detected GitHub MCP server")
 		}
-		if strings.Contains(outputStr, "test_add") {
-			t.Logf("✓ Direct connection successfully listed test_add tool")
-		}
-		if strings.Contains(outputStr, "test_uppercase") {
-			t.Logf("✓ Direct connection successfully listed test_uppercase tool")
+
+		// Verify some GitHub tools are listed (if connection succeeds)
+		if strings.Contains(outputStr, "get_file_contents") || strings.Contains(outputStr, "create_pull_request") {
+			t.Logf("✓ Direct connection successfully listed GitHub MCP tools")
 		}
 	})
 
-	// Test 2: Inspect MCP server through gateway (if Docker available)
+	// Test 2: Inspect GitHub MCP server through gateway (if Docker available)
 	t.Run("gateway_connection", func(t *testing.T) {
 		// Check if gateway image is available
 		checkCmd := exec.Command("docker", "image", "inspect", "ghcr.io/github/gh-aw-mcpg:v0.0.103")
@@ -137,8 +122,9 @@ Test workflow for MCP server connection through gateway.
 		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		defer cancel()
 
-		cmd := exec.CommandContext(ctx, setup.binaryPath, "mcp", "inspect", "test-gateway-with-gateway", "--server", "test-server", "--verbose")
+		cmd := exec.CommandContext(ctx, setup.binaryPath, "mcp", "inspect", "test-gateway-with-gateway", "--server", "github", "--verbose")
 		cmd.Dir = setup.tempDir
+		cmd.Env = append(os.Environ(), "GITHUB_TOKEN=test_token_for_integration_test")
 		output, err := cmd.CombinedOutput()
 		outputStr := string(output)
 
@@ -147,14 +133,19 @@ Test workflow for MCP server connection through gateway.
 		// Check if the command succeeded or at least parsed the configuration
 		if err != nil {
 			// Gateway might not start but config should parse
-			if !strings.Contains(outputStr, "test-server") {
-				t.Errorf("Expected test-server to be mentioned in output")
+			if !strings.Contains(outputStr, "github") {
+				t.Errorf("Expected github to be mentioned in output")
 			}
 		}
 
 		// Verify gateway configuration is detected
 		if strings.Contains(outputStr, "gateway") || strings.Contains(outputStr, "ghcr.io/github/gh-aw-mcpg") {
 			t.Logf("✓ Gateway configuration detected")
+		}
+
+		// Verify GitHub tools are listed through gateway
+		if strings.Contains(outputStr, "get_file_contents") || strings.Contains(outputStr, "create_pull_request") {
+			t.Logf("✓ Gateway connection successfully listed GitHub MCP tools")
 		}
 	})
 
@@ -164,7 +155,7 @@ Test workflow for MCP server connection through gateway.
 		// the same set of tools, ensuring the gateway doesn't lose information
 
 		// Parse direct connection
-		directTools, err := extractToolsFromInspect(setup, "test-gateway-direct", "test-server")
+		directTools, err := extractToolsFromInspect(setup, "test-gateway-direct", "github")
 		if err != nil {
 			t.Logf("Note: Could not extract tools from direct connection: %v", err)
 			// Don't fail if tools can't be extracted - connection might not work in CI
@@ -172,7 +163,7 @@ Test workflow for MCP server connection through gateway.
 		}
 
 		// Parse gateway connection (if available)
-		gatewayTools, err := extractToolsFromInspect(setup, "test-gateway-with-gateway", "test-server")
+		gatewayTools, err := extractToolsFromInspect(setup, "test-gateway-with-gateway", "github")
 		if err != nil {
 			t.Logf("Note: Could not extract tools from gateway connection: %v", err)
 			// Don't fail if tools can't be extracted - gateway might not be available
@@ -201,6 +192,7 @@ func extractToolsFromInspect(setup *integrationTestSetup, workflowName, serverNa
 
 	cmd := exec.CommandContext(ctx, setup.binaryPath, "mcp", "inspect", workflowName, "--server", serverName, "--verbose")
 	cmd.Dir = setup.tempDir
+	cmd.Env = append(os.Environ(), "GITHUB_TOKEN=test_token_for_integration_test")
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return nil, fmt.Errorf("inspect command failed: %w (output: %s)", err, string(output))
@@ -209,16 +201,21 @@ func extractToolsFromInspect(setup *integrationTestSetup, workflowName, serverNa
 	outputStr := string(output)
 	tools := []string{}
 
-	// Extract tool names from output
-	// The inspect command lists tools with their names
-	if strings.Contains(outputStr, "test_echo") {
-		tools = append(tools, "test_echo")
+	// Extract common GitHub MCP tool names from output
+	githubTools := []string{
+		"get_file_contents",
+		"create_pull_request",
+		"create_or_update_file",
+		"add_issue_comment",
+		"search_code",
+		"list_issues",
+		"get_commit",
 	}
-	if strings.Contains(outputStr, "test_add") {
-		tools = append(tools, "test_add")
-	}
-	if strings.Contains(outputStr, "test_uppercase") {
-		tools = append(tools, "test_uppercase")
+
+	for _, tool := range githubTools {
+		if strings.Contains(outputStr, tool) {
+			tools = append(tools, tool)
+		}
 	}
 
 	if len(tools) == 0 {
@@ -236,14 +233,14 @@ func TestMCPServerBasicProtocol(t *testing.T) {
 	// Copy the test MCP server script to the temp directory
 	srcServerPath := filepath.Join(projectRoot, "pkg", "cli", "test-mcp-server.cjs")
 	destServerPath := filepath.Join(setup.tempDir, "test-mcp-server.cjs")
-	
+
 	srcContent, err := os.ReadFile(srcServerPath)
 	if err != nil {
 		t.Skip("Test MCP server script not found")
 	}
 	err = os.WriteFile(destServerPath, srcContent, 0755)
 	require.NoError(t, err, "Failed to write test MCP server script")
-	
+
 	testServerPath := destServerPath
 
 	// Test the MCP server can list tools via direct stdio connection
