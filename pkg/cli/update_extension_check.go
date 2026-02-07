@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"strings"
@@ -14,7 +15,24 @@ import (
 var updateExtensionCheckLog = logger.New("cli:update_extension_check")
 
 // checkExtensionUpdate checks if a newer version of gh-aw is available
+//
+// Deprecated: Use checkExtensionUpdateContext instead.
+// This function is maintained for backward compatibility.
+//
+//nolint:unused // Maintained for backward compatibility
 func checkExtensionUpdate(verbose bool) error {
+	return checkExtensionUpdateContext(context.Background(), verbose)
+}
+
+// checkExtensionUpdateContext checks if a newer version of gh-aw is available with context support
+func checkExtensionUpdateContext(ctx context.Context, verbose bool) error {
+	// Check for cancellation before starting
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+	}
+
 	if verbose {
 		fmt.Fprintln(os.Stderr, console.FormatVerboseMessage("Checking for gh-aw extension updates..."))
 	}

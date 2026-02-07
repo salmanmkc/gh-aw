@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -24,8 +25,16 @@ type FixConfig struct {
 }
 
 // RunFix runs the fix command with the given configuration
+//
+// Deprecated: Use RunFixContext instead.
+// This function is maintained for backward compatibility.
 func RunFix(config FixConfig) error {
-	return runFixCommand(config.WorkflowIDs, config.Write, config.Verbose, config.WorkflowDir)
+	return RunFixContext(context.Background(), config)
+}
+
+// RunFixContext runs the fix command with the given configuration and context support
+func RunFixContext(ctx context.Context, config FixConfig) error {
+	return runFixCommandContext(ctx, config.WorkflowIDs, config.Write, config.Verbose, config.WorkflowDir)
 }
 
 // NewFixCommand creates the fix command
@@ -116,7 +125,18 @@ func listAvailableCodemods() error {
 
 // runFixCommand runs the fix command on specified or all workflows
 func runFixCommand(workflowIDs []string, write bool, verbose bool, workflowDir string) error {
+	return runFixCommandContext(context.Background(), workflowIDs, write, verbose, workflowDir)
+}
+
+func runFixCommandContext(ctx context.Context, workflowIDs []string, write bool, verbose bool, workflowDir string) error {
 	fixLog.Printf("Running fix command: workflowIDs=%v, write=%v, verbose=%v, workflowDir=%s", workflowIDs, write, verbose, workflowDir)
+
+	// Check for cancellation before starting
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+	}
 
 	// Set up workflow directory (using default if not specified)
 	if workflowDir == "" {
@@ -163,6 +183,13 @@ func runFixCommand(workflowIDs []string, write bool, verbose bool, workflowDir s
 	var workflowsNeedingFixes []workflowFixInfo
 
 	for _, file := range files {
+		// Check for cancellation during loop
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+		}
+
 		fixLog.Printf("Processing file: %s", file)
 
 		fixed, appliedFixes, err := processWorkflowFileWithInfo(file, codemods, write, verbose)

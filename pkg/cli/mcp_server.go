@@ -37,6 +37,64 @@ func mcpErrorData(v any) json.RawMessage {
 	return data
 }
 
+// captureStderr temporarily redirects stderr to capture output from a function.
+// This is used to capture console output from CLI functions for MCP responses.
+// The function is thread-safe and restores stderr after completion.
+func captureStderr(fn func() error) (string, error) {
+	// Create a pipe to capture stderr
+	r, w, err := os.Pipe()
+	if err != nil {
+		return "", fmt.Errorf("failed to create pipe: %w", err)
+	}
+
+	// Save the original stderr
+	oldStderr := os.Stderr
+	// Redirect stderr to the pipe writer
+	os.Stderr = w
+
+	// Channel to receive the captured output
+	outputChan := make(chan string, 1)
+	// Channel to signal when reading is done (owned by reader goroutine)
+	doneChan := make(chan struct{})
+
+	// Start a goroutine to read from the pipe
+	go func() {
+		defer close(doneChan)
+		var buf strings.Builder
+		buffer := make([]byte, 1024)
+		for {
+			n, err := r.Read(buffer)
+			if n > 0 {
+				buf.Write(buffer[:n])
+			}
+			if err != nil {
+				break
+			}
+		}
+		outputChan <- buf.String()
+	}()
+
+	// Execute the function
+	fnErr := fn()
+
+	// Restore stderr before closing the pipe writer
+	os.Stderr = oldStderr
+
+	// Close the pipe writer to signal EOF to the reader
+	w.Close()
+
+	// Wait for the reader to finish
+	<-doneChan
+
+	// Close the pipe reader
+	r.Close()
+
+	// Get the captured output
+	output := <-outputChan
+
+	return output, fnErr
+}
+
 // NewMCPServerCommand creates the mcp-server command
 func NewMCPServerCommand() *cobra.Command {
 	var port int
@@ -882,35 +940,39 @@ Returns formatted text output showing:
 		default:
 		}
 
-		// Build command arguments
-		cmdArgs := []string{"update"}
+		mcpLog.Printf("Executing update tool: workflows=%v, major=%v, force=%v", args.Workflows, args.Major, args.Force)
 
-		// Add workflow IDs if specified
-		cmdArgs = append(cmdArgs, args.Workflows...)
-
-		// Add optional flags
-		if args.Major {
-			cmdArgs = append(cmdArgs, "--major")
-		}
-		if args.Force {
-			cmdArgs = append(cmdArgs, "--force")
-		}
-
-		// Execute the CLI command
-		cmd := execCmd(ctx, cmdArgs...)
-		output, err := cmd.CombinedOutput()
+		// Capture stderr output during the update process
+		output, err := captureStderr(func() error {
+			// Call UpdateWorkflowsWithExtensionCheckContext directly with context support
+			// Parameters: workflowNames, allowMajor, force, verbose, engineOverride, createPR, workflowsDir, noStopAfter, stopAfter, merge, noActions
+			return UpdateWorkflowsWithExtensionCheckContext(
+				ctx,
+				args.Workflows, // workflowNames
+				args.Major,     // allowMajor
+				args.Force,     // force
+				true,           // verbose (for MCP output)
+				"",             // engineOverride (not exposed in MCP)
+				false,          // createPR (not exposed in MCP)
+				"",             // workflowsDir (use default)
+				false,          // noStopAfter (not exposed in MCP)
+				"",             // stopAfter (not exposed in MCP)
+				false,          // merge (not exposed in MCP)
+				false,          // noActions (always update actions in MCP)
+			)
+		})
 
 		if err != nil {
 			return nil, nil, &jsonrpc.Error{
 				Code:    jsonrpc.CodeInternalError,
 				Message: "failed to update workflows",
-				Data:    mcpErrorData(map[string]any{"error": err.Error(), "output": string(output)}),
+				Data:    mcpErrorData(map[string]any{"error": err.Error(), "output": output}),
 			}
 		}
 
 		return &mcp.CallToolResult{
 			Content: []mcp.Content{
-				&mcp.TextContent{Text: string(output)},
+				&mcp.TextContent{Text: output},
 			},
 		}, nil, nil
 	})

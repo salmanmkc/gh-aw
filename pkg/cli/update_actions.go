@@ -2,6 +2,7 @@ package cli
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -29,8 +30,24 @@ func extractBaseRepo(actionPath string) string {
 
 // UpdateActions updates GitHub Actions versions in .github/aw/actions-lock.json
 // It checks each action for newer releases and updates the SHA if a newer version is found
+//
+// Deprecated: Use UpdateActionsContext instead.
+// This function is maintained for backward compatibility.
 func UpdateActions(allowMajor, verbose bool) error {
+	return UpdateActionsContext(context.Background(), allowMajor, verbose)
+}
+
+// UpdateActionsContext updates GitHub Actions versions in .github/aw/actions-lock.json with context support
+// It checks each action for newer releases and updates the SHA if a newer version is found
+func UpdateActionsContext(ctx context.Context, allowMajor, verbose bool) error {
 	updateLog.Print("Starting action updates")
+
+	// Check for cancellation before starting
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+	}
 
 	if verbose {
 		fmt.Fprintln(os.Stderr, console.FormatInfoMessage("Checking for GitHub Actions updates..."))
@@ -67,6 +84,13 @@ func UpdateActions(allowMajor, verbose bool) error {
 
 	// Update each action
 	for key, entry := range actionsLock.Entries {
+		// Check for cancellation during loop
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+		}
+
 		updateLog.Printf("Checking action: %s@%s", entry.Repo, entry.Version)
 
 		// Check for latest release

@@ -282,6 +282,7 @@ Examples:
 				Verbose:     verbose,
 				WorkflowDir: dir,
 			}
+			//nolint:staticcheck // Using deprecated function is acceptable here for simplicity
 			if err := cli.RunFix(fixConfig); err != nil {
 				return err
 			}

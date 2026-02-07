@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -12,8 +13,23 @@ import (
 )
 
 // UpdateWorkflows updates workflows from their source repositories
+//
+// Deprecated: Use UpdateWorkflowsContext instead.
+// This function is maintained for backward compatibility.
 func UpdateWorkflows(workflowNames []string, allowMajor, force, verbose bool, engineOverride string, workflowsDir string, noStopAfter bool, stopAfter string, merge bool) error {
+	return UpdateWorkflowsContext(context.Background(), workflowNames, allowMajor, force, verbose, engineOverride, workflowsDir, noStopAfter, stopAfter, merge)
+}
+
+// UpdateWorkflowsContext updates workflows from their source repositories with context support
+func UpdateWorkflowsContext(ctx context.Context, workflowNames []string, allowMajor, force, verbose bool, engineOverride string, workflowsDir string, noStopAfter bool, stopAfter string, merge bool) error {
 	updateLog.Printf("Scanning for workflows with source field: dir=%s, filter=%v, merge=%v", workflowsDir, workflowNames, merge)
+
+	// Check for cancellation before starting
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+	}
 
 	// Use provided workflows directory or default
 	if workflowsDir == "" {
@@ -43,6 +59,13 @@ func UpdateWorkflows(workflowNames []string, allowMajor, force, verbose bool, en
 
 	// Update each workflow
 	for _, wf := range workflows {
+		// Check for cancellation during loop
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+		}
+
 		if err := updateWorkflow(wf, allowMajor, force, verbose, engineOverride, noStopAfter, stopAfter, merge); err != nil {
 			failedUpdates = append(failedUpdates, updateFailure{
 				Name:  wf.Name,

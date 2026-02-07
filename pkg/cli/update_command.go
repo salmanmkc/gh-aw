@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"context"
 	"fmt"
 	"os"
 
@@ -141,25 +142,66 @@ func runDependencyAudit(verbose bool, jsonOutput bool) error {
 // 3. Update workflows from source repositories (compiles each workflow after update)
 // 4. Apply automatic fixes to updated workflows
 // 5. Optionally create a PR
+//
+// Deprecated: Use UpdateWorkflowsWithExtensionCheckContext instead.
+// This function is maintained for backward compatibility.
 func UpdateWorkflowsWithExtensionCheck(workflowNames []string, allowMajor, force, verbose bool, engineOverride string, createPR bool, workflowsDir string, noStopAfter bool, stopAfter string, merge bool, noActions bool) error {
+	return UpdateWorkflowsWithExtensionCheckContext(context.Background(), workflowNames, allowMajor, force, verbose, engineOverride, createPR, workflowsDir, noStopAfter, stopAfter, merge, noActions)
+}
+
+// UpdateWorkflowsWithExtensionCheckContext performs the complete update process with context support:
+// 1. Check for gh-aw extension updates
+// 2. Update GitHub Actions versions (unless --no-actions flag is set)
+// 3. Update workflows from source repositories (compiles each workflow after update)
+// 4. Apply automatic fixes to updated workflows
+// 5. Optionally create a PR
+func UpdateWorkflowsWithExtensionCheckContext(ctx context.Context, workflowNames []string, allowMajor, force, verbose bool, engineOverride string, createPR bool, workflowsDir string, noStopAfter bool, stopAfter string, merge bool, noActions bool) error {
 	updateLog.Printf("Starting update process: workflows=%v, allowMajor=%v, force=%v, createPR=%v, merge=%v, noActions=%v", workflowNames, allowMajor, force, createPR, merge, noActions)
 
+	// Check for cancellation before starting
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+	}
+
 	// Step 1: Check for gh-aw extension updates
-	if err := checkExtensionUpdate(verbose); err != nil {
+	if err := checkExtensionUpdateContext(ctx, verbose); err != nil {
 		return fmt.Errorf("extension update check failed: %w", err)
+	}
+
+	// Check for cancellation after extension check
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
 	}
 
 	// Step 2: Update GitHub Actions versions (unless disabled)
 	if !noActions {
-		if err := UpdateActions(allowMajor, verbose); err != nil {
+		if err := UpdateActionsContext(ctx, allowMajor, verbose); err != nil {
 			return fmt.Errorf("action update failed: %w", err)
 		}
 	}
 
+	// Check for cancellation after actions update
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+	}
+
 	// Step 3: Update workflows from source repositories
 	// Note: Each workflow is compiled immediately after update
-	if err := UpdateWorkflows(workflowNames, allowMajor, force, verbose, engineOverride, workflowsDir, noStopAfter, stopAfter, merge); err != nil {
+	if err := UpdateWorkflowsContext(ctx, workflowNames, allowMajor, force, verbose, engineOverride, workflowsDir, noStopAfter, stopAfter, merge); err != nil {
 		return fmt.Errorf("workflow update failed: %w", err)
+	}
+
+	// Check for cancellation after workflows update
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
 	}
 
 	// Step 4: Apply automatic fixes to updated workflows
@@ -168,7 +210,7 @@ func UpdateWorkflowsWithExtensionCheck(workflowNames []string, allowMajor, force
 		Write:       true,
 		Verbose:     verbose,
 	}
-	if err := RunFix(fixConfig); err != nil {
+	if err := RunFixContext(ctx, fixConfig); err != nil {
 		updateLog.Printf("Fix command failed (non-fatal): %v", err)
 		// Don't fail the update if fix fails - this is non-critical
 		if verbose {
@@ -176,9 +218,16 @@ func UpdateWorkflowsWithExtensionCheck(workflowNames []string, allowMajor, force
 		}
 	}
 
+	// Check for cancellation after fix
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+	}
+
 	// Step 5: Optionally create PR if flag is set
 	if createPR {
-		if err := createUpdatePR(verbose); err != nil {
+		if err := createUpdatePRContext(ctx, verbose); err != nil {
 			return fmt.Errorf("failed to create PR: %w", err)
 		}
 	}

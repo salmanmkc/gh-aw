@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"context"
 	"fmt"
 	"math/rand"
 	"os"
@@ -32,7 +33,24 @@ func runGitCommand(args ...string) error {
 }
 
 // createUpdatePR creates a pull request with the workflow changes
+//
+// Deprecated: Use createUpdatePRContext instead.
+// This function is maintained for backward compatibility.
+//
+//nolint:unused // Maintained for backward compatibility
 func createUpdatePR(verbose bool) error {
+	return createUpdatePRContext(context.Background(), verbose)
+}
+
+// createUpdatePRContext creates a pull request with the workflow changes with context support
+func createUpdatePRContext(ctx context.Context, verbose bool) error {
+	// Check for cancellation before starting
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+	}
+
 	// Check if GitHub CLI is available
 	if !isGHCLIAvailable() {
 		return fmt.Errorf("GitHub CLI (gh) is required for PR creation but not found in PATH")
