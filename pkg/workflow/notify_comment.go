@@ -202,6 +202,26 @@ func (c *Compiler) buildConclusionJob(data *WorkflowData, mainJobName string, sa
 	})
 	steps = append(steps, agentFailureSteps...)
 
+	// Add no-op issue handling step - creates/updates an issue when agent succeeds with only no-op messages
+	// This is separate from agent failure handling
+	// Build environment variables for the no-op issue handler
+	var noopIssueEnvVars []string
+	noopIssueEnvVars = append(noopIssueEnvVars, buildWorkflowMetadataEnvVarsWithTrackerID(data.Name, data.Source, data.TrackerID)...)
+	noopIssueEnvVars = append(noopIssueEnvVars, "          GH_AW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\n")
+	noopIssueEnvVars = append(noopIssueEnvVars, fmt.Sprintf("          GH_AW_AGENT_CONCLUSION: ${{ needs.%s.result }}\n", mainJobName))
+
+	// Build the no-op issue handling step
+	noopIssueSteps := c.buildGitHubScriptStepWithoutDownload(data, GitHubScriptStepConfig{
+		StepName:      "Handle No-Op Issue",
+		StepID:        "handle_noop_issue",
+		MainJobName:   mainJobName,
+		CustomEnvVars: noopIssueEnvVars,
+		Script:        "const { main } = require('/opt/gh-aw/actions/handle_noop_issue.cjs'); await main();",
+		ScriptFile:    "handle_noop_issue.cjs",
+		Token:         "", // Will use default GITHUB_TOKEN
+	})
+	steps = append(steps, noopIssueSteps...)
+
 	// Add create_pull_request error handling step if create-pull-request is configured
 	if data.SafeOutputs != nil && data.SafeOutputs.CreatePullRequests != nil {
 		// Build environment variables for the create PR error handler

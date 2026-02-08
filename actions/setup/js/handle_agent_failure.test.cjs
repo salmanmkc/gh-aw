@@ -26,7 +26,7 @@ describe("handle_agent_failure.cjs", () => {
 **Branch:** {branch}  
 **Run URL:** {run_url}{pull_request_info}
 
-{secret_verification_context}{assignment_errors_context}{create_discussion_errors_context}{missing_data_context}{missing_safe_outputs_context}{noop_messages_context}
+{secret_verification_context}{assignment_errors_context}{create_discussion_errors_context}{missing_data_context}{missing_safe_outputs_context}
 
 ### Action Required
 
@@ -40,7 +40,7 @@ When prompted, instruct the agent to debug this workflow failure.`;
       } else if (filePath.includes("agent_failure_comment.md")) {
         return `Agent job [{run_id}]({run_url}) failed.
 
-{secret_verification_context}{assignment_errors_context}{create_discussion_errors_context}{missing_data_context}{missing_safe_outputs_context}{noop_messages_context}`;
+{secret_verification_context}{assignment_errors_context}{create_discussion_errors_context}{missing_data_context}{missing_safe_outputs_context}`;
       }
       return originalReadFileSync.call(fs, filePath, encoding);
     });
@@ -550,11 +550,11 @@ When prompted, instruct the agent to debug this workflow failure.`;
   });
 
   describe("when agent job did not fail", () => {
-    it("should process when agent conclusion is success with only noop messages", async () => {
+    it("should skip processing when agent conclusion is success with safe outputs", async () => {
       process.env.GH_AW_AGENT_CONCLUSION = "success";
 
-      // Set up agent output file with only noop messages
-      const tempFilePath = "/tmp/test_agent_output_noop_only.json";
+      // Set up agent output file with safe outputs
+      const tempFilePath = "/tmp/test_agent_output_success.json";
       fs.writeFileSync(
         tempFilePath,
         JSON.stringify({
@@ -563,53 +563,9 @@ When prompted, instruct the agent to debug this workflow failure.`;
       );
       process.env.GH_AW_AGENT_OUTPUT = tempFilePath;
 
-      // Mock API responses
-      mockGithub.rest.search.issuesAndPullRequests.mockResolvedValue({
-        data: { total_count: 0, items: [] },
-      });
-
-      mockGithub.rest.issues.create.mockResolvedValue({
-        data: {
-          number: 1,
-          html_url: "https://github.com/test-owner/test-repo/issues/1",
-          node_id: "test-node-id",
-        },
-      });
-
       try {
         await main();
 
-        // Should process noop-only messages as they indicate no action was taken
-        expect(mockCore.info).toHaveBeenCalledWith(expect.stringContaining("Agent succeeded with only noop messages"));
-        expect(mockGithub.rest.search.issuesAndPullRequests).toHaveBeenCalled();
-      } finally {
-        // Clean up
-        if (fs.existsSync(tempFilePath)) {
-          fs.unlinkSync(tempFilePath);
-        }
-      }
-    });
-
-    it("should skip processing when agent conclusion is success with non-noop safe outputs", async () => {
-      process.env.GH_AW_AGENT_CONCLUSION = "success";
-
-      // Set up agent output file with non-noop safe outputs
-      const tempFilePath = "/tmp/test_agent_output_with_actions.json";
-      fs.writeFileSync(
-        tempFilePath,
-        JSON.stringify({
-          items: [
-            { type: "noop", message: "No action taken" },
-            { type: "create_issue", title: "Test issue" },
-          ],
-        })
-      );
-      process.env.GH_AW_AGENT_OUTPUT = tempFilePath;
-
-      try {
-        await main();
-
-        // Should skip when there are other safe outputs besides noop
         expect(mockCore.info).toHaveBeenCalledWith(expect.stringContaining("Agent job did not fail"));
         expect(mockGithub.rest.search.issuesAndPullRequests).not.toHaveBeenCalled();
         expect(mockGithub.rest.issues.create).not.toHaveBeenCalled();
@@ -1416,113 +1372,6 @@ When prompted, instruct the agent to debug this workflow failure.`;
 
       // Verify issue was created (normal failure handling)
       expect(mockGithub.rest.issues.create).toHaveBeenCalled();
-    });
-  });
-
-  describe("noop messages handling", () => {
-    it("should include sanitized noop messages in failure issue when agent succeeds with only noop", async () => {
-      // Set up agent output with only noop messages
-      const tempFilePath = "/tmp/test_noop_messages.json";
-      fs.writeFileSync(
-        tempFilePath,
-        JSON.stringify({
-          items: [
-            { type: "noop", message: "No changes needed - everything is up to date" },
-            { type: "noop", message: "All tests passing, no action required" },
-          ],
-        })
-      );
-      process.env.GH_AW_AGENT_OUTPUT = tempFilePath;
-      process.env.GH_AW_AGENT_CONCLUSION = "success";
-
-      // Mock API responses
-      mockGithub.rest.search.issuesAndPullRequests
-        .mockResolvedValueOnce({ data: { total_count: 0, items: [] } }) // PR search
-        .mockResolvedValueOnce({ data: { total_count: 1, items: [{ number: 1, html_url: "...", node_id: "I_1" }] } }) // Parent search
-        .mockResolvedValueOnce({ data: { total_count: 0, items: [] } }); // Failure issue search
-
-      mockGithub.rest.issues.create.mockResolvedValue({
-        data: { number: 2, html_url: "https://example.com/2", node_id: "I_2" },
-      });
-
-      mockGithub.graphql = vi.fn().mockResolvedValue({
-        addSubIssue: {
-          issue: { id: "I_1", number: 1 },
-          subIssue: { id: "I_2", number: 2 },
-        },
-      });
-
-      try {
-        await main();
-
-        // Verify that the issue was created
-        expect(mockGithub.rest.issues.create).toHaveBeenCalled();
-
-        // Get the issue body
-        const createCall = mockGithub.rest.issues.create.mock.calls[0][0];
-        const issueBody = createCall.body;
-
-        // Verify noop messages context is included
-        expect(issueBody).toContain("**ℹ️ No-Op Messages**");
-        expect(issueBody).toContain("No changes needed - everything is up to date");
-        expect(issueBody).toContain("All tests passing, no action required");
-
-        // Verify footer is included (expiration and XML marker)
-        expect(issueBody).toContain("expires");
-        expect(issueBody).toContain("gh-aw-agentic-workflow");
-      } finally {
-        if (fs.existsSync(tempFilePath)) {
-          fs.unlinkSync(tempFilePath);
-        }
-      }
-    });
-
-    it("should sanitize noop messages with excessive length", async () => {
-      // Create a very long noop message
-      const longMessage = "A".repeat(6000);
-
-      const tempFilePath = "/tmp/test_long_noop.json";
-      fs.writeFileSync(
-        tempFilePath,
-        JSON.stringify({
-          items: [{ type: "noop", message: longMessage }],
-        })
-      );
-      process.env.GH_AW_AGENT_OUTPUT = tempFilePath;
-      process.env.GH_AW_AGENT_CONCLUSION = "success";
-
-      // Mock API responses
-      mockGithub.rest.search.issuesAndPullRequests
-        .mockResolvedValueOnce({ data: { total_count: 0, items: [] } })
-        .mockResolvedValueOnce({ data: { total_count: 1, items: [{ number: 1, html_url: "...", node_id: "I_1" }] } })
-        .mockResolvedValueOnce({ data: { total_count: 0, items: [] } });
-
-      mockGithub.rest.issues.create.mockResolvedValue({
-        data: { number: 2, html_url: "https://example.com/2", node_id: "I_2" },
-      });
-
-      mockGithub.graphql = vi.fn().mockResolvedValue({
-        addSubIssue: {
-          issue: { id: "I_1", number: 1 },
-          subIssue: { id: "I_2", number: 2 },
-        },
-      });
-
-      try {
-        await main();
-
-        const createCall = mockGithub.rest.issues.create.mock.calls[0][0];
-        const issueBody = createCall.body;
-
-        // Verify the message was sanitized (should be truncated to 5000 chars max)
-        expect(issueBody).toContain("**ℹ️ No-Op Messages**");
-        // The full 6000 char message should not be in the body
-        expect(issueBody.length).toBeLessThan(longMessage.length + 1000);
-      } finally {
-        if (fs.existsSync(tempFilePath)) {
-          fs.unlinkSync(tempFilePath);
-        }
-      }
     });
   });
 });

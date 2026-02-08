@@ -355,11 +355,8 @@ async function main() {
     // Check if there are create_discussion errors (regardless of agent job status)
     const hasCreateDiscussionErrors = parseInt(createDiscussionErrorCount, 10) > 0;
 
-    // Check if agent succeeded but produced no safe outputs OR only noop messages
+    // Check if agent succeeded but produced no safe outputs
     let hasMissingSafeOutputs = false;
-    let hasOnlyNoOpMessages = false;
-    let noopMessages = [];
-
     if (agentConclusion === "success") {
       const { loadAgentOutput } = require("./load_agent_output.cjs");
       const agentOutputResult = loadAgentOutput();
@@ -367,21 +364,11 @@ async function main() {
       if (!agentOutputResult.success || !agentOutputResult.items || agentOutputResult.items.length === 0) {
         hasMissingSafeOutputs = true;
         core.info("Agent succeeded but produced no safe outputs");
-      } else {
-        // Check if all outputs are noop messages (no other safe-output types)
-        const noopItems = agentOutputResult.items.filter(item => item.type === "noop");
-        const nonNoopItems = agentOutputResult.items.filter(item => item.type !== "noop");
-
-        if (noopItems.length > 0 && nonNoopItems.length === 0) {
-          hasOnlyNoOpMessages = true;
-          noopMessages = noopItems.map(item => item.message || "");
-          core.info(`Agent succeeded with only noop messages (${noopItems.length} noop message(s), no other safe outputs)`);
-        }
       }
     }
 
-    // Only proceed if the agent job actually failed OR there are assignment errors OR create_discussion errors OR missing safe outputs OR only noop messages
-    if (agentConclusion !== "failure" && !hasAssignmentErrors && !hasCreateDiscussionErrors && !hasMissingSafeOutputs && !hasOnlyNoOpMessages) {
+    // Only proceed if the agent job actually failed OR there are assignment errors OR create_discussion errors OR missing safe outputs
+    if (agentConclusion !== "failure" && !hasAssignmentErrors && !hasCreateDiscussionErrors && !hasMissingSafeOutputs) {
       core.info(`Agent job did not fail and no assignment/discussion errors and has safe outputs (conclusion: ${agentConclusion}), skipping failure handling`);
       return;
     }
@@ -412,9 +399,6 @@ async function main() {
     const issueTitle = `[agentics] ${sanitizedWorkflowName} failed`;
 
     core.info(`Checking for existing issue with title: "${issueTitle}"`);
-
-    // Note: For noop-only messages, we use the same issue title/label as failures to avoid creating separate tracking issues
-    // This ensures we check for existing agent-failure issues before creating a new noop issue
 
     // Search for existing open issue with this title and label
     const searchQuery = `repo:${owner}/${repo} is:issue is:open label:agentic-workflows in:title "${issueTitle}"`;
@@ -474,20 +458,6 @@ async function main() {
           missingSafeOutputsContext += "- The agent should have called `noop` to explicitly indicate no action was taken\n\n";
         }
 
-        // Build noop messages context (when agent succeeded with only noop messages)
-        let noopMessagesContext = "";
-        if (hasOnlyNoOpMessages && noopMessages.length > 0) {
-          noopMessagesContext = "\n**ℹ️ No-Op Messages**: The agent ran but determined no action was needed. The following message(s) were reported:\n\n";
-          noopMessages.forEach((msg, idx) => {
-            const sanitizedMsg = sanitizeContent(msg, { maxLength: 5000 });
-            if (noopMessages.length === 1) {
-              noopMessagesContext += `${sanitizedMsg}\n\n`;
-            } else {
-              noopMessagesContext += `${idx + 1}. ${sanitizedMsg}\n\n`;
-            }
-          });
-        }
-
         // Create template context
         const templateContext = {
           run_url: runUrl,
@@ -504,7 +474,6 @@ async function main() {
           create_discussion_errors_context: createDiscussionErrorsContext,
           missing_data_context: missingDataContext,
           missing_safe_outputs_context: missingSafeOutputsContext,
-          noop_messages_context: noopMessagesContext,
         };
 
         // Render the comment template
@@ -574,20 +543,6 @@ async function main() {
           missingSafeOutputsContext += "- The agent should have called `noop` to explicitly indicate no action was taken\n\n";
         }
 
-        // Build noop messages context (when agent succeeded with only noop messages)
-        let noopMessagesContext = "";
-        if (hasOnlyNoOpMessages && noopMessages.length > 0) {
-          noopMessagesContext = "\n**ℹ️ No-Op Messages**: The agent ran but determined no action was needed. The following message(s) were reported:\n\n";
-          noopMessages.forEach((msg, idx) => {
-            const sanitizedMsg = sanitizeContent(msg, { maxLength: 5000 });
-            if (noopMessages.length === 1) {
-              noopMessagesContext += `${sanitizedMsg}\n\n`;
-            } else {
-              noopMessagesContext += `${idx + 1}. ${sanitizedMsg}\n\n`;
-            }
-          });
-        }
-
         // Create template context with sanitized workflow name
         const templateContext = {
           workflow_name: sanitizedWorkflowName,
@@ -604,7 +559,6 @@ async function main() {
           create_discussion_errors_context: createDiscussionErrorsContext,
           missing_data_context: missingDataContext,
           missing_safe_outputs_context: missingSafeOutputsContext,
-          noop_messages_context: noopMessagesContext,
         };
 
         // Render the issue template
