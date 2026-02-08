@@ -359,7 +359,7 @@ async function main() {
     let hasMissingSafeOutputs = false;
     let hasOnlyNoOpMessages = false;
     let noopMessages = [];
-    
+
     if (agentConclusion === "success") {
       const { loadAgentOutput } = require("./load_agent_output.cjs");
       const agentOutputResult = loadAgentOutput();
@@ -371,7 +371,7 @@ async function main() {
         // Check if all outputs are noop messages (no other safe-output types)
         const noopItems = agentOutputResult.items.filter(item => item.type === "noop");
         const nonNoopItems = agentOutputResult.items.filter(item => item.type !== "noop");
-        
+
         if (noopItems.length > 0 && nonNoopItems.length === 0) {
           hasOnlyNoOpMessages = true;
           noopMessages = noopItems.map(item => item.message || "");
@@ -412,7 +412,7 @@ async function main() {
     const issueTitle = `[agentics] ${sanitizedWorkflowName} failed`;
 
     core.info(`Checking for existing issue with title: "${issueTitle}"`);
-    
+
     // Note: For noop-only messages, we use the same issue title/label as failures to avoid creating separate tracking issues
     // This ensures we check for existing agent-failure issues before creating a new noop issue
 

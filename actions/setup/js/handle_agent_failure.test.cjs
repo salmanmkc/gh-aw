@@ -600,7 +600,7 @@ When prompted, instruct the agent to debug this workflow failure.`;
         JSON.stringify({
           items: [
             { type: "noop", message: "No action taken" },
-            { type: "create_issue", title: "Test issue" }
+            { type: "create_issue", title: "Test issue" },
           ],
         })
       );
@@ -1428,7 +1428,7 @@ When prompted, instruct the agent to debug this workflow failure.`;
         JSON.stringify({
           items: [
             { type: "noop", message: "No changes needed - everything is up to date" },
-            { type: "noop", message: "All tests passing, no action required" }
+            { type: "noop", message: "All tests passing, no action required" },
           ],
         })
       );
@@ -1466,7 +1466,7 @@ When prompted, instruct the agent to debug this workflow failure.`;
         expect(issueBody).toContain("**ℹ️ No-Op Messages**");
         expect(issueBody).toContain("No changes needed - everything is up to date");
         expect(issueBody).toContain("All tests passing, no action required");
-        
+
         // Verify footer is included (expiration and XML marker)
         expect(issueBody).toContain("expires");
         expect(issueBody).toContain("gh-aw-agentic-workflow");
@@ -1480,7 +1480,7 @@ When prompted, instruct the agent to debug this workflow failure.`;
     it("should sanitize noop messages with excessive length", async () => {
       // Create a very long noop message
       const longMessage = "A".repeat(6000);
-      
+
       const tempFilePath = "/tmp/test_long_noop.json";
       fs.writeFileSync(
         tempFilePath,
