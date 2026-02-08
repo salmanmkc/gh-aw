@@ -297,6 +297,187 @@ For new workflow development:
 
 ---
 
+## Path to AI-Native Workflows
+
+### Moving from Hybrid to Pure Natural Language
+
+The analysis shows that 67.3% of workflows currently use explicit examples/code. To become **purely AI-native** (safe-outputs + natural language only), we need strategies to replace explicit code guidance with natural language instructions that achieve the same outcomes.
+
+### Challenge: Replacing Explicit Examples
+
+**Current Hybrid Pattern:**
+```markdown
+---
+safe-outputs:
+  create-discussion:
+    category: "audits"
+---
+
+Use gh-aw MCP server. Run `status` tool to verify.
+
+**Collect Logs**: Use MCP `logs` tool with parameters:
+```bash
+start_date: "-1d"
+```
+```
+
+**Target AI-Native Pattern:**
+```markdown
+---
+safe-outputs:
+  create-discussion:
+    category: "audits"
+---
+
+Collect workflow logs from the last 24 hours and analyze them for issues.
+Create a discussion with your findings.
+```
+
+### Proposed Approaches
+
+#### 1. Reference Pattern Library (Recommended)
+
+Create reusable pattern files in `.github/aw/` that provide examples for common operations:
+
+**Structure:**
+- `.github/aw/orchestration.md` - Delegation patterns (assign-to-agent, dispatch-workflow)
+- `.github/aw/projects.md` - GitHub Projects v2 patterns (update-project, status updates)
+- `.github/aw/analysis.md` - Code analysis patterns (git operations, file analysis)
+- `.github/aw/github-api.md` - GitHub API patterns (search, list, get operations)
+
+**Usage in Workflows:**
+```yaml
+imports:
+  - aw/orchestration.md     # Load orchestration patterns
+  - aw/projects.md          # Load project management patterns
+```
+
+**Benefits:**
+- ✅ Centralized pattern maintenance
+- ✅ Consistent across workflows
+- ✅ AI learns from examples without explicit code in every workflow
+- ✅ Patterns evolve as best practices emerge
+
+#### 2. Enhanced Safe-Output Documentation
+
+Improve safe-output configuration to include inline guidance:
+
+```yaml
+safe-outputs:
+  update-project:
+    project: "https://github.com/orgs/myorg/projects/42"
+    max: 20
+    # guidance: "Use update_project() to add issues/PRs to the project and set fields"
+```
+
+**Benefits:**
+- ✅ Self-documenting configuration
+- ✅ No separate pattern files needed
+- ✅ Context-aware hints
+
+**Limitations:**
+- ❌ Limited space for detailed examples
+- ❌ Harder to maintain across many workflows
+
+#### 3. Tool Schema Enrichment
+
+Enhance MCP tool schemas with detailed descriptions and examples:
+
+```javascript
+{
+  "name": "update_project",
+  "description": "Add issues/PRs to a GitHub Project and set custom fields",
+  "examples": [
+    "To add issue #123: update_project({project: 'URL', content_type: 'issue', content_number: 123})",
+    "To create draft: update_project({project: 'URL', content_type: 'draft_issue', draft_title: 'Title'})"
+  ]
+}
+```
+
+**Benefits:**
+- ✅ Examples travel with tool definitions
+- ✅ AI model has immediate context
+- ✅ Works with any MCP client
+
+**Limitations:**
+- ❌ Requires schema changes
+- ❌ Not workflow-specific
+
+#### 4. Intelligent Imports with Context Mapping
+
+Automatically load relevant patterns based on safe-outputs configuration:
+
+```yaml
+safe-outputs:
+  update-project:     # Automatically imports .github/aw/projects.md
+  dispatch-workflow:  # Automatically imports .github/aw/orchestration.md
+  create-issue:       # Automatically imports .github/aw/github-api.md
+```
+
+**Benefits:**
+- ✅ Zero configuration overhead
+- ✅ Always have relevant examples
+- ✅ Scales with new safe-outputs
+
+**Limitations:**
+- ❌ Requires compiler changes
+- ❌ Less explicit about what's loaded
+
+### Hybrid Transition Strategy
+
+**Phase 1: Current State (67.3% Hybrid)**
+- Most workflows have explicit examples + safe-outputs
+- Works well but requires maintenance
+
+**Phase 2: Pattern Library (Transitional)**
+- Create `.github/aw/` pattern files for common operations
+- Migrate explicit examples to pattern imports
+- Workflows reference patterns instead of inline examples
+
+**Phase 3: Pure AI-Native (Target)**
+- Workflows use only safe-outputs + natural language
+- Pattern libraries provide implicit guidance via imports
+- AI model learns from centralized examples
+
+### Implementation Recommendations
+
+For the transition to AI-native workflows:
+
+1. **Start with orchestration and projects patterns** (already exist in `.github/aw/`)
+2. **Create additional pattern files** for common operations:
+   - Analysis patterns (git, files, code)
+   - GitHub API patterns (search, list, get)
+   - Testing patterns (validation, smoke tests)
+3. **Establish import conventions** for loading relevant patterns
+4. **Measure effectiveness** by comparing workflow success rates
+5. **Iterate on patterns** based on real workflow failures
+
+### Expected Outcomes
+
+**Benefits of AI-Native Approach:**
+- ✅ Simpler workflow files (less boilerplate)
+- ✅ Easier to maintain (centralized patterns)
+- ✅ More flexible (AI interprets intent)
+- ✅ Better abstraction (less implementation details)
+
+**Risks to Mitigate:**
+- ⚠️ Pattern files must be comprehensive
+- ⚠️ AI may need stronger prompting for complex operations
+- ⚠️ Debugging becomes harder without explicit examples
+- ⚠️ Success rates may vary across AI models
+
+### Validation Approach
+
+To validate the AI-native approach:
+
+1. **Select pilot workflows** (10-15) from the safe-outputs-only category
+2. **Monitor success rates** before and after pattern library additions
+3. **Convert 5-10 hybrid workflows** to pure natural language with pattern imports
+4. **Compare outcomes** (success rate, token usage, execution time)
+5. **Document best practices** for pattern-based workflow design
+
+---
+
 **Analysis Generated:** 2026-02-08  
 **Repository:** github/gh-aw  
 **Analyzer:** Workflow Analysis Script v1.0
