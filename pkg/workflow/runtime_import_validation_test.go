@@ -323,3 +323,145 @@ Please process the issue.
 		os.Remove(lockFile)
 	}
 }
+
+// TestValidateRuntimeImportFiles_AgentsFolder tests runtime imports from .agents folder
+func TestValidateRuntimeImportFiles_AgentsFolder(t *testing.T) {
+	// Create a temporary directory structure with both .github and .agents folders
+	tmpDir := t.TempDir()
+	githubDir := filepath.Join(tmpDir, ".github")
+	agentsDir := filepath.Join(tmpDir, ".agents")
+	githubSharedDir := filepath.Join(githubDir, "shared")
+	agentsSharedDir := filepath.Join(agentsDir, "shared")
+	require.NoError(t, os.MkdirAll(githubSharedDir, 0755))
+	require.NoError(t, os.MkdirAll(agentsSharedDir, 0755))
+
+	// Create test files in .github folder
+	githubValidFile := filepath.Join(githubSharedDir, "valid.md")
+	githubContent := `# GitHub Valid Content
+
+This file has safe expressions:
+- Actor: ${{ github.actor }}
+- Repository: ${{ github.repository }}
+`
+	require.NoError(t, os.WriteFile(githubValidFile, []byte(githubContent), 0644))
+
+	// Create test files in .agents folder
+	agentsValidFile := filepath.Join(agentsSharedDir, "agent-instructions.md")
+	agentsContent := `# Agents Valid Content
+
+Agent instructions with safe expressions:
+- Issue number: ${{ github.event.issue.number }}
+- Run ID: ${{ github.run_id }}
+`
+	require.NoError(t, os.WriteFile(agentsValidFile, []byte(agentsContent), 0644))
+
+	agentsInvalidFile := filepath.Join(agentsSharedDir, "agent-invalid.md")
+	agentsInvalidContent := `# Agents Invalid Content
+
+This has an unsafe expression:
+- Secret: ${{ secrets.MY_TOKEN }}
+`
+	require.NoError(t, os.WriteFile(agentsInvalidFile, []byte(agentsInvalidContent), 0644))
+
+	tests := []struct {
+		name        string
+		markdown    string
+		expectError bool
+		errorText   string
+	}{
+		{
+			name:        "valid import from .github",
+			markdown:    "{{#runtime-import .github/shared/valid.md}}",
+			expectError: false,
+		},
+		{
+			name:        "valid import from .agents",
+			markdown:    "{{#runtime-import .agents/shared/agent-instructions.md}}",
+			expectError: false,
+		},
+		{
+			name:        "invalid import from .agents",
+			markdown:    "{{#runtime-import .agents/shared/agent-invalid.md}}",
+			expectError: true,
+			errorText:   "secrets.MY_TOKEN",
+		},
+		{
+			name:        "mixed imports from both folders",
+			markdown:    "{{#runtime-import .github/shared/valid.md}}\n{{#runtime-import .agents/shared/agent-instructions.md}}",
+			expectError: false,
+		},
+		{
+			name:        "mixed imports with one invalid",
+			markdown:    "{{#runtime-import .github/shared/valid.md}}\n{{#runtime-import .agents/shared/agent-invalid.md}}",
+			expectError: true,
+			errorText:   "secrets.MY_TOKEN",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := validateRuntimeImportFiles(tt.markdown, tmpDir)
+
+			if tt.expectError {
+				require.Error(t, err, "Expected an error")
+				if tt.errorText != "" {
+					assert.Contains(t, err.Error(), tt.errorText, "Error should contain expected text")
+				}
+			} else {
+				assert.NoError(t, err, "Expected no error")
+			}
+		})
+	}
+}
+
+// TestValidateRuntimeImportFiles_AgentsFolderSecurity tests security validation for .agents folder
+func TestValidateRuntimeImportFiles_AgentsFolderSecurity(t *testing.T) {
+	// Create a temporary directory structure
+	tmpDir := t.TempDir()
+	agentsDir := filepath.Join(tmpDir, ".agents")
+	require.NoError(t, os.MkdirAll(agentsDir, 0755))
+
+	// Create a file in .agents folder
+	validFile := filepath.Join(agentsDir, "test.md")
+	validContent := "# Test\n\nActor: ${{ github.actor }}"
+	require.NoError(t, os.WriteFile(validFile, []byte(validContent), 0644))
+
+	tests := []struct {
+		name        string
+		markdown    string
+		expectError bool
+		errorText   string
+	}{
+		{
+			name:        "valid path within .agents",
+			markdown:    "{{#runtime-import .agents/test.md}}",
+			expectError: false,
+		},
+		{
+			name:        "path with ./ prefix in .agents",
+			markdown:    "{{#runtime-import .agents/./test.md}}",
+			expectError: false,
+		},
+		{
+			name:        "attempt to escape .agents folder",
+			markdown:    "{{#runtime-import .agents/../.github/test.md}}",
+			expectError: true,
+			errorText:   "Security",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := validateRuntimeImportFiles(tt.markdown, tmpDir)
+
+			if tt.expectError {
+				require.Error(t, err, "Expected an error")
+				if tt.errorText != "" {
+					assert.Contains(t, err.Error(), tt.errorText, "Error should contain expected text")
+				}
+			} else {
+				assert.NoError(t, err, "Expected no error")
+			}
+		})
+	}
+}

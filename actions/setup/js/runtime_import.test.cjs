@@ -1094,5 +1094,63 @@ describe("runtime_import", () => {
           });
         });
       });
+    }),
+    describe("processRuntimeImport - .agents folder support", () => {
+      let agentsDir;
+      (beforeEach(() => {
+        // Create .agents directory alongside .github
+        agentsDir = path.join(tempDir, ".agents");
+        fs.mkdirSync(agentsDir, { recursive: true });
+      }),
+        it("should read file from .agents folder with explicit prefix", async () => {
+          const content = "# Agent Instructions\n\nAgent-specific content.";
+          fs.writeFileSync(path.join(agentsDir, "agent-file.md"), content);
+          const result = await processRuntimeImport(".agents/agent-file.md", false, tempDir);
+          expect(result).toBe(content);
+        }),
+        it("should read file from .github folder with explicit prefix", async () => {
+          const content = "# GitHub Content\n\nGitHub-specific content.";
+          fs.writeFileSync(path.join(githubDir, "github-file.md"), content);
+          const result = await processRuntimeImport(".github/github-file.md", false, tempDir);
+          expect(result).toBe(content);
+        }),
+        it("should default to .github folder without prefix", async () => {
+          const content = "# Default Content\n\nContent in .github by default.";
+          fs.writeFileSync(path.join(githubDir, "default-file.md"), content);
+          const result = await processRuntimeImport("default-file.md", false, tempDir);
+          expect(result).toBe(content);
+        }),
+        it("should throw error for missing file in .agents folder", async () => {
+          await expect(processRuntimeImport(".agents/missing.md", false, tempDir)).rejects.toThrow("Runtime import file not found: missing.md");
+        }),
+        it("should return empty string for missing optional file in .agents folder", async () => {
+          const result = await processRuntimeImport(".agents/missing.md", true, tempDir);
+          expect(result).toBe("");
+          expect(core.warning).toHaveBeenCalledWith("Optional runtime import file not found: missing.md");
+        }),
+        it("should enforce security check for .agents folder", async () => {
+          // Attempt to escape .agents folder using ../
+          await expect(processRuntimeImport(".agents/../.github/test.md", false, tempDir)).rejects.toThrow(/Security.*must be within \.agents folder/);
+        }),
+        it("should enforce security check for .github folder", async () => {
+          // Attempt to escape .github folder using ../
+          await expect(processRuntimeImport(".github/../.agents/test.md", false, tempDir)).rejects.toThrow(/Security.*must be within \.github folder/);
+        }),
+        it("should support Windows-style path separators for .agents", async () => {
+          const content = "# Windows Path\n\nWindows-style path test.";
+          const subDir = path.join(agentsDir, "subdir");
+          fs.mkdirSync(subDir, { recursive: true });
+          fs.writeFileSync(path.join(subDir, "win-file.md"), content);
+          const result = await processRuntimeImport(".agents\\subdir\\win-file.md", false, tempDir);
+          expect(result).toBe(content);
+        }),
+        it("should handle subdirectories in .agents folder", async () => {
+          const content = "# Subdirectory Content\n\nContent in subdirectory.";
+          const subDir = path.join(agentsDir, "shared", "templates");
+          fs.mkdirSync(subDir, { recursive: true });
+          fs.writeFileSync(path.join(subDir, "template.md"), content);
+          const result = await processRuntimeImport(".agents/shared/templates/template.md", false, tempDir);
+          expect(result).toBe(content);
+        }));
     }));
 });
