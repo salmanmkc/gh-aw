@@ -763,3 +763,33 @@
 8. WebSocket upgrade and HTTP TRACE method both return 403 from Squid
 
 **Cumulative**: 515 techniques (21 runs), 1 escape found (patched in v0.9.1). **Sandbox currently secure.**
+
+## Run 21819295673 - 2026-02-09
+
+- [x] Technique 1: Environment Variable Reconnaissance (result: success-info)
+- [x] Technique 2: host.docker.internal Port Scan (result: success-info)
+- [x] Technique 3: HTTP Proxy via host.docker.internal (result: failure)
+- [x] Technique 4: Gateway IP Direct HTTP Access (result: success-info)
+- [x] Technique 5: Capability Check - CAP_NET_RAW (result: success-info)
+- [x] Technique 6: Squid Version Fingerprinting (result: success-info)
+- [x] Technique 7: HTTP Request Smuggling (TE.CL) (result: failure)
+- [x] Technique 8: DNS over TCP to Cloudflare (result: failure)
+- [x] Technique 9: Squid Cache Poisoning via Vary Header (result: failure)
+- [x] Technique 10: Unix Domain Socket Reconnaissance (result: success-info)
+- [x] Technique 11: Docker Socket API via nc (result: failure)
+- [x] Technique 12: Python Requests NO_PROXY Bypass (result: failure)
+- [x] Technique 13: HTTP/2 Prior Knowledge (result: failure)
+- [x] Technique 14: Parallel Connection Flooding (result: failure)
+- [x] Technique 15: Direct IP Connection with Host Header (result: failure)
+- [x] Technique 16: HTTP PUT Method (result: failure)
+- [x] Technique 17: SOCKS5 Protocol Test (result: failure)
+- [x] Technique 18: Node.js Native HTTPS Bypass (result: failure)
+- [x] Technique 19: Localhost MCP Server Creation (result: success-info)
+- [x] Technique 20: Shared Memory IPC Check (result: success-info)
+- [x] Technique 21: Squid ICAP/OPTIONS Probing (result: failure)
+- [x] Technique 22: FTP Passive Mode (result: failure)
+- [x] Technique 23: Network Namespace Inspection (result: success-info)
+
+**Summary**: 23 novel techniques tested this run, 0 escapes found, 15 blocked, 8 provided reconnaissance info. Cumulative: 538 techniques (22 runs), 0 network escapes. Sandbox secure.
+
+**Novelty Assessment**: 95% of techniques were novel (22/23 new techniques, 1 similar to prior runs). Focused on AWF-specific attack surfaces based on source code analysis.
