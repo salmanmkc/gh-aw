@@ -3,7 +3,6 @@
 
 const fs = require("fs");
 const path = require("path");
-const { execSync } = require("child_process");
 
 const { getBaseBranch } = require("./get_base_branch.cjs");
 const { getErrorMessage } = require("./error_helpers.cjs");
@@ -11,9 +10,10 @@ const { getErrorMessage } = require("./error_helpers.cjs");
 /**
  * Generates a git patch file for the current changes
  * @param {string} branchName - The branch name to generate patch for
- * @returns {Object} Object with patch info or error
+ * @param {Object} exec - The exec module from @actions/exec
+ * @returns {Promise<Object>} Object with patch info or error
  */
-function generateGitPatch(branchName) {
+async function generateGitPatch(branchName, exec) {
   const patchPath = "/tmp/gh-aw/aw.patch";
   const cwd = process.env.GITHUB_WORKSPACE || process.cwd();
   const defaultBranch = process.env.DEFAULT_BRANCH || getBaseBranch();
@@ -33,33 +33,49 @@ function generateGitPatch(branchName) {
     if (branchName) {
       // Check if the branch exists locally
       try {
-        execSync(`git show-ref --verify --quiet refs/heads/${branchName}`, { cwd, encoding: "utf8" });
+        const showRefResult = await exec.getExecOutput("git", ["show-ref", "--verify", "--quiet", `refs/heads/${branchName}`], {
+          cwd,
+          ignoreReturnCode: true,
+        });
 
-        // Determine base ref for patch generation
-        let baseRef;
-        try {
-          // Check if origin/branchName exists
-          execSync(`git show-ref --verify --quiet refs/remotes/origin/${branchName}`, { cwd, encoding: "utf8" });
-          baseRef = `origin/${branchName}`;
-        } catch {
-          // Use merge-base with default branch
-          execSync(`git fetch origin ${defaultBranch}`, { cwd, encoding: "utf8" });
-          baseRef = execSync(`git merge-base origin/${defaultBranch} ${branchName}`, { cwd, encoding: "utf8" }).trim();
-        }
+        if (showRefResult.exitCode === 0) {
+          // Determine base ref for patch generation
+          let baseRef;
+          try {
+            // Check if origin/branchName exists
+            const originRefResult = await exec.getExecOutput("git", ["show-ref", "--verify", "--quiet", `refs/remotes/origin/${branchName}`], {
+              cwd,
+              ignoreReturnCode: true,
+            });
+            
+            if (originRefResult.exitCode === 0) {
+              baseRef = `origin/${branchName}`;
+            } else {
+              // Use merge-base with default branch
+              await exec.getExecOutput("git", ["fetch", "origin", defaultBranch], { cwd });
+              const mergeBaseResult = await exec.getExecOutput("git", ["merge-base", `origin/${defaultBranch}`, branchName], { cwd });
+              baseRef = mergeBaseResult.stdout.trim();
+            }
+          } catch {
+            // Use merge-base with default branch
+            await exec.getExecOutput("git", ["fetch", "origin", defaultBranch], { cwd });
+            const mergeBaseResult = await exec.getExecOutput("git", ["merge-base", `origin/${defaultBranch}`, branchName], { cwd });
+            baseRef = mergeBaseResult.stdout.trim();
+          }
 
-        // Count commits to be included
-        const commitCount = parseInt(execSync(`git rev-list --count ${baseRef}..${branchName}`, { cwd, encoding: "utf8" }).trim(), 10);
+          // Count commits to be included
+          const commitCountResult = await exec.getExecOutput("git", ["rev-list", "--count", `${baseRef}..${branchName}`], { cwd });
+          const commitCount = parseInt(commitCountResult.stdout.trim(), 10);
 
-        if (commitCount > 0) {
-          // Generate patch from the determined base to the branch
-          const patchContent = execSync(`git format-patch ${baseRef}..${branchName} --stdout`, {
-            cwd,
-            encoding: "utf8",
-          });
+          if (commitCount > 0) {
+            // Generate patch from the determined base to the branch
+            const patchContentResult = await exec.getExecOutput("git", ["format-patch", `${baseRef}..${branchName}`, "--stdout"], { cwd });
+            const patchContent = patchContentResult.stdout;
 
-          if (patchContent && patchContent.trim()) {
-            fs.writeFileSync(patchPath, patchContent, "utf8");
-            patchGenerated = true;
+            if (patchContent && patchContent.trim()) {
+              fs.writeFileSync(patchPath, patchContent, "utf8");
+              patchGenerated = true;
+            }
           }
         }
       } catch (branchError) {
@@ -69,7 +85,8 @@ function generateGitPatch(branchName) {
 
     // Strategy 2: Check if commits were made to current HEAD since checkout
     if (!patchGenerated) {
-      const currentHead = execSync("git rev-parse HEAD", { cwd, encoding: "utf8" }).trim();
+      const currentHeadResult = await exec.getExecOutput("git", ["rev-parse", "HEAD"], { cwd });
+      const currentHead = currentHeadResult.stdout.trim();
 
       if (!githubSha) {
         errorMessage = "GITHUB_SHA environment variable is not set";
@@ -78,21 +95,25 @@ function generateGitPatch(branchName) {
       } else {
         // Check if GITHUB_SHA is an ancestor of current HEAD
         try {
-          execSync(`git merge-base --is-ancestor ${githubSha} HEAD`, { cwd, encoding: "utf8" });
+          const ancestorResult = await exec.getExecOutput("git", ["merge-base", "--is-ancestor", githubSha, "HEAD"], {
+            cwd,
+            ignoreReturnCode: true,
+          });
 
-          // Count commits between GITHUB_SHA and HEAD
-          const commitCount = parseInt(execSync(`git rev-list --count ${githubSha}..HEAD`, { cwd, encoding: "utf8" }).trim(), 10);
+          if (ancestorResult.exitCode === 0) {
+            // Count commits between GITHUB_SHA and HEAD
+            const commitCountResult = await exec.getExecOutput("git", ["rev-list", "--count", `${githubSha}..HEAD`], { cwd });
+            const commitCount = parseInt(commitCountResult.stdout.trim(), 10);
 
-          if (commitCount > 0) {
-            // Generate patch from GITHUB_SHA to HEAD
-            const patchContent = execSync(`git format-patch ${githubSha}..HEAD --stdout`, {
-              cwd,
-              encoding: "utf8",
-            });
+            if (commitCount > 0) {
+              // Generate patch from GITHUB_SHA to HEAD
+              const patchContentResult = await exec.getExecOutput("git", ["format-patch", `${githubSha}..HEAD`, "--stdout"], { cwd });
+              const patchContent = patchContentResult.stdout;
 
-            if (patchContent && patchContent.trim()) {
-              fs.writeFileSync(patchPath, patchContent, "utf8");
-              patchGenerated = true;
+              if (patchContent && patchContent.trim()) {
+                fs.writeFileSync(patchPath, patchContent, "utf8");
+                patchGenerated = true;
+              }
             }
           }
         } catch {
