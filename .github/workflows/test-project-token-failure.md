@@ -16,10 +16,10 @@ timeout-minutes: 5
 safe-outputs:
   update-project:
     max: 1
-    project: "https://github.com/orgs/example-org/projects/1"
+    project: "https://github.com/orgs/github/projects/24068"
   create-project-status-update:
     max: 1
-    project: "https://github.com/orgs/example-org/projects/1"
+    project: "https://github.com/orgs/github/projects/24068"
   create-project:
     max: 1
 
