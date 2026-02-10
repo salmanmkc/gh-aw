@@ -3,6 +3,7 @@
 
 const fs = require("fs");
 const path = require("path");
+const exec = require("@actions/exec");
 
 const { getBaseBranch } = require("./get_base_branch.cjs");
 const { getErrorMessage } = require("./error_helpers.cjs");
@@ -10,10 +11,9 @@ const { getErrorMessage } = require("./error_helpers.cjs");
 /**
  * Generates a git patch file for the current changes
  * @param {string} branchName - The branch name to generate patch for
- * @param {Object} exec - The exec module from @actions/exec
  * @returns {Promise<Object>} Object with patch info or error
  */
-async function generateGitPatch(branchName, exec) {
+async function generateGitPatch(branchName) {
   const patchPath = "/tmp/gh-aw/aw.patch";
   const cwd = process.env.GITHUB_WORKSPACE || process.cwd();
   const defaultBranch = process.env.DEFAULT_BRANCH || getBaseBranch();
@@ -47,7 +47,7 @@ async function generateGitPatch(branchName, exec) {
               cwd,
               ignoreReturnCode: true,
             });
-            
+
             if (originRefResult.exitCode === 0) {
               baseRef = `origin/${branchName}`;
             } else {

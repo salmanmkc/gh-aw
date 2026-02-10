@@ -30,7 +30,7 @@ describe("generateGitPatch", () => {
 
     const { generateGitPatch } = await import("./generate_git_patch.cjs");
 
-    const result = generateGitPatch(null);
+    const result = await generateGitPatch(null);
 
     expect(result.success).toBe(false);
     expect(result).toHaveProperty("error");
@@ -43,7 +43,7 @@ describe("generateGitPatch", () => {
     process.env.GITHUB_WORKSPACE = "/tmp/nonexistent-repo";
     process.env.GITHUB_SHA = "abc123";
 
-    const result = generateGitPatch("nonexistent-branch");
+    const result = await generateGitPatch("nonexistent-branch");
 
     expect(result.success).toBe(false);
     expect(result).toHaveProperty("error");
@@ -57,7 +57,7 @@ describe("generateGitPatch", () => {
     process.env.GITHUB_SHA = "abc123";
 
     // Even if it fails, it should try to create the directory
-    const result = generateGitPatch("test-branch");
+    const result = await generateGitPatch("test-branch");
 
     expect(result).toHaveProperty("patchPath");
     expect(result.patchPath).toBe("/tmp/gh-aw/aw.patch");
@@ -69,7 +69,7 @@ describe("generateGitPatch", () => {
     process.env.GITHUB_WORKSPACE = "/tmp/nonexistent-repo";
     process.env.GITHUB_SHA = "abc123";
 
-    const result = generateGitPatch("test-branch");
+    const result = await generateGitPatch("test-branch");
 
     expect(result).toHaveProperty("success");
     expect(result).toHaveProperty("patchPath");
@@ -82,7 +82,7 @@ describe("generateGitPatch", () => {
     process.env.GITHUB_WORKSPACE = "/tmp/nonexistent-repo";
     process.env.GITHUB_SHA = "abc123";
 
-    const result = generateGitPatch(null);
+    const result = await generateGitPatch(null);
 
     expect(result).toHaveProperty("success");
     expect(result).toHaveProperty("patchPath");
@@ -94,7 +94,7 @@ describe("generateGitPatch", () => {
     process.env.GITHUB_WORKSPACE = "/tmp/nonexistent-repo";
     process.env.GITHUB_SHA = "abc123";
 
-    const result = generateGitPatch("");
+    const result = await generateGitPatch("");
 
     expect(result).toHaveProperty("success");
     expect(result).toHaveProperty("patchPath");
@@ -107,7 +107,7 @@ describe("generateGitPatch", () => {
     process.env.GITHUB_SHA = "abc123";
     process.env.DEFAULT_BRANCH = "develop";
 
-    const result = generateGitPatch("feature-branch");
+    const result = await generateGitPatch("feature-branch");
 
     expect(result).toHaveProperty("success");
     // Should attempt to use develop as default branch
@@ -121,7 +121,7 @@ describe("generateGitPatch", () => {
     delete process.env.DEFAULT_BRANCH;
     process.env.GH_AW_BASE_BRANCH = "master";
 
-    const result = generateGitPatch("feature-branch");
+    const result = await generateGitPatch("feature-branch");
 
     expect(result).toHaveProperty("success");
     // Should attempt to use master as base branch

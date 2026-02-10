@@ -185,7 +185,7 @@ function createHandlers(server, appendSafeOutput, config = {}) {
    * Resolves the current branch if branch is not provided or is the base branch
    * Generates git patch for the changes (unless allow-empty is true)
    */
-  const createPullRequestHandler = args => {
+  const createPullRequestHandler = async args => {
     const entry = { ...args, type: "create_pull_request" };
     const baseBranch = getBaseBranch();
 
@@ -226,7 +226,7 @@ function createHandlers(server, appendSafeOutput, config = {}) {
 
     // Generate git patch
     server.debug(`Generating patch for create_pull_request with branch: ${entry.branch}`);
-    const patchResult = generateGitPatch(entry.branch);
+    const patchResult = await generateGitPatch(entry.branch);
 
     if (!patchResult.success) {
       // Patch generation failed or patch is empty
@@ -276,7 +276,7 @@ function createHandlers(server, appendSafeOutput, config = {}) {
    * Resolves the current branch if branch is not provided or is the base branch
    * Generates git patch for the changes
    */
-  const pushToPullRequestBranchHandler = args => {
+  const pushToPullRequestBranchHandler = async args => {
     const entry = { ...args, type: "push_to_pull_request_branch" };
     const baseBranch = getBaseBranch();
 
@@ -296,7 +296,7 @@ function createHandlers(server, appendSafeOutput, config = {}) {
 
     // Generate git patch
     server.debug(`Generating patch for push_to_pull_request_branch with branch: ${entry.branch}`);
-    const patchResult = generateGitPatch(entry.branch);
+    const patchResult = await generateGitPatch(entry.branch);
 
     if (!patchResult.success) {
       // Patch generation failed or patch is empty
