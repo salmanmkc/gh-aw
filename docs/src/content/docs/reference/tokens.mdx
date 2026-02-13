@@ -14,8 +14,8 @@ import Video from '../../../components/Video.astro';
 You will need one of the following tokens/secrets:
 
 - **Copilot** – Add [`COPILOT_GITHUB_TOKEN`](#copilot_github_token)
-- **Claude by Anthropic** – Add [`ANTHROPIC_API_KEY`](/gh-aw/reference/engines/#using-claude-by-anthropic-claude-code)
-- **Codex by OpenAI** – Add [`OPENAI_API_KEY`](/gh-aw/reference/engines/#using-openai-codex)
+- **Claude by Anthropic** – Add [`ANTHROPIC_API_KEY`](#anthropic_api_key)
+- **Codex by OpenAI** – Add [`OPENAI_API_KEY`](#openai_api_key)
 
 Depending on what your workflow needs to do, you may need additional tokens:
 
@@ -91,7 +91,7 @@ If using the Copilot CLI, you need a GitHub Personal Access Token (PAT) with the
 
 **Setup**:
 
-Create a fine-grained PAT at <https://github.com/settings/personal-access-tokens/new>.
+Create a [fine-grained PAT](https://github.com/settings/personal-access-tokens/new) with:
 
 - **IMPORTANT:** Select your user account, NOT an organization
 - **IMPORTANT:** Choose "Public repositories" access, even if adding to a private repo. Yes that's right just do it
@@ -120,6 +120,8 @@ If using the Claude by Anthropic engine, you need to configure `ANTHROPIC_API_KE
 gh aw secrets set ANTHROPIC_API_KEY --value "YOUR_ANTHROPIC_API_KEY"
 ```
 
+See also (/gh-aw/reference/engines/#using-claude-by-anthropic-claude-code) for additional configuration needed when using Claude with GitHub MCP.
+
 ---
 
 ### `OPENAI_API_KEY`
@@ -133,6 +135,8 @@ If using the Codex by OpenAI engine, you need to configure `OPENAI_API_KEY` with
 ```bash wrap
 gh aw secrets set OPENAI_API_KEY --value "YOUR_OPENAI_API_KEY"
 ```
+
+See also (/gh-aw/reference/engines/#using-openai-codex) for additional configuration needed when using Codex with GitHub MCP.
 
 ---
 
