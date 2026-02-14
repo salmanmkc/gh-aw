@@ -213,7 +213,7 @@ describe("frontmatter_hash with GitHub API", () => {
       console.log(`JavaScript hash for audit-workflows.md: ${jsHash}`);
       console.log(`Go hash for audit-workflows.md: ${goHash}`);
       console.log(`Hashes match: ${jsHash === goHash}`);
-    });
+    }, 60000); // 60 second timeout to allow for Go dependency downloads
 
     it("should produce deterministic hashes across multiple calls", async () => {
       const owner = "github";
