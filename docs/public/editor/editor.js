@@ -10,6 +10,7 @@ import { markdown } from 'https://esm.sh/@codemirror/lang-markdown@6.5.0';
 import { indentUnit } from 'https://esm.sh/@codemirror/language@6.12.1';
 import { oneDark } from 'https://esm.sh/@codemirror/theme-one-dark@6.1.3';
 import { createWorkerCompiler } from '/gh-aw/wasm/compiler-loader.js';
+import { frontmatterHoverTooltip } from './hover-tooltips.js';
 
 // ---------------------------------------------------------------
 // Sample workflow registry (fetched from GitHub on demand)
@@ -125,9 +126,6 @@ const divider = $('divider');
 const panelEditor = $('panelEditor');
 const panelOutput = $('panelOutput');
 const panels = $('panels');
-const tabBar = $('tabBar');
-const tabStatusDot = $('tabStatusDot');
-const fabCompile = $('fabCompile');
 
 // ---------------------------------------------------------------
 // State
@@ -139,10 +137,7 @@ let isCompiling = false;
 let compileTimer = null;
 let currentYaml = '';
 let pendingCompile = false;
-let activeTab = 'editor';       // 'editor' | 'output'
-let outputIsStale = false;      // true when editor changed since last compile
-let lastCompileStatus = 'ok';   // 'ok' | 'error'
-let isDragging = false;         // divider drag state (used by both divider + swipe logic)
+let isDragging = false;
 
 // ---------------------------------------------------------------
 // Theme — follows browser's prefers-color-scheme automatically.
@@ -185,13 +180,11 @@ const editorView = new EditorView({
       key: 'Mod-Enter',
       run: () => { doCompile(); return true; }
     }]),
+    frontmatterHoverTooltip,
     EditorView.updateListener.of(update => {
       if (update.docChanged) {
         try { localStorage.setItem(STORAGE_KEY, update.state.doc.toString()); }
         catch (_) { /* localStorage full or unavailable */ }
-        // Mark output as stale (editor changed since last compile)
-        outputIsStale = true;
-        updateTabStatusDot();
         if (isReady) {
           scheduleCompile();
         } else {
@@ -366,7 +359,6 @@ async function doCompile() {
 
   isCompiling = true;
   setStatus('compiling', 'Compiling...');
-  if (fabCompile) fabCompile.classList.add('compiling');
 
   // Hide old banners
   errorBanner.classList.add('d-none');
@@ -377,15 +369,10 @@ async function doCompile() {
 
     if (result.error) {
       setStatus('error', 'Error');
-      lastCompileStatus = 'error';
-      updateTabStatusDot();
       errorText.textContent = result.error;
       errorBanner.classList.remove('d-none');
     } else {
       setStatus('ready', 'Ready');
-      lastCompileStatus = 'ok';
-      outputIsStale = false;
-      updateTabStatusDot();
       currentYaml = result.yaml;
 
       // Update output CodeMirror view
@@ -403,13 +390,10 @@ async function doCompile() {
     }
   } catch (err) {
     setStatus('error', 'Error');
-    lastCompileStatus = 'error';
-    updateTabStatusDot();
     errorText.textContent = err.message || String(err);
     errorBanner.classList.remove('d-none');
   } finally {
     isCompiling = false;
-    if (fabCompile) fabCompile.classList.remove('compiling');
   }
 }
 
@@ -418,110 +402,6 @@ async function doCompile() {
 // ---------------------------------------------------------------
 $('errorClose').addEventListener('click', () => errorBanner.classList.add('d-none'));
 $('warningClose').addEventListener('click', () => warningBanner.classList.add('d-none'));
-
-// ---------------------------------------------------------------
-// Mobile: Tab-based layout
-// ---------------------------------------------------------------
-const mobileMq = window.matchMedia('(max-width: 767px)');
-
-/** Check if currently in mobile layout */
-function isMobileLayout() {
-  return mobileMq.matches;
-}
-
-/** Switch the active mobile tab */
-function switchTab(tab) {
-  activeTab = tab;
-
-  // Update tab button states
-  tabBar.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.panel === tab);
-  });
-
-  // Show/hide panels
-  if (tab === 'editor') {
-    panelEditor.style.display = '';
-    panelOutput.style.display = 'none';
-  } else {
-    panelEditor.style.display = 'none';
-    panelOutput.style.display = '';
-  }
-}
-
-/** Update the status dot on the Output tab */
-function updateTabStatusDot() {
-  if (!tabStatusDot) return;
-  if (lastCompileStatus === 'error') {
-    tabStatusDot.setAttribute('data-stale', 'error');
-  } else if (outputIsStale) {
-    tabStatusDot.setAttribute('data-stale', 'true');
-  } else {
-    tabStatusDot.removeAttribute('data-stale');
-  }
-}
-
-/** Apply or revert mobile layout depending on viewport width */
-function applyResponsiveLayout() {
-  if (isMobileLayout()) {
-    // Enter mobile mode: show only the active tab's panel
-    switchTab(activeTab);
-  } else {
-    // Exit mobile mode: show both panels, restore flex
-    panelEditor.style.display = '';
-    panelOutput.style.display = '';
-    panelEditor.style.flex = '';
-    panelOutput.style.flex = '';
-  }
-}
-
-// Tab button click handlers
-tabBar.addEventListener('click', (e) => {
-  const btn = e.target.closest('.tab-btn');
-  if (!btn || !isMobileLayout()) return;
-  switchTab(btn.dataset.panel);
-});
-
-// FAB compile button
-fabCompile.addEventListener('click', () => {
-  doCompile();
-});
-
-// Swipe gesture support on panels container
-let touchStartX = 0;
-let touchStartY = 0;
-let touchStartTime = 0;
-
-panels.addEventListener('touchstart', (e) => {
-  // Only handle swipe gestures in mobile tab mode and when not dragging the divider
-  if (!isMobileLayout() || isDragging) return;
-  touchStartX = e.touches[0].clientX;
-  touchStartY = e.touches[0].clientY;
-  touchStartTime = Date.now();
-}, { passive: true });
-
-panels.addEventListener('touchend', (e) => {
-  if (!isMobileLayout() || isDragging) return;
-  const dx = e.changedTouches[0].clientX - touchStartX;
-  const dy = e.changedTouches[0].clientY - touchStartY;
-  const dt = Date.now() - touchStartTime;
-
-  // Require: horizontal distance > 50px, more horizontal than vertical, within 500ms
-  if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5 && dt < 500) {
-    if (dx < 0 && activeTab === 'editor') {
-      // Swipe left: go to Output
-      switchTab('output');
-    } else if (dx > 0 && activeTab === 'output') {
-      // Swipe right: go to Editor
-      switchTab('editor');
-    }
-  }
-}, { passive: true });
-
-// Listen for viewport changes (e.g., device rotation, window resize)
-mobileMq.addEventListener('change', () => applyResponsiveLayout());
-
-// Apply on initial load
-applyResponsiveLayout();
 
 // ---------------------------------------------------------------
 // Draggable divider
@@ -537,19 +417,10 @@ divider.addEventListener('mousedown', (e) => {
 document.addEventListener('mousemove', (e) => {
   if (!isDragging) return;
   const rect = panels.getBoundingClientRect();
-  const isMobile = window.innerWidth < 768;
-
-  if (isMobile) {
-    const fraction = (e.clientY - rect.top) / rect.height;
-    const clamped = Math.max(0.2, Math.min(0.8, fraction));
-    panelEditor.style.flex = `0 0 ${clamped * 100}%`;
-    panelOutput.style.flex = `0 0 ${(1 - clamped) * 100}%`;
-  } else {
-    const fraction = (e.clientX - rect.left) / rect.width;
-    const clamped = Math.max(0.2, Math.min(0.8, fraction));
-    panelEditor.style.flex = `0 0 ${clamped * 100}%`;
-    panelOutput.style.flex = `0 0 ${(1 - clamped) * 100}%`;
-  }
+  const fraction = (e.clientX - rect.left) / rect.width;
+  const clamped = Math.max(0.2, Math.min(0.8, fraction));
+  panelEditor.style.flex = `0 0 ${clamped * 100}%`;
+  panelOutput.style.flex = `0 0 ${(1 - clamped) * 100}%`;
 });
 
 document.addEventListener('mouseup', () => {
@@ -558,39 +429,6 @@ document.addEventListener('mouseup', () => {
     divider.classList.remove('dragging');
     document.body.style.cursor = '';
     document.body.style.userSelect = '';
-  }
-});
-
-// Touch support for mobile divider
-divider.addEventListener('touchstart', (e) => {
-  isDragging = true;
-  divider.classList.add('dragging');
-  e.preventDefault();
-});
-
-document.addEventListener('touchmove', (e) => {
-  if (!isDragging) return;
-  const touch = e.touches[0];
-  const rect = panels.getBoundingClientRect();
-  const isMobile = window.innerWidth < 768;
-
-  if (isMobile) {
-    const fraction = (touch.clientY - rect.top) / rect.height;
-    const clamped = Math.max(0.2, Math.min(0.8, fraction));
-    panelEditor.style.flex = `0 0 ${clamped * 100}%`;
-    panelOutput.style.flex = `0 0 ${(1 - clamped) * 100}%`;
-  } else {
-    const fraction = (touch.clientX - rect.left) / rect.width;
-    const clamped = Math.max(0.2, Math.min(0.8, fraction));
-    panelEditor.style.flex = `0 0 ${clamped * 100}%`;
-    panelOutput.style.flex = `0 0 ${(1 - clamped) * 100}%`;
-  }
-});
-
-document.addEventListener('touchend', () => {
-  if (isDragging) {
-    isDragging = false;
-    divider.classList.remove('dragging');
   }
 });
 

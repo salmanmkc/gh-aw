@@ -99,6 +99,16 @@ var ClaudeDefaultDomains = []string{
 	"ts-ocsp.ws.symantec.com",
 }
 
+// GeminiDefaultDomains are the default domains required for Google Gemini CLI authentication and operation
+var GeminiDefaultDomains = []string{
+	"*.googleapis.com",
+	"generativelanguage.googleapis.com",
+	"github.com",
+	"host.docker.internal",
+	"raw.githubusercontent.com",
+	"registry.npmjs.org",
+}
+
 // PlaywrightDomains are the domains required for Playwright browser downloads
 // These domains are needed when Playwright MCP server initializes in the Docker container
 var PlaywrightDomains = []string{
@@ -276,10 +286,62 @@ func GetAllowedDomains(network *NetworkPermissions) []string {
 	return expandedDomains
 }
 
-// GetDomainEcosystem returns the ecosystem identifier for a given domain, or empty string if not found
+// ecosystemPriority defines the order in which ecosystems are checked by GetDomainEcosystem.
+// More specific sub-ecosystems are listed before their parent ecosystems so that domains
+// shared between multiple ecosystems resolve deterministically to the most specific one.
+// For example, "node-cdns" is listed before "node" so that cdn.jsdelivr.net returns "node-cdns".
+// All known ecosystems are enumerated here; any ecosystem not in this list is checked last
+// in sorted order (for forward-compatibility with new entries).
+var ecosystemPriority = []string{
+	"node-cdns", // before "node" — more specific CDN sub-ecosystem
+	"rust",      // before "python" — crates.io/index.crates.io/static.crates.io are native Rust domains
+	"containers",
+	"dart",
+	"defaults",
+	"dotnet",
+	"fonts",
+	"github",
+	"github-actions",
+	"go",
+	"haskell",
+	"java",
+	"linux-distros",
+	"node",
+	"perl",
+	"php",
+	"playwright",
+	"python",
+	"ruby",
+	"swift",
+	"terraform",
+}
+
+// GetDomainEcosystem returns the ecosystem identifier for a given domain, or empty string if not found.
+// Ecosystems are checked in ecosystemPriority order so that the result is deterministic even when
+// a domain appears in multiple ecosystems (e.g. cdn.jsdelivr.net is in both "node" and "node-cdns").
 func GetDomainEcosystem(domain string) string {
-	// Check each ecosystem for domain match
+	checked := make(map[string]bool, len(ecosystemPriority))
+
+	// Check ecosystems in priority order first
+	for _, ecosystem := range ecosystemPriority {
+		checked[ecosystem] = true
+		domains := getEcosystemDomains(ecosystem)
+		for _, ecosystemDomain := range domains {
+			if matchesDomain(domain, ecosystemDomain) {
+				return ecosystem
+			}
+		}
+	}
+
+	// Fall back to any ecosystems not in the priority list, sorted for determinism
+	remaining := make([]string, 0)
 	for ecosystem := range ecosystemDomains {
+		if !checked[ecosystem] {
+			remaining = append(remaining, ecosystem)
+		}
+	}
+	SortStrings(remaining)
+	for _, ecosystem := range remaining {
 		domains := getEcosystemDomains(ecosystem)
 		for _, ecosystemDomain := range domains {
 			if matchesDomain(domain, ecosystemDomain) {
@@ -508,6 +570,12 @@ func GetClaudeAllowedDomainsWithTools(network *NetworkPermissions, tools map[str
 // Returns a deduplicated, sorted, comma-separated string suitable for AWF's --allow-domains flag
 func GetClaudeAllowedDomainsWithToolsAndRuntimes(network *NetworkPermissions, tools map[string]any, runtimes map[string]any) string {
 	return mergeDomainsWithNetworkToolsAndRuntimes(ClaudeDefaultDomains, network, tools, runtimes)
+}
+
+// GetGeminiAllowedDomainsWithToolsAndRuntimes merges Gemini default domains with NetworkPermissions, HTTP MCP server domains, and runtime ecosystem domains
+// Returns a deduplicated, sorted, comma-separated string suitable for AWF's --allow-domains flag
+func GetGeminiAllowedDomainsWithToolsAndRuntimes(network *NetworkPermissions, tools map[string]any, runtimes map[string]any) string {
+	return mergeDomainsWithNetworkToolsAndRuntimes(GeminiDefaultDomains, network, tools, runtimes)
 }
 
 // GetBlockedDomains returns the blocked domains from network permissions
