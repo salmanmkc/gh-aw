@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/github/gh-aw/pkg/console"
+	"github.com/github/gh-aw/pkg/fileutil"
 	"github.com/github/gh-aw/pkg/gitutil"
 	"github.com/github/gh-aw/pkg/logger"
 	"github.com/github/gh-aw/pkg/workflow"
@@ -29,6 +30,8 @@ func downloadWorkflowContentViaGit(repo, path, ref string, verbose bool) ([]byte
 	repoURL := fmt.Sprintf("%s/%s.git", githubHost, repo)
 
 	// git archive command: git archive --remote=<repo> <ref> <path>
+	// #nosec G204 -- repoURL, ref, and path are from workflow import configuration authored by the
+	// developer; exec.Command with separate args (not shell execution) prevents shell injection.
 	cmd := exec.Command("git", "archive", "--remote="+repoURL, ref, path)
 	archiveOutput, err := cmd.Output()
 	if err != nil {
@@ -36,10 +39,8 @@ func downloadWorkflowContentViaGit(repo, path, ref string, verbose bool) ([]byte
 		return downloadWorkflowContentViaGitClone(repo, path, ref, verbose)
 	}
 
-	// Extract the file from the tar archive
-	tarCmd := exec.Command("tar", "-xO", path)
-	tarCmd.Stdin = strings.NewReader(string(archiveOutput))
-	content, err := tarCmd.Output()
+	// Extract the file from the tar archive using Go's archive/tar (cross-platform)
+	content, err := fileutil.ExtractFileFromTar(archiveOutput, path)
 	if err != nil {
 		return nil, fmt.Errorf("failed to extract file from git archive: %w", err)
 	}

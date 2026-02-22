@@ -12,6 +12,7 @@ import (
 	"github.com/github/gh-aw/pkg/console"
 	"github.com/github/gh-aw/pkg/fileutil"
 	"github.com/github/gh-aw/pkg/logger"
+	"github.com/github/gh-aw/pkg/workflow"
 )
 
 var gitLog = logger.New("cli:git")
@@ -671,8 +672,8 @@ func getDefaultBranch() (string, error) {
 
 	owner, repo := parts[0], parts[1]
 
-	// Use gh CLI to get default branch from GitHub API
-	cmd := exec.Command("gh", "api", fmt.Sprintf("/repos/%s/%s", owner, repo), "--jq", ".default_branch")
+	// Use ExecGH helper which handles token configuration (GH_TOKEN/GITHUB_TOKEN)
+	cmd := workflow.ExecGH("api", fmt.Sprintf("/repos/%s/%s", owner, repo), "--jq", ".default_branch")
 	output, err := cmd.Output()
 	if err != nil {
 		gitLog.Printf("Failed to get default branch: %v", err)
