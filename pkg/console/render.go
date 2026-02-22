@@ -67,7 +67,7 @@ func renderStruct(val reflect.Value, title string, output *strings.Builder, dept
 
 	// Track the longest field name for alignment
 	maxFieldLen := 0
-	for i := 0; i < val.NumField(); i++ {
+	for i := range val.NumField() {
 		field := val.Field(i)
 		fieldType := typ.Field(i)
 		tag := parseConsoleTag(fieldType.Tag.Get("console"))
@@ -87,7 +87,7 @@ func renderStruct(val reflect.Value, title string, output *strings.Builder, dept
 	}
 
 	// Iterate through struct fields
-	for i := 0; i < val.NumField(); i++ {
+	for i := range val.NumField() {
 		field := val.Field(i)
 		fieldType := typ.Field(i)
 
@@ -173,7 +173,7 @@ func renderSlice(val reflect.Value, title string, output *strings.Builder, depth
 		output.WriteString(RenderTable(config))
 	} else {
 		// Render as list
-		for i := 0; i < val.Len(); i++ {
+		for i := range val.Len() {
 			elem := val.Index(i)
 			fmt.Fprintf(output, "  • %v\n", formatFieldValue(elem))
 		}
@@ -225,7 +225,7 @@ func buildTableConfig(val reflect.Value, title string) TableConfig {
 	var fieldIndices []int
 	var fieldTags []consoleTag
 
-	for i := 0; i < elemType.NumField(); i++ {
+	for i := range elemType.NumField() {
 		field := elemType.Field(i)
 		tag := parseConsoleTag(field.Tag.Get("console"))
 
@@ -248,7 +248,7 @@ func buildTableConfig(val reflect.Value, title string) TableConfig {
 	config.Headers = headers
 
 	// Build rows
-	for i := 0; i < val.Len(); i++ {
+	for i := range val.Len() {
 		elem := val.Index(i)
 		// Dereference pointer if needed
 		for elem.Kind() == reflect.Ptr {
@@ -293,21 +293,21 @@ func parseConsoleTag(tag string) consoleTag {
 		return result
 	}
 
-	parts := strings.Split(tag, ",")
-	for _, part := range parts {
+	parts := strings.SplitSeq(tag, ",")
+	for part := range parts {
 		part = strings.TrimSpace(part)
 		if part == "omitempty" {
 			result.omitempty = true
-		} else if strings.HasPrefix(part, "title:") {
-			result.title = strings.TrimPrefix(part, "title:")
-		} else if strings.HasPrefix(part, "header:") {
-			result.header = strings.TrimPrefix(part, "header:")
-		} else if strings.HasPrefix(part, "format:") {
-			result.format = strings.TrimPrefix(part, "format:")
-		} else if strings.HasPrefix(part, "default:") {
-			result.defaultVal = strings.TrimPrefix(part, "default:")
-		} else if strings.HasPrefix(part, "maxlen:") {
-			maxLenStr := strings.TrimPrefix(part, "maxlen:")
+		} else if after, ok := strings.CutPrefix(part, "title:"); ok {
+			result.title = after
+		} else if after, ok := strings.CutPrefix(part, "header:"); ok {
+			result.header = after
+		} else if after, ok := strings.CutPrefix(part, "format:"); ok {
+			result.format = after
+		} else if after, ok := strings.CutPrefix(part, "default:"); ok {
+			result.defaultVal = after
+		} else if after, ok := strings.CutPrefix(part, "maxlen:"); ok {
+			maxLenStr := after
 			if len, err := strconv.Atoi(maxLenStr); err == nil {
 				result.maxLen = len
 			}

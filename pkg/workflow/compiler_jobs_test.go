@@ -5,6 +5,7 @@ package workflow
 import (
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 
@@ -198,13 +199,7 @@ func TestGetCustomJobsDependingOnPreActivationEdgeCases(t *testing.T) {
 			}
 			// Check that expected job IDs are present
 			for _, expectedID := range tt.expectedJobIDs {
-				found := false
-				for _, job := range result {
-					if job == expectedID {
-						found = true
-						break
-					}
-				}
+				found := slices.Contains(result, expectedID)
 				if !found {
 					t.Errorf("Expected job %q not found in result", expectedID)
 				}
@@ -490,13 +485,7 @@ func TestGetReferencedCustomJobs(t *testing.T) {
 			}
 			// Check that expected job IDs are present
 			for _, expectedID := range tt.expectedJobIDs {
-				found := false
-				for _, job := range result {
-					if job == expectedID {
-						found = true
-						break
-					}
-				}
+				found := slices.Contains(result, expectedID)
 				if !found {
 					t.Errorf("Expected job %q not found in result", expectedID)
 				}
@@ -747,13 +736,7 @@ func TestBuildMainJobWithActivation(t *testing.T) {
 	}
 
 	// Check that it depends on activation job
-	found := false
-	for _, need := range job.Needs {
-		if need == string(constants.ActivationJobName) {
-			found = true
-			break
-		}
-	}
+	found := slices.Contains(job.Needs, string(constants.ActivationJobName))
 	if !found {
 		t.Errorf("Expected job to depend on %s, got needs: %v", string(constants.ActivationJobName), job.Needs)
 	}
@@ -1357,13 +1340,7 @@ func TestJobsWithRepoMemoryDependencies(t *testing.T) {
 
 	// Verify dependencies include detection when threat detection is enabled
 	if threatDetectionEnabledForSafeJobs {
-		hasDetectionDep := false
-		for _, need := range pushRepoMemoryJob.Needs {
-			if need == string(constants.DetectionJobName) {
-				hasDetectionDep = true
-				break
-			}
-		}
+		hasDetectionDep := slices.Contains(pushRepoMemoryJob.Needs, string(constants.DetectionJobName))
 		if !hasDetectionDep {
 			t.Error("Expected push_repo_memory to depend on detection job when threat detection is enabled")
 		}
@@ -1428,13 +1405,7 @@ func TestJobsWithCacheMemoryDependencies(t *testing.T) {
 		}
 
 		// Verify dependencies include detection
-		hasDetectionDep := false
-		for _, need := range updateCacheMemoryJob.Needs {
-			if need == string(constants.DetectionJobName) {
-				hasDetectionDep = true
-				break
-			}
-		}
+		hasDetectionDep := slices.Contains(updateCacheMemoryJob.Needs, string(constants.DetectionJobName))
 		if !hasDetectionDep {
 			t.Error("Expected update_cache_memory to depend on detection job")
 		}
@@ -2155,13 +2126,7 @@ func TestBuildCustomJobsAutomaticActivationDependency(t *testing.T) {
 	}
 
 	// Check that activation is in the needs array
-	found := false
-	for _, need := range job.Needs {
-		if need == string(constants.ActivationJobName) {
-			found = true
-			break
-		}
-	}
+	found := slices.Contains(job.Needs, string(constants.ActivationJobName))
 	if !found {
 		t.Error("Expected automatic dependency on activation job")
 	}
