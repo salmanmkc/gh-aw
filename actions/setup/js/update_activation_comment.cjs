@@ -4,6 +4,20 @@
 const { getErrorMessage } = require("./error_helpers.cjs");
 const { getMessages } = require("./messages_core.cjs");
 const { sanitizeContent } = require("./sanitize_content.cjs");
+const { getPullRequestCreatedMessage, getIssueCreatedMessage, getCommitPushedMessage } = require("./messages_run_status.cjs");
+const { parseBoolTemplatable } = require("./templatable.cjs");
+const { generateXMLMarker } = require("./generate_footer.cjs");
+
+/**
+ * Build the workflow run URL from context and environment.
+ * @param {any} context - GitHub Actions context
+ * @returns {string} The workflow run URL
+ */
+function getRunUrl(context) {
+  const runId = context.runId || process.env.GITHUB_RUN_ID || "";
+  const githubServer = process.env.GITHUB_SERVER_URL || "https://github.com";
+  return context.payload?.repository?.html_url ? `${context.payload.repository.html_url}/actions/runs/${runId}` : `${githubServer}/${context.repo.owner}/${context.repo.repo}/actions/runs/${runId}`;
+}
 
 /**
  * Update the activation comment with a link to the created pull request or issue
@@ -16,7 +30,10 @@ const { sanitizeContent } = require("./sanitize_content.cjs");
  */
 async function updateActivationComment(github, context, core, itemUrl, itemNumber, itemType = "pull_request") {
   const itemLabel = itemType === "issue" ? "issue" : "pull request";
-  const linkMessage = itemType === "issue" ? `\n\n✅ Issue created: [#${itemNumber}](${itemUrl})` : `\n\n✅ Pull request created: [#${itemNumber}](${itemUrl})`;
+  const workflowName = process.env.GH_AW_WORKFLOW_NAME || "Workflow";
+  const runUrl = getRunUrl(context);
+  const body = itemType === "issue" ? getIssueCreatedMessage({ itemNumber, itemUrl }) : getPullRequestCreatedMessage({ itemNumber, itemUrl });
+  const linkMessage = `\n\n${body}\n\n${generateXMLMarker(workflowName, runUrl)}`;
   await updateActivationCommentWithMessage(github, context, core, linkMessage, itemLabel, { targetIssueNumber: itemNumber });
 }
 
@@ -32,7 +49,9 @@ async function updateActivationComment(github, context, core, itemUrl, itemNumbe
  */
 async function updateActivationCommentWithCommit(github, context, core, commitSha, commitUrl, options = {}) {
   const shortSha = commitSha.substring(0, 7);
-  const message = `\n\n✅ Commit pushed: [\`${shortSha}\`](${commitUrl})`;
+  const workflowName = process.env.GH_AW_WORKFLOW_NAME || "Workflow";
+  const runUrl = getRunUrl(context);
+  const message = `\n\n${getCommitPushedMessage({ commitSha, shortSha, commitUrl })}\n\n${generateXMLMarker(workflowName, runUrl)}`;
   await updateActivationCommentWithMessage(github, context, core, message, "commit", options);
 }
 
@@ -53,6 +72,12 @@ async function updateActivationCommentWithMessage(github, context, core, message
   // Check if append-only-comments is enabled
   const messagesConfig = getMessages();
   const appendOnlyComments = messagesConfig?.appendOnlyComments === true;
+
+  // Check if activation comments are disabled entirely
+  if (!parseBoolTemplatable(messagesConfig?.activationComments, true)) {
+    core.info("activation-comments is disabled: skipping activation comment update");
+    return;
+  }
 
   // Parse comment repo (format: "owner/repo") with validation
   let repoOwner = context.repo.owner;
