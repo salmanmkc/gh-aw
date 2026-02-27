@@ -144,21 +144,37 @@ func (c *Compiler) buildSharedPRCheckoutSteps(data *WorkflowData) []string {
 	}
 
 	// Determine the ref (branch) to checkout
-	// Priority: create-pull-request base-branch > default to github.ref_name
+	// Priority: create-pull-request base-branch > fallback expression
 	// This is critical: we must checkout the base branch, not github.sha (the triggering commit),
 	// because github.sha might be an older commit with different workflow files. A shallow clone
 	// of an old commit followed by git fetch/checkout may not properly update all files,
 	// leading to spurious "workflow file changed" errors on push.
+	//
+	// Fallback expression: github.base_ref || github.event.pull_request.base.ref || github.ref_name || github.event.repository.default_branch
+	// - github.base_ref: set for pull_request/pull_request_target events
+	// - github.event.pull_request.base.ref: set for pull_request_review, pull_request_review_comment events
+	// - github.event.repository.default_branch: fallback for issue_comment events and other edge cases
+	//
+	// LIMITATION: For issue_comment events on PRs targeting non-default branches, this will checkout
+	// the default branch instead of the actual PR base branch. This is a known limitation because
+	// issue_comment payloads don't include PR base ref info and we can't make API calls in YAML expressions.
+	// For most PRs targeting main/master, this works correctly.
+	//
+	// TODO: @dsyme says: We must remove this. Indeed the important longer term thing is that we need the processing
+	// of the application of safe outputs to be independent of
+	// * event trigger context
+	// * ideally repository context too
+	// So safe outputs are "self-describing" and already know which base branch, repository etc. they're
+	// targeting.  Then a lot of this gnarly event code will be only on the "front end" (prepping the
+	// coding agent) not the "backend" (applying the safe outputs)
+	const baseBranchFallbackExpr = "${{ github.base_ref || github.event.pull_request.base.ref || github.ref_name || github.event.repository.default_branch }}"
 	var checkoutRef string
 	if data.SafeOutputs.CreatePullRequests != nil && data.SafeOutputs.CreatePullRequests.BaseBranch != "" {
 		checkoutRef = data.SafeOutputs.CreatePullRequests.BaseBranch
-		consolidatedSafeOutputsStepsLog.Printf("Using base-branch from create-pull-request for checkout ref: %s", checkoutRef)
+		consolidatedSafeOutputsStepsLog.Printf("Using custom base-branch from create-pull-request for checkout ref: %s", checkoutRef)
 	} else {
-		// Default to github.base_ref (PR base branch) with fallback to github.event.pull_request.base.ref
-		// (pull_request_review events) and then github.ref_name (push event branch).
-		// This handles PR contexts where github.ref_name is "123/merge" which is invalid for checkout.
-		checkoutRef = "${{ github.base_ref || github.event.pull_request.base.ref || github.ref_name }}"
-		consolidatedSafeOutputsStepsLog.Print("Using github.base_ref || github.event.pull_request.base.ref || github.ref_name for checkout ref")
+		checkoutRef = baseBranchFallbackExpr
+		consolidatedSafeOutputsStepsLog.Printf("Using fallback base branch expression for checkout ref")
 	}
 
 	// Step 1: Checkout repository with conditional execution
