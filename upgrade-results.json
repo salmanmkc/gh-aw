@@ -1,0 +1,38 @@
+{
+  "org": "github",
+  "last_updated": "2026-02-27T14:48:40Z",
+  "summary": {
+    "total_processed": 1,
+    "prs_created": 0,
+    "prs_updated": 0,
+    "node24_prs": 0,
+    "general_prs": 0,
+    "no_updates_needed": 0,
+    "failed": 0
+  },
+  "results": [
+    {
+      "repo": "github/gh-aw",
+      "success": true,
+      "pr_url": null,
+      "pr_updated": false,
+      "error": null,
+      "updates_count": 8,
+      "processed_at": "2026-02-27T14:48:40Z"
+    }
+  ],
+  "discovered_actions": {
+    "anchore/sbom-action": {
+      "latest_version": "v0.23.0",
+      "release_scheme": "tag_semver"
+    },
+    "github/stale-repos": {
+      "latest_version": "v8.0.4",
+      "release_scheme": "tag_semver"
+    },
+    "super-linter/super-linter": {
+      "latest_version": "v8.5.0",
+      "release_scheme": "tag_semver"
+    }
+  }
+}

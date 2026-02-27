@@ -73,7 +73,7 @@ jobs:
           retention-days: 7
 steps:
   - name: Download super-linter log
-    uses: actions/download-artifact@v6
+    uses: actions/download-artifact@v7
     with:
       name: super-linter-log
       path: /tmp/gh-aw/

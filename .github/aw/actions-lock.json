@@ -50,6 +50,11 @@
       "version": "v6",
       "sha": "018cc2cf5baa6db3ef3c5f8a56943fffe632ef53"
     },
+    "actions/download-artifact@v7": {
+      "repo": "actions/download-artifact",
+      "version": "v7",
+      "sha": "37930b1c2abaa49bbe596cd826c3c89aef350131"
+    },
     "actions/github-script@v7.1.0": {
       "repo": "actions/github-script",
       "version": "v7.1.0",
@@ -169,6 +174,11 @@
       "repo": "github/codeql-action/upload-sarif",
       "version": "v3.32.4",
       "sha": "85b88275909735f5bc23196090e03d2eb148b3de"
+    },
+    "github/gh-aw/actions/setup@v0.50.6": {
+      "repo": "github/gh-aw/actions/setup",
+      "version": "v0.50.6",
+      "sha": "fa00c211a1435b633eb568b1b41a203486ec760d"
     },
     "github/stale-repos@v3.0.2": {
       "repo": "github/stale-repos",
